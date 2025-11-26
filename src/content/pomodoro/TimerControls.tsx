@@ -7,33 +7,38 @@ interface TimerControlsProps {
   onRest: () => void;
 }
 
-export function TimerControls({ isActive, onToggle, onReset, onRest }: TimerControlsProps) {
+export function TimerControls({
+  isActive,
+  onToggle,
+  onReset,
+  onRest
+}: TimerControlsProps) {
   const buttons = [
     {
       onClick: onRest,
       title: "Break",
-      icon: <Coffee size={20} />
+      icon: <Coffee size={35} />
     },
     {
       onClick: onToggle,
       title: isActive ? "Pause" : "Play",
-      icon: isActive ? <Pause size={20} /> : <Play size={20} />
+      icon: isActive ? <Pause size={35} /> : <Play size={35} />
     },
     {
       onClick: onReset,
       title: "Reset",
-      icon: <Square size={20} />
-    },
+      icon: <Square size={35} />
+    }
   ];
 
   return (
-    <div className="flex gap-3">
+    <div className="flex gap-10">
       {buttons.map((btn, index) => (
         <button
           key={index}
           onClick={btn.onClick}
-          className="flex items-center gap-2 px-4 py-2 bg-surface border border-primary/50 hover:bg-primary/10 text-text rounded-lg transition-colors cursor-pointer"
           title={btn.title}
+          className="cursor-pointer rounded-lg flex items-center gap-2 px-4 py-2 bg-surface border border-primary/50 hover:bg-primary/10 text-text transition-colors"
         >
           {btn.icon}
         </button>
