@@ -1,33 +1,42 @@
-import { Play, Pause, Square, Coffee } from 'lucide-react';
+import { Play, Pause, Square, Coffee, Brain } from "lucide-react";
 
 interface TimerControlsProps {
   isActive: boolean;
+  isWorkMode: boolean;
+  hasStarted: boolean;
   onToggle: () => void;
   onReset: () => void;
   onRest: () => void;
+  onWork: () => void;
 }
 
 export function TimerControls({
   isActive,
+  isWorkMode,
+  hasStarted,
   onToggle,
   onReset,
-  onRest
+  onRest,
+  onWork
 }: TimerControlsProps) {
   const buttons = [
     {
-      onClick: onRest,
-      title: "Break",
-      icon: <Coffee size={35} />
+      onClick: isWorkMode ? onRest : onWork,
+      title: isWorkMode ? "Break" : "Work",
+      icon: isWorkMode ? <Coffee size={35} /> : <Brain size={35} />,
+      disabled: !hasStarted
     },
     {
       onClick: onToggle,
       title: isActive ? "Pause" : "Play",
-      icon: isActive ? <Pause size={35} /> : <Play size={35} />
+      icon: isActive ? <Pause size={35} /> : <Play size={35} />,
+      disabled: false
     },
     {
       onClick: onReset,
       title: "Reset",
-      icon: <Square size={35} />
+      icon: <Square size={35} />,
+      disabled: !hasStarted
     }
   ];
 
@@ -37,8 +46,13 @@ export function TimerControls({
         <button
           key={index}
           onClick={btn.onClick}
+          disabled={btn.disabled}
           title={btn.title}
-          className="cursor-pointer rounded-lg flex items-center gap-2 px-4 py-2 bg-surface border border-primary/50 hover:bg-primary/10 text-text transition-colors"
+          className={`cursor-pointer rounded-lg flex items-center gap-2 px-4 py-2 bg-[#0b0d27]/50 border border-[#7c527c]/50 text-text transition-colors ${
+            btn.disabled
+              ? "opacity-50 cursor-not-allowed"
+              : "hover:bg-primary/10"
+          }`}
         >
           {btn.icon}
         </button>

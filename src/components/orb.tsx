@@ -6,15 +6,34 @@ interface OrbProps {
   hoverIntensity?: number;
   rotateOnHover?: boolean;
   forceHoverState?: boolean;
+  paused?: boolean;
 }
 
 export default function Orb({
   hue = 0,
   hoverIntensity = 0.2,
   rotateOnHover = true,
-  forceHoverState = false
+  forceHoverState = false,
+  paused = false
 }: OrbProps) {
   const ctnDom = useRef<HTMLDivElement>(null);
+  const params = useRef({
+    hue,
+    hoverIntensity,
+    rotateOnHover,
+    forceHoverState,
+    paused
+  });
+
+  useEffect(() => {
+    params.current = {
+      hue,
+      hoverIntensity,
+      rotateOnHover,
+      forceHoverState,
+      paused
+    };
+  }, [hue, hoverIntensity, rotateOnHover, forceHoverState, paused]);
 
   const vert = /* glsl */ `
     precision highp float;
@@ -191,12 +210,16 @@ export default function Orb({
       uniforms: {
         iTime: { value: 0 },
         iResolution: {
-          value: new Vec3(gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height)
+          value: new Vec3(
+            gl.canvas.width,
+            gl.canvas.height,
+            gl.canvas.width / gl.canvas.height
+          )
         },
-        hue: { value: hue },
+        hue: { value: params.current.hue },
         hover: { value: 0 },
         rot: { value: 0 },
-        hoverIntensity: { value: hoverIntensity }
+        hoverIntensity: { value: params.current.hoverIntensity }
       }
     });
 
@@ -250,19 +273,31 @@ export default function Orb({
     container.addEventListener("mouseleave", handleMouseLeave);
 
     let rafId: number;
+    let currentTime = 0;
+
     const update = (t: number) => {
       rafId = requestAnimationFrame(update);
+
       const dt = (t - lastTime) * 0.001;
       lastTime = t;
-      program.uniforms.iTime.value = t * 0.001;
-      program.uniforms.hue.value = hue;
-      program.uniforms.hoverIntensity.value = hoverIntensity;
 
-      const effectiveHover = forceHoverState ? 1 : targetHover;
+      if (!params.current.paused) {
+        currentTime += dt;
+      }
+
+      program.uniforms.iTime.value = currentTime;
+      program.uniforms.hue.value = params.current.hue;
+      program.uniforms.hoverIntensity.value = params.current.hoverIntensity;
+
+      const effectiveHover = params.current.forceHoverState ? 1 : targetHover;
       program.uniforms.hover.value +=
         (effectiveHover - program.uniforms.hover.value) * 0.1;
 
-      if (rotateOnHover && effectiveHover > 0.5) {
+      if (
+        params.current.rotateOnHover &&
+        effectiveHover > 0.5 &&
+        !params.current.paused
+      ) {
         currentRot += dt * rotationSpeed;
       }
       program.uniforms.rot.value = currentRot;
@@ -279,7 +314,7 @@ export default function Orb({
       container.removeChild(gl.canvas);
       gl.getExtension("WEBGL_lose_context")?.loseContext();
     };
-  }, [hue, hoverIntensity, rotateOnHover, forceHoverState]);
+  }, []);
 
   return <div ref={ctnDom} className="w-full h-full" />;
 }

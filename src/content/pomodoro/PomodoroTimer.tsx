@@ -9,6 +9,8 @@ export function PomodoroTimer() {
   const [isActive, setIsActive] = useState(false);
   const [isWorkMode, setIsWorkMode] = useState(true);
   const [completedCycles, setCompletedCycles] = useState(0);
+  const [hasStarted, setHasStarted] = useState(false);
+  const [isTestMode, setIsTestMode] = useState(false);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -22,19 +24,22 @@ export function PomodoroTimer() {
       if (isWorkMode) {
         setCompletedCycles((prev) => prev + 1);
         setIsWorkMode(false);
-        setTimeLeft(1);
+        setTimeLeft(isTestMode ? 1 : 5 * 60);
       } else {
         setIsWorkMode(true);
-        setTimeLeft(1);
+        setTimeLeft(isTestMode ? 1 : 25 * 60);
       }
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, timeLeft, isWorkMode]);
+  }, [isActive, timeLeft, isWorkMode, isTestMode]);
 
   const toggleTimer = () => {
+    if (!isActive && isWorkMode) {
+      setHasStarted(true);
+    }
     setIsActive(!isActive);
   };
 
@@ -42,14 +47,32 @@ export function PomodoroTimer() {
     setIsActive(false);
     setIsWorkMode(true);
     setCompletedCycles(0);
-    setTimeLeft(1);
+    setHasStarted(false);
+    setTimeLeft(isTestMode ? 1 : 25 * 60);
   };
 
   const startRest = () => {
     setIsActive(false);
     setIsWorkMode(false);
-    setTimeLeft(1);
+    setTimeLeft(isTestMode ? 1 : 5 * 60);
     setIsActive(true);
+  };
+
+  const startWork = () => {
+    setIsActive(false);
+    setIsWorkMode(true);
+    setHasStarted(true);
+    setTimeLeft(isTestMode ? 1 : 25 * 60);
+    setIsActive(true);
+  };
+
+  const toggleTestMode = () => {
+    setIsTestMode(!isTestMode);
+    if (!isTestMode) {
+      setTimeLeft(1);
+    } else {
+      setTimeLeft(isWorkMode ? 25 * 60 : 5 * 60);
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -61,18 +84,34 @@ export function PomodoroTimer() {
   };
 
   return (
-    <div className="flex flex-col items-center gap-20 w-full max-w-2xl mx-auto">
-      <div className="bg-surface/93 rounded-full shadow-lg border-5 border-b-background-secondary flex flex-col items-center justify-center transition-all duration-300 hover:shadow-[0_0_30px_rgba(106,48,255,0.2)]">
+    <div className="flex flex-col items-center gap-15 w-full max-w-2xl mx-auto">
+      <button
+        onClick={toggleTestMode}
+        className={`mt-4 px-4 py-2 rounded text-xs font-mono transition-colors ${
+          isTestMode
+            ? "bg-red-500/20 text-red-300 hover:bg-red-500/30"
+            : "bg-white/5 text-white/30 hover:text-white hover:bg-white/10"
+        }`}
+      >
+        {isTestMode ? "TEST MODE ON (1s)" : "TEST MODE OFF"}
+      </button>
+
+      <div className="bg-[#0b0d27]/80 rounded-full shadow-lg  flex flex-col items-center justify-center transition-all duration-300 hover:shadow-[0_0_30px_rgba(106,48,255,0.2)]">
         <div className="relative w-110 h-110 rounded-full flex items-center justify-center">
           {Array.from({ length: completedCycles }).map((_, i) => (
             <CycleStar key={i} index={i} />
           ))}
 
-          <div className="absolute inset-0 pointer-events-none">
+          <div
+            className={`absolute inset-0 pointer-events-none transition-opacity duration-700 ${
+              hasStarted ? "opacity-100" : "opacity-0"
+            }`}
+          >
             <Orb
               hoverIntensity={10}
               rotateOnHover={true}
-              hue={isActive ? 0 : 200}
+              hue={isWorkMode ? 0 : 45}
+              paused={!isActive}
             />
           </div>
 
@@ -81,7 +120,11 @@ export function PomodoroTimer() {
               particleCount={completedCycles * 30}
               particleSpread={10}
               speed={0.1}
-              particleColors={["#6A30FF", "#D6B8FF", "#ffffff"]}
+              particleColors={
+                isWorkMode
+                  ? ["#6A30FF", "#D6B8FF", "#ffffff"]
+                  : ["#FFD700", "#FFA500", "#ffffff"]
+              }
               moveParticlesOnHover={false}
               alphaParticles={true}
               particleBaseSize={100}
@@ -100,9 +143,12 @@ export function PomodoroTimer() {
 
       <TimerControls
         isActive={isActive}
+        isWorkMode={isWorkMode}
+        hasStarted={hasStarted}
         onToggle={toggleTimer}
         onReset={resetTimer}
         onRest={startRest}
+        onWork={startWork}
       />
     </div>
   );
