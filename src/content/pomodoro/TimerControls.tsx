@@ -48,7 +48,7 @@ export function TimerControls({
           onClick={btn.onClick}
           disabled={btn.disabled}
           title={btn.title}
-          className={`cursor-pointer rounded-lg flex items-center gap-2 px-4 py-2 bg-[#0b0d27]/50 border border-[#7c527c]/50 text-text transition-colors ${
+          className={`cursor-pointer rounded-lg flex items-center gap-2 px-4 py-2 bg-[#0b0d27]/50 border  text-text transition-colors ${
             btn.disabled
               ? "opacity-50 cursor-not-allowed"
               : "hover:bg-primary/10"

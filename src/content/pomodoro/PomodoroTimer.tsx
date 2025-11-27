@@ -96,7 +96,7 @@ export function PomodoroTimer() {
         {isTestMode ? "TEST MODE ON (1s)" : "TEST MODE OFF"}
       </button>
 
-      <div className="bg-[#0b0d27]/80 rounded-full shadow-lg  flex flex-col items-center justify-center transition-all duration-300 hover:shadow-[0_0_30px_rgba(106,48,255,0.2)]">
+      <div className="bg-[#0b0d27]/80 rounded-full shadow-lg border-2   flex flex-col items-center justify-center transition-all duration-300 hover:shadow-[0_0_30px_rgba(106,48,255,0.2)]">
         <div className="relative w-110 h-110 rounded-full flex items-center justify-center">
           {Array.from({ length: completedCycles }).map((_, i) => (
             <CycleStar key={i} index={i} />

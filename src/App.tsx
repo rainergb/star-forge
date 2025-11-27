@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { PomodoroTimer } from "@/content/pomodoro/PomodoroTimer";
+import { TopBar } from "@/components/top-bar";
 import bgVideo from "@/assets/bg.mp4";
 
 function App() {
@@ -15,14 +16,16 @@ function App() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden flex items-center justify-center">
-      <video
+      {/* <video
         autoPlay
         loop
         muted
         className="absolute top-0 left-0 w-full h-full object-cover z-0 opacity-50"
       >
         <source src={bgVideo} type="video/mp4" />
-      </video>
+      </video> */}
+
+      <TopBar />
 
       <div className="relative z-10 container max-w-[2000px] max-h-[2000px] w-full mx-auto p-5">
         <PomodoroTimer />
