@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { PomodoroTimer } from "@/content/pomodoro/PomodoroTimer";
+import { PomodoroTimer } from "@/content/pomodoro/pomodoro-timer";
 import { TopBar } from "@/components/top-bar";
-import bgVideo from "@/assets/bg.mp4";
+// import bgVideo from "@/assets/bg.mp4";
 
 function App() {
   const [electronVersion, setElectronVersion] =

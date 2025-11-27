@@ -6,7 +6,7 @@ export default {
       colors: {
         // Background / Base
         background: {
-          DEFAULT: "#0A0F26",
+          DEFAULT: "#0b0d27",
           secondary: "#111832"
         },
         surface: "#1A2447",

@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from "react";
 import Orb from "@/components/orb";
 import { CycleStar } from "@/components/cycle-star";
 import Particles from "@/components/particles";
-import { TimerControls } from "./TimerControls";
+import { TimerControls } from "./timer-controls";
 
 export function PomodoroTimer() {
   const [timeLeft, setTimeLeft] = useState(25 * 60);
@@ -12,15 +12,30 @@ export function PomodoroTimer() {
   const [hasStarted, setHasStarted] = useState(false);
   const [isTestMode, setIsTestMode] = useState(false);
 
+  const endTimeRef = useRef<number | null>(null);
+  const isTickingRef = useRef(false);
+
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
     if (isActive && timeLeft > 0) {
+      if (!isTickingRef.current || !endTimeRef.current) {
+        endTimeRef.current = Date.now() + timeLeft * 1000;
+      }
+      isTickingRef.current = false;
+
       interval = setInterval(() => {
-        setTimeLeft((prevTime) => prevTime - 1);
-      }, 1000);
+        if (endTimeRef.current) {
+          const now = Date.now();
+          const diff = Math.ceil((endTimeRef.current - now) / 1000);
+
+          isTickingRef.current = true;
+          setTimeLeft(diff > 0 ? diff : 0);
+        }
+      }, 100);
     } else if (timeLeft === 0) {
       setIsActive(false);
+      endTimeRef.current = null;
       if (isWorkMode) {
         setCompletedCycles((prev) => prev + 1);
         setIsWorkMode(false);
@@ -29,6 +44,8 @@ export function PomodoroTimer() {
         setIsWorkMode(true);
         setTimeLeft(isTestMode ? 1 : 25 * 60);
       }
+    } else {
+      endTimeRef.current = null;
     }
 
     return () => {
@@ -49,12 +66,14 @@ export function PomodoroTimer() {
     setCompletedCycles(0);
     setHasStarted(false);
     setTimeLeft(isTestMode ? 1 : 25 * 60);
+    endTimeRef.current = null;
   };
 
   const startRest = () => {
     setIsActive(false);
     setIsWorkMode(false);
     setTimeLeft(isTestMode ? 1 : 5 * 60);
+    endTimeRef.current = null;
     setIsActive(true);
   };
 
@@ -63,11 +82,13 @@ export function PomodoroTimer() {
     setIsWorkMode(true);
     setHasStarted(true);
     setTimeLeft(isTestMode ? 1 : 25 * 60);
+    endTimeRef.current = null;
     setIsActive(true);
   };
 
   const toggleTestMode = () => {
     setIsTestMode(!isTestMode);
+    endTimeRef.current = null;
     if (!isTestMode) {
       setTimeLeft(1);
     } else {
@@ -96,7 +117,10 @@ export function PomodoroTimer() {
         {isTestMode ? "TEST MODE ON (1s)" : "TEST MODE OFF"}
       </button>
 
-      <div className="bg-[#0b0d27]/80 rounded-full shadow-lg border-2   flex flex-col items-center justify-center transition-all duration-300 hover:shadow-[0_0_30px_rgba(106,48,255,0.2)]">
+      <div 
+        onClick={toggleTimer}
+        className="bg-background/80 rounded-full shadow-lg border-2 cursor-pointer flex flex-col items-center justify-center transition-all duration-300 hover:shadow-[0_0_30px_rgba(106,48,255,0.2)]"
+      >
         <div className="relative w-110 h-110 rounded-full flex items-center justify-center">
           {Array.from({ length: completedCycles }).map((_, i) => (
             <CycleStar key={i} index={i} />
