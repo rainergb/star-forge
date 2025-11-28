@@ -19,6 +19,10 @@ export default {
           glow: "#D6B8FF"
         },
 
+        error: {
+          DEFAULT: "#FF4D6D"
+        },
+
         // Texto
         text: "#E8E8FF"
       },
@@ -41,5 +45,5 @@ export default {
       }
     }
   },
-  plugins: []
+  plugins: [require("tailwindcss-animate")]
 };

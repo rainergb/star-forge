@@ -1,39 +1,75 @@
-import { app, BrowserWindow } from 'electron'
-import path from 'path'
+import { app, BrowserWindow, ipcMain } from "electron";
+import path from "path";
+import fs from "fs";
 
-const isDev = process.env.NODE_ENV === 'development'
+const isDev = process.env.NODE_ENV === "development";
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
-      nodeIntegration: false,
-    },
-  })
+      nodeIntegration: false
+    }
+  });
 
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173')
-    mainWindow.webContents.openDevTools()
+    mainWindow.loadURL("http://localhost:5173");
+    mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
+    mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
   }
 }
 
 app.whenReady().then(() => {
-  createWindow()
+  createWindow();
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow()
+  ipcMain.handle("api-request", async (event, { method, url, body }) => {
+    if (url === "/config") {
+      const dataPath = path.join(process.cwd(), "src", "data", "config.txt");
+
+      if (method === "GET") {
+        try {
+          if (fs.existsSync(dataPath)) {
+            const data = fs.readFileSync(dataPath, "utf-8");
+            return { success: true, data: JSON.parse(data) };
+          }
+          return { success: true, data: null };
+        } catch (error) {
+          console.error("Failed to get config:", error);
+          return { success: false, error: (error as Error).message };
+        }
+      }
+
+      if (method === "PUT") {
+        try {
+          const dir = path.dirname(dataPath);
+          if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+          }
+          fs.writeFileSync(dataPath, JSON.stringify(body, null, 2));
+          return { success: true };
+        } catch (error) {
+          console.error("Failed to save config:", error);
+          return { success: false, error: (error as Error).message };
+        }
+      }
     }
-  })
-})
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
+    return { success: false, error: "Route not found" };
+  });
+
+  app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
+});
+
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
   }
-})
+});

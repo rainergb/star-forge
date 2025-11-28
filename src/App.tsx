@@ -1,17 +1,24 @@
 import { useState, useEffect } from 'react'
 import { PomodoroTimer } from "@/content/pomodoro/pomodoro-timer";
 import { TopBar } from "@/components/top-bar";
+import { useToast } from "@/hooks/use-toast";
 // import bgVideo from "@/assets/bg.mp4";
 
 function App() {
+  const { toast } = useToast();
   const [electronVersion, setElectronVersion] =
     useState<string>("Carregando...");
-  console.log(electronVersion);
 
   useEffect(() => {
     if (window.electronAPI) {
       setElectronVersion(window.electronAPI.getAppVersion());
     }
+
+    toast({
+      title: "System Ready",
+      description: "Star Forge is ready.",
+      duration: 3000
+    });
   }, []);
 
   return (

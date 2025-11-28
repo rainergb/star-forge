@@ -1,8 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Settings } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle
+} from "@/components/ui/sheet";
 import { Accordion } from "@/components/ui/accordion";
-import { TimerConfig, TimerSettings } from "./timer-config";
+import { TimerConfig } from "./timer-config";
+import { useConfig } from "@/hooks/use-config";
+import { Toaster } from "@/components/ui/toaster";
 
 interface SettingsModalProps {
   open: boolean;
@@ -11,15 +18,23 @@ interface SettingsModalProps {
 
 export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const [openSection, setOpenSection] = useState<string | null>("timer");
+  const { settings, saveSettings } = useConfig();
 
-  const [settings, setSettings] = useState<TimerSettings>({
-    pomodoro: 25,
-    shortBreak: 5,
-    longBreak: 15,
-    autoStartBreaks: false,
-    autoStartPomodoros: false,
-    longBreakInterval: 4,
-  });
+  const [localSettings, setLocalSettings] = useState(settings);
+
+  useEffect(() => {
+    setLocalSettings(settings);
+  }, [settings]);
+
+  useEffect(() => {
+    const saveTimer = setTimeout(() => {
+      if (JSON.stringify(localSettings) !== JSON.stringify(settings)) {
+        saveSettings(localSettings);
+      }
+    }, 500);
+
+    return () => clearTimeout(saveTimer);
+  }, [localSettings, saveSettings, settings]);
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section);
@@ -34,16 +49,19 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
             Settings
           </SheetTitle>
         </SheetHeader>
-        
+
         <div className="py-6">
           <Accordion className="w-full">
-            <TimerConfig 
+            <TimerConfig
               isOpen={openSection === "timer"}
               onToggle={() => toggleSection("timer")}
-              settings={settings}
-              onSettingsChange={setSettings}
+              settings={localSettings}
+              onSettingsChange={setLocalSettings}
             />
           </Accordion>
+        </div>
+        <div className="absolute top-2 right-0 mb-4 mr-20">
+          <Toaster />
         </div>
       </SheetContent>
     </Sheet>
