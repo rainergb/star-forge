@@ -14,23 +14,58 @@ export function usePomodoroTimer() {
   const [isTestMode, setIsTestMode] = useState(false);
 
   const endTimeRef = useRef<number | null>(null);
+  const prevPomodoroRef = useRef(settings.pomodoro);
+  const prevShortBreakRef = useRef(settings.shortBreak);
+  const prevLongBreakRef = useRef(settings.longBreak);
 
-  const getTimeForMode = useCallback((targetMode: TimerMode, testMode: boolean): number => {
-    if (testMode) return 1;
-    
-    switch (targetMode) {
-      case "work":
-        return settings.pomodoro * 60;
-      case "shortBreak":
-        return settings.shortBreak * 60;
-      case "longBreak":
-        return settings.longBreak * 60;
+  const getTimeForMode = useCallback(
+    (targetMode: TimerMode, testMode: boolean): number => {
+      if (testMode) return 1;
+
+      switch (targetMode) {
+        case "work":
+          return settings.pomodoro * 60;
+        case "shortBreak":
+          return settings.shortBreak * 60;
+        case "longBreak":
+          return settings.longBreak * 60;
+      }
+    },
+    [settings.pomodoro, settings.shortBreak, settings.longBreak]
+  );
+
+  const getNextBreakMode = useCallback(
+    (cycles: number): TimerMode => {
+      return cycles % settings.longBreakInterval === 0
+        ? "longBreak"
+        : "shortBreak";
+    },
+    [settings.longBreakInterval]
+  );
+
+  useEffect(() => {
+    const settingsChanged =
+      prevPomodoroRef.current !== settings.pomodoro ||
+      prevShortBreakRef.current !== settings.shortBreak ||
+      prevLongBreakRef.current !== settings.longBreak;
+
+    if (settingsChanged && !hasStarted) {
+      setTimeLeft(getTimeForMode(mode, isTestMode));
+      endTimeRef.current = null;
     }
-  }, [settings.pomodoro, settings.shortBreak, settings.longBreak]);
 
-  const getNextBreakMode = useCallback((cycles: number): TimerMode => {
-    return cycles % settings.longBreakInterval === 0 ? "longBreak" : "shortBreak";
-  }, [settings.longBreakInterval]);
+    prevPomodoroRef.current = settings.pomodoro;
+    prevShortBreakRef.current = settings.shortBreak;
+    prevLongBreakRef.current = settings.longBreak;
+  }, [
+    settings.pomodoro,
+    settings.shortBreak,
+    settings.longBreak,
+    mode,
+    isTestMode,
+    hasStarted,
+    getTimeForMode
+  ]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -78,17 +113,6 @@ export function usePomodoroTimer() {
       if (interval) clearInterval(interval);
     };
   }, [isActive, timeLeft, mode, completedCycles, isTestMode, settings.autoStartBreaks, settings.autoStartPomodoros, getTimeForMode, getNextBreakMode]);
-
-  useEffect(() => {
-    if (!isActive) {
-      setTimeLeft(getTimeForMode(mode, isTestMode));
-      endTimeRef.current = null;
-    } else {
-      const newTime = getTimeForMode(mode, isTestMode);
-      setTimeLeft(newTime);
-      endTimeRef.current = Date.now() + newTime * 1000;
-    }
-  }, [settings.pomodoro, settings.shortBreak, settings.longBreak, mode, isTestMode, isActive, getTimeForMode]);
 
   const toggleTimer = useCallback(() => {
     if (!isActive && mode === "work") {

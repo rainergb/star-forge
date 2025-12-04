@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Settings } from "lucide-react";
 import {
   Sheet,
@@ -19,22 +19,25 @@ interface SettingsModalProps {
 export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const [openSection, setOpenSection] = useState<string | null>("timer");
   const { settings, saveSettings } = useConfig();
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [localSettings, setLocalSettings] = useState(settings);
+  const handleSettingsChange = (newSettings: typeof settings) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
 
-  useEffect(() => {
-    setLocalSettings(settings);
-  }, [settings]);
-
-  useEffect(() => {
-    const saveTimer = setTimeout(() => {
-      if (JSON.stringify(localSettings) !== JSON.stringify(settings)) {
-        saveSettings(localSettings);
-      }
+    saveTimeoutRef.current = setTimeout(() => {
+      saveSettings(newSettings);
     }, 500);
+  };
 
-    return () => clearTimeout(saveTimer);
-  }, [localSettings, saveSettings, settings]);
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section);
@@ -55,8 +58,8 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
             <TimerConfig
               isOpen={openSection === "timer"}
               onToggle={() => toggleSection("timer")}
-              settings={localSettings}
-              onSettingsChange={setLocalSettings}
+              settings={settings}
+              onSettingsChange={handleSettingsChange}
             />
           </Accordion>
         </div>

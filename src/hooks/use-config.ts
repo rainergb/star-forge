@@ -1,9 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect } from "react";
 import { configService } from "@/services/config-service";
 import { TimerSettings } from "@/content/config/timer-config";
 import { useToast } from "@/hooks/use-toast";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 
-const CONFIG_QUERY_KEY = ["config"];
+const STORAGE_KEY = "star-forge-settings";
 
 const defaultSettings: TimerSettings = {
   pomodoro: 25,
@@ -11,72 +12,73 @@ const defaultSettings: TimerSettings = {
   longBreak: 15,
   autoStartBreaks: false,
   autoStartPomodoros: false,
-  longBreakInterval: 4,
+  longBreakInterval: 4
 };
 
 export function useConfig() {
-  const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { value: settings, setValue: setSettings } =
+    useLocalStorage<TimerSettings>(STORAGE_KEY, defaultSettings);
 
-  const { data: settings, isLoading } = useQuery({
-    queryKey: CONFIG_QUERY_KEY,
-    queryFn: async () => {
-      const data = await configService.getConfig();
-      if (!data) return defaultSettings;
-
-      return {
-        pomodoro: Math.floor(data.stageSeconds[0] / 60),
-        shortBreak: Math.floor(data.stageSeconds[1] / 60),
-        longBreak: Math.floor(data.stageSeconds[2] / 60),
-        autoStartBreaks: data.autoStartEnabled,
-        autoStartPomodoros: data.autoStartPomodoroEnabled,
-        longBreakInterval: data.longBreakInterval,
-      } as TimerSettings;
-    },
-    initialData: defaultSettings,
-  });
-
-  const { mutate: saveSettings, isPending: isSaving } = useMutation({
-    mutationFn: async (newSettings: TimerSettings) => {
+  useEffect(() => {
+    const loadFromFile = async () => {
       try {
-        // Add timeout to detect hanging requests
-        const timeout = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Request timed out after 5s")), 5000)
-        );
+        const data = await configService.getConfig();
+        if (data) {
+          const fileSettings: TimerSettings = {
+            pomodoro: Math.floor(data.stageSeconds[0] / 60),
+            shortBreak: Math.floor(data.stageSeconds[1] / 60),
+            longBreak: Math.floor(data.stageSeconds[2] / 60),
+            autoStartBreaks: data.autoStartEnabled,
+            autoStartPomodoros: data.autoStartPomodoroEnabled,
+            longBreakInterval: data.longBreakInterval
+          };
+          setSettings(fileSettings);
+        }
+      } catch (error) {}
+    };
 
-        const result = await Promise.race([
-          configService.saveConfig(newSettings),
-          timeout,
-        ]);
+    loadFromFile();
+  }, []);
 
-        return result;
-      } catch (e) {
-        throw e;
+  const saveSettings = useCallback(
+    async (newSettings: TimerSettings) => {
+      try {
+        setSettings(newSettings);
+
+        if (window.electronAPI) {
+          const timeout = new Promise((_, reject) =>
+            setTimeout(
+              () => reject(new Error("Request timed out after 5s")),
+              5000
+            )
+          );
+
+          await Promise.race([configService.saveConfig(newSettings), timeout]);
+        }
+
+        toast({
+          title: "Settings saved",
+          description: "Your changes have been successfully saved.",
+          duration: 2000,
+          variant: "success"
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to save settings to file.",
+          variant: "destructive",
+          duration: 2000
+        });
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: CONFIG_QUERY_KEY });
-      toast({
-        title: "Settings saved",
-        description: "Your changes have been successfully saved.",
-        duration: 2000,
-        variant: "success",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to save settings.",
-        variant: "destructive",
-        duration: 2000,
-      });
-    },
-  });
+    [setSettings, toast]
+  );
 
   return {
     settings,
-    isLoading,
+    isLoading: false,
     saveSettings,
-    isSaving
+    isSaving: false
   };
 }
