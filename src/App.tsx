@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { PomodoroTimer } from "@/content/pomodoro/pomodoro-timer";
 import { TopBar } from "@/components/top-bar";
 import { useToast } from "@/hooks/use-toast";
-// import bgVideo from "@/assets/bg.mp4";
+import { usePersonalize } from "@/hooks/use-personalize";
+import bgVideo from "@/assets/bg.mp4";
 
 function App() {
   const { toast } = useToast();
+  const { settings } = usePersonalize();
   const [electronVersion, setElectronVersion] =
     useState<string>("Carregando...");
 
@@ -23,14 +25,16 @@ function App() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden flex items-center justify-center">
-      {/* <video
-        autoPlay
-        loop
-        muted
-        className="absolute top-0 left-0 w-full h-full object-cover z-0 opacity-50"
-      >
-        <source src={bgVideo} type="video/mp4" />
-      </video> */}
+      {settings.showBg && (
+        <video
+          autoPlay
+          loop
+          muted
+          className="absolute top-0 left-0 w-full h-full object-cover z-0 opacity-50"
+        >
+          <source src={bgVideo} type="video/mp4" />
+        </video>
+      )}
 
       <TopBar />
 

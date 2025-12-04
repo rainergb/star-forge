@@ -1,10 +1,12 @@
 import { usePomodoroTimer } from "./use-pomodoro-timer";
+import { usePersonalize } from "@/hooks/use-personalize";
 import Orb from "@/components/orb";
 import { CycleStar } from "@/components/cycle-star";
 import Particles from "@/components/particles";
 import { TimerControls } from "./timer-controls";
 
 export function PomodoroTimer() {
+  const { settings } = usePersonalize();
   const {
     timeLeft,
     isActive,
@@ -35,16 +37,18 @@ export function PomodoroTimer() {
 
   return (
     <div className="flex flex-col items-center gap-15 w-full max-w-2xl mx-auto">
-      <button
-        onClick={toggleTestMode}
-        className={`mt-4 px-4 py-2 rounded text-xs font-mono transition-colors ${
-          isTestMode
-            ? "bg-red-500/20 text-red-300 hover:bg-red-500/30"
-            : "bg-white/5 text-white/30 hover:text-white hover:bg-white/10"
-        }`}
-      >
-        {isTestMode ? "TEST MODE ON (1s)" : "TEST MODE OFF"}
-      </button>
+      {settings.showTest && (
+        <button
+          onClick={toggleTestMode}
+          className={`mt-4 px-4 py-2 rounded text-xs font-mono transition-colors ${
+            isTestMode
+              ? "bg-red-500/20 text-red-300 hover:bg-red-500/30"
+              : "bg-white/5 text-white/30 hover:text-white hover:bg-white/10"
+          }`}
+        >
+          {isTestMode ? "TEST MODE ON (1s)" : "TEST MODE OFF"}
+        </button>
+      )}
 
       <div
         onClick={toggleTimer}
