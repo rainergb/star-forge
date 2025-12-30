@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { PomodoroTimer } from "@/content/pomodoro/pomodoro-timer";
 import { TopBar } from "@/components/top-bar";
+import { AppDock } from "@/content/dock/app-dock";
 import { useToast } from "@/hooks/use-toast";
 import { usePersonalize } from "@/hooks/use-personalize";
 import bgVideo from "@/assets/bg.mp4";
@@ -13,6 +14,7 @@ function App() {
 
   useEffect(() => {
     if (window.electronAPI) {
+      console.log(electronVersion);
       setElectronVersion(window.electronAPI.getAppVersion());
     }
 
@@ -41,6 +43,8 @@ function App() {
       <div className="relative z-10 container max-w-[2000px] max-h-[2000px] w-full mx-auto p-5">
         <PomodoroTimer />
       </div>
+
+      <AppDock />
     </div>
   );
 }

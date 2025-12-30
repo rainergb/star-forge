@@ -1,11 +1,32 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useConfig } from "@/hooks/use-config";
+import { usePersonalize } from "@/hooks/use-personalize";
+import notificationSound from "@/assets/notification.mp3";
 
 export type TimerMode = "work" | "shortBreak" | "longBreak";
 
 export function usePomodoroTimer() {
   const { settings } = useConfig();
-  
+  const { settings: personalizeSettings } = usePersonalize();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    audioRef.current = new Audio(notificationSound);
+  }, []);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = personalizeSettings.notificationVolume / 100;
+    }
+  }, [personalizeSettings.notificationVolume]);
+
+  const playNotification = useCallback(() => {
+    if (audioRef.current && personalizeSettings.notificationSound) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(() => {});
+    }
+  }, [personalizeSettings.notificationSound]);
+
   const [timeLeft, setTimeLeft] = useState(settings.pomodoro * 60);
   const [isActive, setIsActive] = useState(false);
   const [mode, setMode] = useState<TimerMode>("work");
@@ -85,22 +106,23 @@ export function usePomodoroTimer() {
     } else if (timeLeft === 0) {
       setIsActive(false);
       endTimeRef.current = null;
-      
+      playNotification();
+
       if (mode === "work") {
         const newCycles = completedCycles + 1;
         setCompletedCycles(newCycles);
-        
+
         const nextMode = getNextBreakMode(newCycles);
         setMode(nextMode);
         setTimeLeft(getTimeForMode(nextMode, isTestMode));
-        
+
         if (settings.autoStartBreaks) {
           setIsActive(true);
         }
       } else {
         setMode("work");
         setTimeLeft(getTimeForMode("work", isTestMode));
-        
+
         if (settings.autoStartPomodoros) {
           setIsActive(true);
         }
@@ -112,7 +134,17 @@ export function usePomodoroTimer() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, timeLeft, mode, completedCycles, isTestMode, settings.autoStartBreaks, settings.autoStartPomodoros, getTimeForMode, getNextBreakMode]);
+  }, [
+    isActive,
+    timeLeft,
+    mode,
+    completedCycles,
+    isTestMode,
+    settings.autoStartBreaks,
+    settings.autoStartPomodoros,
+    getTimeForMode,
+    getNextBreakMode
+  ]);
 
   const toggleTimer = useCallback(() => {
     if (!isActive && mode === "work") {
@@ -158,7 +190,9 @@ export function usePomodoroTimer() {
   const formatTime = useCallback((seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    return `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
   }, []);
 
   return {

@@ -20,7 +20,7 @@ interface SettingsModalProps {
 
 export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const [openSections, setOpenSections] = useState<Set<string>>(
-    new Set(["timer"])
+    new Set(["timer", "personalize"])
   );
   const { settings: timerSettings, saveSettings: saveTimerSettings } =
     useConfig();
