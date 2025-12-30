@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { SettingsModal } from "@/content/config/settings";
 

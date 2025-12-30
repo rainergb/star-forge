@@ -19,15 +19,31 @@
   ],
   "author": "",
   "license": "ISC",
+  "build": {
+    "appId": "com.starforge.app",
+    "productName": "Star Forge",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  },
   "dependencies": {
     "@rollup/rollup-win32-x64-msvc": "^4.53.3",
     "@tanstack/react-query": "^5.90.11",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
     "lucide-react": "^0.555.0",
     "motion": "^12.23.12",
     "ogl": "^1.0.11",
     "react": "^18.2.0",
+    "react-day-picker": "^8.10.1",
     "react-dom": "^18.2.0",
     "tailwind-merge": "^3.4.0"
   },
