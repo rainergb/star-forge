@@ -1,1 +1,1 @@
-export type AppView = "pomodoro" | "tasks";
+export type AppView = "pomodoro" | "tasks" | "stats";

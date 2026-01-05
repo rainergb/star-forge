@@ -1,18 +1,70 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Circle, CheckCircle2, Star, CalendarCheck, CalendarDays, Calendar, Trash2, ChevronLeft } from "lucide-react";
+import {
+  Circle,
+  CheckCircle2,
+  Star,
+  CalendarCheck,
+  CalendarDays,
+  Calendar,
+  Trash2,
+  ChevronLeft,
+  Bell,
+  Repeat,
+  Timer,
+  Clock,
+  Focus
+} from "lucide-react";
 import { Task } from "@/types/task.types";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+import { enUS } from "date-fns/locale";
+import { format, isToday, isTomorrow, isPast } from "date-fns";
+import { usePersonalize } from "@/hooks/use-personalize";
+import successSound from "@/assets/sucess.mp3";
+
+const formatDueDate = (timestamp: number): string => {
+  const date = new Date(timestamp);
+  if (isToday(date)) return "Today";
+  if (isTomorrow(date)) return "Tomorrow";
+  return format(date, "MM/dd");
+};
+
+const formatReminderDate = (timestamp: number): string => {
+  const date = new Date(timestamp);
+  if (isToday(date)) return "Today";
+  if (isTomorrow(date)) return "Tomorrow";
+  return format(date, "MM/dd");
+};
+
+const getRepeatLabel = (repeat: string): string => {
+  const labels: Record<string, string> = {
+    daily: "Daily",
+    weekly: "Weekly",
+    monthly: "Monthly",
+    yearly: "Yearly"
+  };
+  return labels[repeat] || repeat;
+};
+
+const formatTimeSpent = (seconds: number): string => {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (hours > 0) return `${hours}h${minutes > 0 ? ` ${minutes}m` : ""}`;
+  if (minutes > 0) return `${minutes}m`;
+  return "";
+};
 
 interface TaskItemProps {
   task: Task;
+  isActive?: boolean;
   onToggleCompleted: (id: string) => void;
   onToggleFavorite: (id: string) => void;
   onSetDueDate: (id: string, date: number | null) => void;
   onRemoveTask: (id: string) => void;
   onClick: () => void;
+  onFocus?: () => void;
 }
 
 interface ContextMenuPosition {
@@ -20,12 +72,47 @@ interface ContextMenuPosition {
   y: number;
 }
 
-export function TaskItem({ task, onToggleCompleted, onToggleFavorite, onSetDueDate, onRemoveTask, onClick }: TaskItemProps) {
-  const [contextMenu, setContextMenu] = useState<ContextMenuPosition | null>(null);
+export function TaskItem({
+  task,
+  isActive,
+  onToggleCompleted,
+  onToggleFavorite,
+  onSetDueDate,
+  onRemoveTask,
+  onClick,
+  onFocus
+}: TaskItemProps) {
+  const [contextMenu, setContextMenu] = useState<ContextMenuPosition | null>(
+    null
+  );
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     task.dueDate ? new Date(task.dueDate) : undefined
   );
+
+  const { settings: personalizeSettings } = usePersonalize();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    audioRef.current = new Audio(successSound);
+    audioRef.current.volume =
+      (personalizeSettings.notificationVolume ?? 50) / 100;
+  }, [personalizeSettings.notificationVolume]);
+
+  const playSuccessSound = () => {
+    if (audioRef.current && personalizeSettings.notificationSound) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(() => {});
+    }
+  };
+
+  const handleToggleCompleted = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!task.completed) {
+      playSuccessSound();
+    }
+    onToggleCompleted(task.id);
+  };
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -74,14 +161,14 @@ export function TaskItem({ task, onToggleCompleted, onToggleFavorite, onSetDueDa
       <div
         onClick={onClick}
         onContextMenu={handleContextMenu}
-        className="flex items-center justify-between px-4 py-3 bg-background/50 border border-white/10 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+        className={cn(
+          "flex items-center justify-between px-4 py-3 bg-background/50 border rounded-lg hover:bg-white/5 transition-colors cursor-pointer",
+          isActive ? "border-primary/50 bg-primary/5" : "border-white/10"
+        )}
       >
         <div className="flex items-center gap-3">
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleCompleted(task.id);
-            }}
+            onClick={handleToggleCompleted}
             className="cursor-pointer text-white/70 hover:text-white transition-colors"
           >
             {task.completed ? (
@@ -99,124 +186,182 @@ export function TaskItem({ task, onToggleCompleted, onToggleFavorite, onSetDueDa
             >
               {task.title}
             </span>
-            <span className="text-xs text-white/40">{task.category}</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-white/40">{task.category}</span>
+              {task.dueDate && (
+                <span
+                  className={`flex items-center gap-1 text-xs ${
+                    isPast(new Date(task.dueDate)) && !task.completed
+                      ? "text-red-400"
+                      : "text-white/50"
+                  }`}
+                >
+                  <Calendar className="w-3 h-3" />
+                  {formatDueDate(task.dueDate)}
+                </span>
+              )}
+              {task.reminder && (
+                <span className="flex items-center gap-1 text-xs text-[#1A7FFF]">
+                  <Bell className="w-3 h-3" />
+                  {formatReminderDate(task.reminder.date)}
+                </span>
+              )}
+              {task.repeat && (
+                <span className="flex items-center gap-1 text-xs text-[#B57CFF]">
+                  <Repeat className="w-3 h-3" />
+                  {getRepeatLabel(task.repeat)}
+                </span>
+              )}
+              {task.estimatedPomodoros && task.estimatedPomodoros > 0 && (
+                <span className="flex items-center gap-1 text-xs text-[#B57CFF]">
+                  <Timer className="w-3 h-3" />
+                  {task.completedPomodoros ?? 0}/{task.estimatedPomodoros}
+                </span>
+              )}
+              {task.totalTimeSpent > 0 && (
+                <span className="flex items-center gap-1 text-xs text-[#1A7FFF]">
+                  <Clock className="w-3 h-3" />
+                  {formatTimeSpent(task.totalTimeSpent)}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleFavorite(task.id);
-          }}
-          className="cursor-pointer text-white/30 hover:text-yellow-400 transition-colors"
-        >
-          <Star
-            className={`w-5 h-5 ${
-              task.favorite ? "fill-yellow-400 text-yellow-400" : ""
-            }`}
-          />
-        </button>
+        <div className="flex items-center gap-2">
+          {onFocus && !task.completed && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onFocus();
+              }}
+              className={cn(
+                "cursor-pointer transition-colors",
+                isActive
+                  ? "text-primary hover:text-primary/80"
+                  : "text-white/30 hover:text-primary"
+              )}
+              title={isActive ? "Remove focus" : "Set focus"}
+            >
+              <Focus className="w-5 h-5" />
+            </button>
+          )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavorite(task.id);
+            }}
+            className="cursor-pointer text-white/30 hover:text-[#D6B8FF] transition-colors"
+          >
+            <Star
+              className={`w-5 h-5 ${
+                task.favorite ? "fill-[#D6B8FF] text-[#D6B8FF]" : ""
+              }`}
+            />
+          </button>
+        </div>
       </div>
 
       {/* Context Menu */}
-      {contextMenu && createPortal(
-        <>
-          <div
-            className="fixed inset-0 z-50"
-            onClick={closeContextMenu}
-          />
-          <div
-            className="fixed z-50 min-w-[200px] bg-[#2d2d2d] border border-white/10 rounded-lg shadow-xl py-1 animate-in fade-in-0 zoom-in-95"
-            style={{
-              left: contextMenu.x,
-              top: contextMenu.y,
-            }}
-          >
-            <button
-              onClick={handleSetDueToday}
-              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
+      {contextMenu &&
+        createPortal(
+          <>
+            <div className="fixed inset-0 z-50" onClick={closeContextMenu} />
+            <div
+              className="fixed z-50 min-w-[200px] bg-[#2d2d2d] border border-white/10 rounded-lg shadow-xl py-1 animate-in fade-in-0 zoom-in-95"
+              style={{
+                left: contextMenu.x,
+                top: contextMenu.y
+              }}
             >
-              <CalendarCheck className="w-4 h-4 text-white/60" />
-              Concluir hoje
-            </button>
-            <button
-              onClick={handleSetDueTomorrow}
-              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
-            >
-              <CalendarDays className="w-4 h-4 text-white/60" />
-              Concluir amanhã
-            </button>
-            <button
-              onClick={handleChooseDate}
-              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
-            >
-              <Calendar className="w-4 h-4 text-white/60" />
-              Escolher uma data
-            </button>
-            
-            <div className="my-1 border-t border-white/10" />
-            
-            <button
-              onClick={handleDelete}
-              className="w-full flex items-center justify-between px-3 py-2 text-sm text-red-400 hover:bg-white/10 transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-3">
-                <Trash2 className="w-4 h-4" />
-                Excluir tarefa
-              </div>
-              <span className="text-xs text-white/40">Delete</span>
-            </button>
-          </div>
-        </>,
-        document.body
-      )}
+              <button
+                onClick={handleSetDueToday}
+                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <CalendarCheck className="w-4 h-4 text-white/60" />
+                Due today
+              </button>
+              <button
+                onClick={handleSetDueTomorrow}
+                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <CalendarDays className="w-4 h-4 text-white/60" />
+                Due tomorrow
+              </button>
+              <button
+                onClick={handleChooseDate}
+                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <Calendar className="w-4 h-4 text-white/60" />
+                Choose a date
+              </button>
+
+              <div className="my-1 border-t border-white/10" />
+
+              <button
+                onClick={handleDelete}
+                className="w-full flex items-center justify-between px-3 py-2 text-sm text-red-400 hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <Trash2 className="w-4 h-4" />
+                  Delete task
+                </div>
+                <span className="text-xs text-white/40">Delete</span>
+              </button>
+            </div>
+          </>,
+          document.body
+        )}
 
       {/* Date Picker Modal */}
-      {showDatePicker && createPortal(
-        <>
-          <div
-            className="fixed inset-0 z-50 bg-black/50"
-            onClick={() => setShowDatePicker(false)}
-          />
-          <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#1a1d3a] border border-white/10 rounded-lg shadow-xl overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10">
-              <button
-                onClick={() => setShowDatePicker(false)}
-                className="text-white/50 hover:text-white cursor-pointer"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span className="text-white/80 text-sm font-medium">Escolher data de conclusão</span>
-            </div>
-            
-            <CalendarPicker
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              locale={ptBR}
-              initialFocus
+      {showDatePicker &&
+        createPortal(
+          <>
+            <div
+              className="fixed inset-0 z-50 bg-black/50"
+              onClick={() => setShowDatePicker(false)}
             />
-              
-            <div className="flex gap-2 border-t border-white/10 p-4">
-              <Button
-                variant="ghost"
-                className="flex-1 text-white/70"
-                onClick={() => setShowDatePicker(false)}
-              >
-                Cancelar
-              </Button>
-              <Button
-                className="flex-1 bg-primary/80 hover:bg-primary text-white"
-                onClick={handleDateSave}
-                disabled={!selectedDate}
-              >
-                Salvar
-              </Button>
+            <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#1a1d3a] border border-white/10 rounded-lg shadow-xl overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10">
+                <button
+                  onClick={() => setShowDatePicker(false)}
+                  className="text-white/50 hover:text-white cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="text-white/80 text-sm font-medium">
+                  Choose due date
+                </span>
+              </div>
+
+              <CalendarPicker
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                locale={enUS}
+                initialFocus
+              />
+
+              <div className="flex gap-2 border-t border-white/10 p-4">
+                <Button
+                  variant="ghost"
+                  className="flex-1 text-white/70"
+                  onClick={() => setShowDatePicker(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 bg-primary/80 hover:bg-primary text-white"
+                  onClick={handleDateSave}
+                  disabled={!selectedDate}
+                >
+                  Save
+                </Button>
+              </div>
             </div>
-          </div>
-        </>,
-        document.body
-      )}
+          </>,
+          document.body
+        )}
     </>
   );
 }

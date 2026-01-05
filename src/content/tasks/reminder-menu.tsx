@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import { Clock, Sun, Calendar, CalendarDays, ChevronLeft } from "lucide-react";
 import { TaskReminder } from "@/types/task.types";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
@@ -26,7 +26,7 @@ export function ReminderMenu({ onSelect, onClose }: ReminderMenuProps) {
     now.setHours(13, 0, 0, 0);
     return {
       date: now.getTime(),
-      label: "Ainda hoje às 13:00"
+      label: "Later today at 13:00"
     };
   };
 
@@ -34,10 +34,10 @@ export function ReminderMenu({ onSelect, onClose }: ReminderMenuProps) {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(9, 0, 0, 0);
-    const dayName = tomorrow.toLocaleDateString("pt-BR", { weekday: "short" });
+    const dayName = tomorrow.toLocaleDateString("en-US", { weekday: "short" });
     return {
       date: tomorrow.getTime(),
-      label: `Amanhã, ${dayName}, 09:00`
+      label: `Tomorrow, ${dayName}, 09:00`
     };
   };
 
@@ -45,50 +45,56 @@ export function ReminderMenu({ onSelect, onClose }: ReminderMenuProps) {
     const nextWeek = new Date();
     nextWeek.setDate(nextWeek.getDate() + 7);
     nextWeek.setHours(9, 0, 0, 0);
-    const dayName = nextWeek.toLocaleDateString("pt-BR", { weekday: "short" });
+    const dayName = nextWeek.toLocaleDateString("en-US", { weekday: "short" });
     return {
       date: nextWeek.getTime(),
-      label: `Próxima semana, ${dayName}, 09:00`
+      label: `Next week, ${dayName}, 09:00`
     };
   };
 
   const options = [
     {
       icon: <Clock className="w-4 h-4" />,
-      label: "Ainda hoje",
+      label: "Later today",
       time: "13:00",
       getReminder: getTodayReminder
     },
     {
       icon: <Sun className="w-4 h-4" />,
-      label: "Amanhã",
-      time: new Date(Date.now() + 86400000).toLocaleDateString("pt-BR", {
-        weekday: "short"
-      }) + ", 09:00",
+      label: "Tomorrow",
+      time:
+        new Date(Date.now() + 86400000).toLocaleDateString("en-US", {
+          weekday: "short"
+        }) + ", 09:00",
       getReminder: getTomorrowReminder
     },
     {
       icon: <Calendar className="w-4 h-4" />,
-      label: "Próxima semana",
-      time: new Date(Date.now() + 7 * 86400000).toLocaleDateString("pt-BR", {
-        weekday: "short"
-      }) + ", 09:00",
+      label: "Next week",
+      time:
+        new Date(Date.now() + 7 * 86400000).toLocaleDateString("en-US", {
+          weekday: "short"
+        }) + ", 09:00",
       getReminder: getNextWeekReminder
     }
   ];
 
   const formatCustomLabel = (date: Date): string => {
-    return format(date, "EEE, d MMM, HH:mm", { locale: ptBR });
+    return format(date, "EEE, d MMM, HH:mm", { locale: enUS });
   };
 
   const handleTimeChange = (type: "hours" | "minutes", value: string) => {
     const numValue = parseInt(value) || 0;
-    
+
     if (type === "hours") {
-      const clamped = Math.min(23, Math.max(0, numValue)).toString().padStart(2, "0");
+      const clamped = Math.min(23, Math.max(0, numValue))
+        .toString()
+        .padStart(2, "0");
       setHours(clamped);
     } else {
-      const clamped = Math.min(59, Math.max(0, numValue)).toString().padStart(2, "0");
+      const clamped = Math.min(59, Math.max(0, numValue))
+        .toString()
+        .padStart(2, "0");
       setMinutes(clamped);
     }
   };
@@ -116,14 +122,16 @@ export function ReminderMenu({ onSelect, onClose }: ReminderMenuProps) {
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="text-white/80 text-sm font-medium">Escolher data e hora</span>
+            <span className="text-white/80 text-sm font-medium">
+              Choose date and time
+            </span>
           </div>
-          
+
           <CalendarPicker
             mode="single"
             selected={selectedDate}
             onSelect={setSelectedDate}
-            locale={ptBR}
+            locale={enUS}
             initialFocus
           />
 
@@ -144,21 +152,21 @@ export function ReminderMenu({ onSelect, onClose }: ReminderMenuProps) {
               maxLength={2}
             />
           </div>
-            
+
           <div className="flex gap-2 border-t border-white/10 p-4">
             <Button
               variant="ghost"
               className="flex-1 text-white/70"
               onClick={onClose}
             >
-              Cancelar
+              Cancel
             </Button>
             <Button
               className="flex-1 bg-primary/80 hover:bg-primary text-white"
               onClick={handleCustomSave}
               disabled={!selectedDate}
             >
-              Salvar
+              Save
             </Button>
           </div>
         </div>
@@ -186,7 +194,7 @@ export function ReminderMenu({ onSelect, onClose }: ReminderMenuProps) {
           className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 cursor-pointer text-left border-t border-white/10"
         >
           <CalendarDays className="w-4 h-4 text-white/50" />
-          <span className="text-white/80 text-sm">Escolher uma data e hora</span>
+          <span className="text-white/80 text-sm">Choose a date and time</span>
         </button>
       </div>
     </>

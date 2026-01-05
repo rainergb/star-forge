@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { PersonalizeSettings } from "@/content/config/personalize-config";
 
-const STORAGE_KEY = "star-forge-personalize";
+const STORAGE_KEY = "star-habit-personalize";
 
 const defaultSettings: PersonalizeSettings = {
   showBg: true,

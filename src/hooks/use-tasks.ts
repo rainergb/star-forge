@@ -1,18 +1,24 @@
 import { useCallback } from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { Task, TasksState, TaskStep, TaskReminder, TaskFile, TaskNote } from "@/types/task.types";
+import {
+  Task,
+  TasksState,
+  TaskStep,
+  TaskReminder,
+  TaskFile,
+  TaskNote,
+  RepeatType
+} from "@/types/task.types";
 
-const STORAGE_KEY = "star-forge-tasks";
+const STORAGE_KEY = "star-habit-tasks";
 
 const defaultState: TasksState = {
   tasks: []
 };
 
 export function useTasks() {
-  const { value: storedState, setValue: setState } = useLocalStorage<TasksState>(
-    STORAGE_KEY,
-    defaultState
-  );
+  const { value: storedState, setValue: setState } =
+    useLocalStorage<TasksState>(STORAGE_KEY, defaultState);
 
   const state = { ...defaultState, ...storedState };
 
@@ -21,66 +27,83 @@ export function useTasks() {
   };
 
   const addTask = useCallback(
-    (title: string, category: string = "Tarefas") => {
+    (
+      title: string,
+      category: string = "Tarefas",
+      options?: {
+        dueDate?: number | null;
+        reminder?: TaskReminder | null;
+        estimatedPomodoros?: number | null;
+      }
+    ): string => {
+      const id = generateId();
       const newTask: Task = {
-        id: generateId(),
+        id,
         title,
         category,
         completed: false,
         favorite: false,
         createdAt: Date.now(),
         steps: [],
-        dueDate: null,
-        reminder: null,
+        dueDate: options?.dueDate ?? null,
+        reminder: options?.reminder ?? null,
+        repeat: null,
         files: [],
-        notes: []
+        notes: [],
+        estimatedPomodoros: options?.estimatedPomodoros ?? null,
+        completedPomodoros: 0,
+        totalTimeSpent: 0
       };
-      setState({ ...state, tasks: [newTask, ...state.tasks] });
+      setState((prev) => ({ ...prev, tasks: [newTask, ...prev.tasks] }));
+      return id;
     },
-    [state, setState]
+    [setState]
   );
 
   const removeTask = useCallback(
     (id: string) => {
-      setState({ ...state, tasks: state.tasks.filter((task) => task.id !== id) });
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.filter((task) => task.id !== id)
+      }));
     },
-    [state, setState]
+    [setState]
   );
 
   const toggleCompleted = useCallback(
     (id: string) => {
-      setState({
-        ...state,
-        tasks: state.tasks.map((task) =>
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
           task.id === id ? { ...task, completed: !task.completed } : task
         )
-      });
+      }));
     },
-    [state, setState]
+    [setState]
   );
 
   const toggleFavorite = useCallback(
     (id: string) => {
-      setState({
-        ...state,
-        tasks: state.tasks.map((task) =>
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
           task.id === id ? { ...task, favorite: !task.favorite } : task
         )
-      });
+      }));
     },
-    [state, setState]
+    [setState]
   );
 
   const updateTask = useCallback(
     (id: string, updates: Partial<Omit<Task, "id" | "createdAt">>) => {
-      setState({
-        ...state,
-        tasks: state.tasks.map((task) =>
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
           task.id === id ? { ...task, ...updates } : task
         )
-      });
+      }));
     },
-    [state, setState]
+    [setState]
   );
 
   const addStep = useCallback(
@@ -90,73 +113,90 @@ export function useTasks() {
         title: stepTitle,
         completed: false
       };
-      setState({
-        ...state,
-        tasks: state.tasks.map((task) =>
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
           task.id === taskId
             ? { ...task, steps: [...(task.steps || []), newStep] }
             : task
         )
-      });
+      }));
     },
-    [state, setState]
+    [setState]
   );
 
   const toggleStep = useCallback(
     (taskId: string, stepId: string) => {
-      setState({
-        ...state,
-        tasks: state.tasks.map((task) =>
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
           task.id === taskId
             ? {
                 ...task,
                 steps: (task.steps || []).map((step) =>
-                  step.id === stepId ? { ...step, completed: !step.completed } : step
+                  step.id === stepId
+                    ? { ...step, completed: !step.completed }
+                    : step
                 )
               }
             : task
         )
-      });
+      }));
     },
-    [state, setState]
+    [setState]
   );
 
   const removeStep = useCallback(
     (taskId: string, stepId: string) => {
-      setState({
-        ...state,
-        tasks: state.tasks.map((task) =>
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
           task.id === taskId
-            ? { ...task, steps: (task.steps || []).filter((step) => step.id !== stepId) }
+            ? {
+                ...task,
+                steps: (task.steps || []).filter((step) => step.id !== stepId)
+              }
             : task
         )
-      });
+      }));
     },
-    [state, setState]
+    [setState]
   );
 
   const setDueDate = useCallback(
     (taskId: string, dueDate: number | null) => {
-      setState({
-        ...state,
-        tasks: state.tasks.map((task) =>
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
           task.id === taskId ? { ...task, dueDate } : task
         )
-      });
+      }));
     },
-    [state, setState]
+    [setState]
   );
 
   const setReminder = useCallback(
     (taskId: string, reminder: TaskReminder | null) => {
-      setState({
-        ...state,
-        tasks: state.tasks.map((task) =>
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
           task.id === taskId ? { ...task, reminder } : task
         )
-      });
+      }));
     },
-    [state, setState]
+    [setState]
+  );
+
+  const setRepeat = useCallback(
+    (taskId: string, repeat: RepeatType) => {
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
+          task.id === taskId ? { ...task, repeat } : task
+        )
+      }));
+    },
+    [setState]
   );
 
   const addFile = useCallback(
@@ -166,30 +206,33 @@ export function useTasks() {
         id: generateId(),
         addedAt: Date.now()
       };
-      setState({
-        ...state,
-        tasks: state.tasks.map((task) =>
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
           task.id === taskId
             ? { ...task, files: [...(task.files || []), newFile] }
             : task
         )
-      });
+      }));
     },
-    [state, setState]
+    [setState]
   );
 
   const removeFile = useCallback(
     (taskId: string, fileId: string) => {
-      setState({
-        ...state,
-        tasks: state.tasks.map((task) =>
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
           task.id === taskId
-            ? { ...task, files: (task.files || []).filter((f) => f.id !== fileId) }
+            ? {
+                ...task,
+                files: (task.files || []).filter((f) => f.id !== fileId)
+              }
             : task
         )
-      });
+      }));
     },
-    [state, setState]
+    [setState]
   );
 
   const addNote = useCallback(
@@ -200,23 +243,23 @@ export function useTasks() {
         createdAt: Date.now(),
         updatedAt: Date.now()
       };
-      setState({
-        ...state,
-        tasks: state.tasks.map((task) =>
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
           task.id === taskId
             ? { ...task, notes: [...(task.notes || []), newNote] }
             : task
         )
-      });
+      }));
     },
-    [state, setState]
+    [setState]
   );
 
   const updateNote = useCallback(
     (taskId: string, noteId: string, content: string) => {
-      setState({
-        ...state,
-        tasks: state.tasks.map((task) =>
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
           task.id === taskId
             ? {
                 ...task,
@@ -228,28 +271,85 @@ export function useTasks() {
               }
             : task
         )
-      });
+      }));
     },
-    [state, setState]
+    [setState]
   );
 
   const removeNote = useCallback(
     (taskId: string, noteId: string) => {
-      setState({
-        ...state,
-        tasks: state.tasks.map((task) =>
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
           task.id === taskId
-            ? { ...task, notes: (task.notes || []).filter((note) => note.id !== noteId) }
+            ? {
+                ...task,
+                notes: (task.notes || []).filter((note) => note.id !== noteId)
+              }
             : task
         )
-      });
+      }));
     },
-    [state, setState]
+    [setState]
+  );
+
+  const incrementPomodoro = useCallback(
+    (taskId: string) => {
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) => {
+          if (task.id !== taskId) return task;
+
+          const newCompleted = (task.completedPomodoros || 0) + 1;
+          const currentEstimated = task.estimatedPomodoros || 0;
+
+          // Se não tem estimativa ou se completados ultrapassarem, ajusta a estimativa
+          const newEstimated =
+            currentEstimated < newCompleted ? newCompleted : currentEstimated;
+
+          return {
+            ...task,
+            completedPomodoros: newCompleted,
+            estimatedPomodoros: newEstimated > 0 ? newEstimated : null
+          };
+        })
+      }));
+    },
+    [setState]
+  );
+
+  const addTimeSpent = useCallback(
+    (taskId: string, seconds: number) => {
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
+          task.id === taskId
+            ? { ...task, totalTimeSpent: (task.totalTimeSpent || 0) + seconds }
+            : task
+        )
+      }));
+    },
+    [setState]
+  );
+
+  const setEstimatedPomodoros = useCallback(
+    (taskId: string, count: number | null) => {
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
+          task.id === taskId ? { ...task, estimatedPomodoros: count } : task
+        )
+      }));
+    },
+    [setState]
   );
 
   const clearCompleted = useCallback(() => {
-    setState({ ...state, tasks: state.tasks.filter((task) => !task.completed) });
-  }, [state, setState]);
+    setState((prev) => ({
+      ...prev,
+      tasks: prev.tasks.filter((task) => !task.completed)
+    }));
+  }, [setState]);
 
   const getTask = useCallback(
     (id: string): Task | undefined => {
@@ -258,11 +358,24 @@ export function useTasks() {
     [state.tasks]
   );
 
+  const reorderTasks = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      setState((prev) => {
+        const newTasks = [...prev.tasks];
+        const [removed] = newTasks.splice(fromIndex, 1);
+        newTasks.splice(toIndex, 0, removed);
+        return { ...prev, tasks: newTasks };
+      });
+    },
+    [setState]
+  );
+
   return {
     tasks: state.tasks,
     addTask,
     removeTask,
     toggleCompleted,
+    toggleComplete: toggleCompleted,
     toggleFavorite,
     updateTask,
     addStep,
@@ -270,12 +383,17 @@ export function useTasks() {
     removeStep,
     setDueDate,
     setReminder,
+    setRepeat,
     addFile,
     removeFile,
     addNote,
     updateNote,
     removeNote,
+    incrementPomodoro,
+    addTimeSpent,
+    setEstimatedPomodoros,
     clearCompleted,
-    getTask
+    getTask,
+    reorderTasks
   };
 }

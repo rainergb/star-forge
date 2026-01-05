@@ -23,6 +23,8 @@ export interface TaskNote {
   updatedAt: number;
 }
 
+export type RepeatType = "daily" | "weekly" | "monthly" | "yearly" | null;
+
 export interface Task {
   id: string;
   title: string;
@@ -33,8 +35,12 @@ export interface Task {
   steps: TaskStep[];
   dueDate: number | null;
   reminder: TaskReminder | null;
+  repeat: RepeatType;
   files: TaskFile[];
   notes: TaskNote[];
+  estimatedPomodoros: number | null;
+  completedPomodoros: number;
+  totalTimeSpent: number;
 }
 
 export interface TasksState {

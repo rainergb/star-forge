@@ -1,4 +1,4 @@
-# API Contracts - Star Forge Backend
+# API Contracts - Star Habit Backend
 
 Este diretório contém a documentação ilustrativa dos contratos de API para integração com um backend.
 

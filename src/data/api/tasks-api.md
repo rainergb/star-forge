@@ -40,8 +40,12 @@ interface Task {
   steps: TaskStep[];
   dueDate: number | null;
   reminder: TaskReminder | null;
+  repeat: RepeatType;
   files: TaskFile[];
   notes: TaskNote[];   // array de notas/comentários
+  estimatedPomodoros: number | null;  // pomodoros estimados para a task
+  completedPomodoros: number;         // pomodoros concluídos
+  totalTimeSpent: number;             // tempo total gasto em segundos
 }
 ```
 
@@ -404,6 +408,82 @@ Remove uma nota.
 | DELETE | `/api/tasks/:taskId/reminder` | Remover reminder |
 | POST | `/api/tasks/:taskId/files` | Upload arquivo |
 | DELETE | `/api/tasks/:taskId/files/:fileId` | Remover arquivo |
+| PUT | `/api/tasks/:taskId/estimated-pomodoros` | Definir pomodoros estimados |
+| POST | `/api/tasks/:taskId/pomodoro-complete` | Registrar pomodoro concluído |
+| GET | `/api/tasks/:taskId/pomodoro-stats` | Obter estatísticas pomodoro |
+
+---
+
+## 🍅 Pomodoro Integration
+
+### PUT /api/tasks/:taskId/estimated-pomodoros
+
+Define o número estimado de pomodoros para uma task.
+
+**Request:**
+```json
+{
+  "estimatedPomodoros": 4
+}
+```
+
+**Response:**
+```json
+{
+  "task": {
+    "id": "1735570800000-abc123",
+    "estimatedPomodoros": 4,
+    "completedPomodoros": 0,
+    "totalTimeSpent": 0
+  }
+}
+```
+
+### POST /api/tasks/:taskId/pomodoro-complete
+
+Registra a conclusão de um pomodoro vinculado à task.
+
+**Request:**
+```json
+{
+  "duration": 1500,
+  "sessionId": "1735580000000-xyz789"
+}
+```
+
+**Response:**
+```json
+{
+  "task": {
+    "id": "1735570800000-abc123",
+    "completedPomodoros": 3,
+    "totalTimeSpent": 4500
+  }
+}
+```
+
+### GET /api/tasks/:taskId/pomodoro-stats
+
+Retorna estatísticas de pomodoro para uma task específica.
+
+**Response:**
+```json
+{
+  "taskId": "1735570800000-abc123",
+  "taskTitle": "Estudar TypeScript",
+  "estimatedPomodoros": 4,
+  "completedPomodoros": 3,
+  "totalTimeSpent": 4500,
+  "progress": 75,
+  "sessions": [
+    {
+      "id": "1735580000000-xyz789",
+      "startedAt": 1735580000000,
+      "duration": 1500,
+      "completed": true
+    }
+  ]
+}
 | POST | `/api/tasks/:taskId/notes` | Adicionar nota |
 | PUT | `/api/tasks/:taskId/notes/:noteId` | Editar nota |
 | DELETE | `/api/tasks/:taskId/notes/:noteId` | Remover nota |

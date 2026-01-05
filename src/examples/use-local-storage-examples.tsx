@@ -200,13 +200,13 @@ function ExemploRemove() {
 }
 
 // ============================================
-// COMO É USADO NO STAR FORGE (useConfig)
+// COMO É USADO NO STAR HABIT (useConfig)
 // ============================================
 /**
  * O hook useConfig usa o useLocalStorage internamente:
  * 
  * const { value: settings, setValue: setSettings } = useLocalStorage<TimerSettings>(
- *   "star-forge-settings",
+ *   "star-habit-settings",
  *   defaultSettings
  * );
  * 
@@ -220,7 +220,7 @@ function ExemploRemove() {
  * ESTRUTURA DOS DADOS SALVOS
  * ============================================
  * 
- * No localStorage (chave: "star-forge-settings"):
+ * No localStorage (chave: "star-habit-settings"):
  * {
  *   "pomodoro": 25,
  *   "shortBreak": 5,

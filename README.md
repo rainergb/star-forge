@@ -1,4 +1,4 @@
-# Star Forge ⚡
+# Star Habit ⚡
 
 Aplicação desktop moderna com **Electron + React + TypeScript + Vite**
 
@@ -43,7 +43,7 @@ npm run electron:build
 ## 📁 Estrutura do Projeto
 
 ```
-star-forge/
+star-habit/
 ├── electron/
 │   ├── main.ts          # Processo principal do Electron
 │   └── preload.ts       # Preload script (context bridge)

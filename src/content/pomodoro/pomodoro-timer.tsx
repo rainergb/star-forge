@@ -1,4 +1,4 @@
-import { usePomodoroTimer } from "./use-pomodoro-timer";
+import { usePomodoroContext } from "@/context/pomodoro-context";
 import { usePersonalize } from "@/hooks/use-personalize";
 import Orb from "@/components/orb";
 import { CycleStar } from "@/components/cycle-star";
@@ -21,7 +21,7 @@ export function PomodoroTimer() {
     toggleTestMode,
     formatTime,
     isWorkMode
-  } = usePomodoroTimer();
+  } = usePomodoroContext();
 
   const getHue = () => {
     if (mode === "work") return 0;

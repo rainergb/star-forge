@@ -1,5 +1,5 @@
 {
-  "name": "star-forge",
+  "name": "star-habit",
   "version": "1.0.0",
   "type": "module",
   "description": "Aplicação desktop com Electron + React + TypeScript",
@@ -21,7 +21,7 @@
   "license": "ISC",
   "build": {
     "appId": "com.starforge.app",
-    "productName": "Star Forge",
+    "productName": "Star Habit",
     "directories": {
       "output": "release"
     },
@@ -34,6 +34,9 @@
     }
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@rollup/rollup-win32-x64-msvc": "^4.53.3",
     "@tanstack/react-query": "^5.90.11",
     "class-variance-authority": "^0.7.1",

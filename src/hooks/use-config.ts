@@ -4,7 +4,7 @@ import { TimerSettings } from "@/content/config/timer-config";
 import { useToast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
-const STORAGE_KEY = "star-forge-settings";
+const STORAGE_KEY = "star-habit-settings";
 
 const defaultSettings: TimerSettings = {
   pomodoro: 25,

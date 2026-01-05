@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useConfig } from "@/hooks/use-config";
 import { usePersonalize } from "@/hooks/use-personalize";
+import { useActiveTask } from "@/hooks/use-active-task";
+import { usePomodoroSessions } from "@/hooks/use-pomodoro-sessions";
+import { useTasks } from "@/hooks/use-tasks";
 import notificationSound from "@/assets/notification.mp3";
 
 export type TimerMode = "work" | "shortBreak" | "longBreak";
@@ -8,7 +11,34 @@ export type TimerMode = "work" | "shortBreak" | "longBreak";
 export function usePomodoroTimer() {
   const { settings } = useConfig();
   const { settings: personalizeSettings } = usePersonalize();
+  const { activeTask, clearActiveTask } = useActiveTask();
+  const { addSession } = usePomodoroSessions();
+  const { incrementPomodoro, addTimeSpent, tasks } = useTasks();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const sessionStartRef = useRef<number | null>(null);
+
+  // Refs para evitar stale closures
+  const activeTaskRef = useRef(activeTask);
+  const incrementPomodoroRef = useRef(incrementPomodoro);
+  const addTimeSpentRef = useRef(addTimeSpent);
+  const addSessionRef = useRef(addSession);
+
+  // Atualizar refs quando valores mudam
+  useEffect(() => {
+    activeTaskRef.current = activeTask;
+  }, [activeTask]);
+
+  useEffect(() => {
+    incrementPomodoroRef.current = incrementPomodoro;
+  }, [incrementPomodoro]);
+
+  useEffect(() => {
+    addTimeSpentRef.current = addTimeSpent;
+  }, [addTimeSpent]);
+
+  useEffect(() => {
+    addSessionRef.current = addSession;
+  }, [addSession]);
 
   useEffect(() => {
     audioRef.current = new Audio(notificationSound);
@@ -108,23 +138,54 @@ export function usePomodoroTimer() {
       endTimeRef.current = null;
       playNotification();
 
+      const sessionDuration = sessionStartRef.current
+        ? Math.round((Date.now() - sessionStartRef.current) / 1000)
+        : mode === "work"
+        ? settings.pomodoro * 60
+        : mode === "shortBreak"
+        ? settings.shortBreak * 60
+        : settings.longBreak * 60;
+
+      // Usar refs para evitar stale closures
+      const currentActiveTask = activeTaskRef.current;
+
+      addSessionRef.current({
+        taskId: currentActiveTask?.id || null,
+        taskTitle: currentActiveTask?.title || null,
+        mode,
+        duration: sessionDuration,
+        completed: true,
+        startedAt:
+          sessionStartRef.current || Date.now() - sessionDuration * 1000,
+        endedAt: Date.now()
+      });
+
       if (mode === "work") {
+        if (currentActiveTask) {
+          incrementPomodoroRef.current(currentActiveTask.id);
+          addTimeSpentRef.current(currentActiveTask.id, sessionDuration);
+        }
+
         const newCycles = completedCycles + 1;
         setCompletedCycles(newCycles);
 
         const nextMode = getNextBreakMode(newCycles);
         setMode(nextMode);
         setTimeLeft(getTimeForMode(nextMode, isTestMode));
+        sessionStartRef.current = null;
 
         if (settings.autoStartBreaks) {
           setIsActive(true);
+          sessionStartRef.current = Date.now();
         }
       } else {
         setMode("work");
         setTimeLeft(getTimeForMode("work", isTestMode));
+        sessionStartRef.current = null;
 
         if (settings.autoStartPomodoros) {
           setIsActive(true);
+          sessionStartRef.current = Date.now();
         }
       }
     } else {
@@ -142,13 +203,20 @@ export function usePomodoroTimer() {
     isTestMode,
     settings.autoStartBreaks,
     settings.autoStartPomodoros,
+    settings.pomodoro,
+    settings.shortBreak,
+    settings.longBreak,
     getTimeForMode,
-    getNextBreakMode
+    getNextBreakMode,
+    playNotification
   ]);
 
   const toggleTimer = useCallback(() => {
     if (!isActive && mode === "work") {
       setHasStarted(true);
+    }
+    if (!isActive) {
+      sessionStartRef.current = Date.now();
     }
     setIsActive(!isActive);
   }, [isActive, mode]);
@@ -160,7 +228,9 @@ export function usePomodoroTimer() {
     setHasStarted(false);
     setTimeLeft(getTimeForMode("work", isTestMode));
     endTimeRef.current = null;
-  }, [getTimeForMode, isTestMode]);
+    sessionStartRef.current = null;
+    clearActiveTask();
+  }, [getTimeForMode, isTestMode, clearActiveTask]);
 
   const startBreak = useCallback(() => {
     setIsActive(false);
@@ -168,6 +238,7 @@ export function usePomodoroTimer() {
     setMode(breakMode);
     setTimeLeft(getTimeForMode(breakMode, isTestMode));
     endTimeRef.current = null;
+    sessionStartRef.current = Date.now();
     setIsActive(true);
   }, [completedCycles, getTimeForMode, getNextBreakMode, isTestMode]);
 
@@ -177,6 +248,7 @@ export function usePomodoroTimer() {
     setHasStarted(true);
     setTimeLeft(getTimeForMode("work", isTestMode));
     endTimeRef.current = null;
+    sessionStartRef.current = Date.now();
     setIsActive(true);
   }, [getTimeForMode, isTestMode]);
 
@@ -202,6 +274,8 @@ export function usePomodoroTimer() {
     completedCycles,
     hasStarted,
     isTestMode,
+    activeTask,
+    tasks,
     toggleTimer,
     resetTimer,
     startBreak,

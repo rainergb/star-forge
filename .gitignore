@@ -6,6 +6,7 @@ node_modules/
 dist/
 dist-electron/
 build/
+release/
 
 # Logs
 *.log

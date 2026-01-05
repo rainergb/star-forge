@@ -1,4 +1,4 @@
-import { Palette, Volume2, VolumeX } from "lucide-react";
+import { Palette, Volume2, VolumeX, Trash2 } from "lucide-react";
 import {
   AccordionItem,
   AccordionTrigger,
@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/accordion";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import ElasticSlider from "@/components/elastic-slider";
 
 export interface PersonalizeSettings {
@@ -65,6 +66,22 @@ export function PersonalizeConfig({
             checked={settings.showTest}
             onCheckedChange={(checked) => updateSetting("showTest", checked)}
           />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label className="text-white/90">Clear Cache</Label>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              localStorage.clear();
+              window.location.reload();
+            }}
+            className="flex items-center gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            Clear
+          </Button>
         </div>
 
         <div className="flex items-center justify-between">
