@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { PomodoroTimer } from "@/content/pomodoro/pomodoro-timer";
-import { PomodoroStats } from "@/content/pomodoro/pomodoro-stats";
+import { PomodoroStats } from "@/content/stats";
 import { TaskList } from "@/content/tasks/task-list";
 import { TopBar } from "@/components/top-bar";
 import { AppDock } from "@/content/dock/app-dock";
@@ -23,7 +23,7 @@ import bgVideo from "@/assets/bg.mp4";
 function AppContent() {
   const { toast } = useToast();
   const { settings } = usePersonalize();
-  const { setActiveTask, clearActiveTask } = useActiveTask();
+  const { setActiveTask, clearActiveTask, activeTask } = useActiveTask();
   const {
     isVisible,
     isPinned,
@@ -39,14 +39,14 @@ function AppContent() {
     isWorkMode,
     toggleTimer,
     resetTimer,
-    startBreak
+    startBreak,
+    formatTime
   } = usePomodoroContext();
 
   const [currentView, setCurrentView] = useState<AppView>("pomodoro");
   const [electronVersion, setElectronVersion] =
     useState<string>("Carregando...");
 
-  // Calculate stack index for widgets at the same position
   const getStackIndex = (widget: WidgetType): number => {
     const widgets: WidgetType[] = [
       "miniTaskList",
@@ -77,6 +77,17 @@ function AppContent() {
       duration: 3000
     });
   }, []);
+
+  useEffect(() => {
+    if (hasStarted && isWorkMode) {
+      const taskName = activeTask?.title;
+      document.title = taskName
+        ? `${formatTime(timeLeft)} - ${taskName}`
+        : `${formatTime(timeLeft)} - Star Habit`;
+    } else {
+      document.title = "Star Habit";
+    }
+  }, [timeLeft, hasStarted, isWorkMode, activeTask, formatTime]);
 
   const handleSelectTaskFromMini = (task: Task) => {
     setActiveTask(task);

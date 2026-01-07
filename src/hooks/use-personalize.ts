@@ -8,7 +8,8 @@ const defaultSettings: PersonalizeSettings = {
   showBg: true,
   showTest: false,
   notificationSound: true,
-  notificationVolume: 50
+  notificationVolume: 50,
+  notificationRepeat: 1
 };
 
 export function usePersonalize() {

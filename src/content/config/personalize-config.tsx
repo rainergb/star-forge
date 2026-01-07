@@ -1,4 +1,4 @@
-import { Palette, Volume2, VolumeX, Trash2 } from "lucide-react";
+import { Palette, Volume2, VolumeX, Trash2, Plus, Minus } from "lucide-react";
 import {
   AccordionItem,
   AccordionTrigger,
@@ -14,6 +14,7 @@ export interface PersonalizeSettings {
   showTest: boolean;
   notificationSound: boolean;
   notificationVolume: number;
+  notificationRepeat: number;
 }
 
 interface PersonalizeConfigProps {
@@ -108,6 +109,45 @@ export function PersonalizeConfig({
               onChange={(value) => updateSetting("notificationVolume", value)}
               className="w-40"
             />
+          </div>
+        )}
+
+        {settings.notificationSound && (
+          <div className="flex items-center justify-between">
+            <Label className="text-white/90">Sound Repeat</Label>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-white/50 hover:text-white hover:bg-white/10"
+                onClick={() => {
+                  const current = settings.notificationRepeat ?? 1;
+                  if (current > 1) {
+                    updateSetting("notificationRepeat", current - 1);
+                  }
+                }}
+                disabled={(settings.notificationRepeat ?? 1) <= 1}
+              >
+                <Minus className="w-3 h-3" />
+              </Button>
+              <span className="w-8 text-center text-sm text-white/90 font-medium">
+                {settings.notificationRepeat ?? 1}x
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-white/50 hover:text-white hover:bg-white/10"
+                onClick={() => {
+                  const current = settings.notificationRepeat ?? 1;
+                  if (current < 10) {
+                    updateSetting("notificationRepeat", current + 1);
+                  }
+                }}
+                disabled={(settings.notificationRepeat ?? 1) >= 10}
+              >
+                <Plus className="w-3 h-3" />
+              </Button>
+            </div>
           </div>
         )}
       </AccordionContent>

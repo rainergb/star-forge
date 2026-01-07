@@ -5,6 +5,7 @@ import { useActiveTask } from "@/hooks/use-active-task";
 import { usePomodoroSessions } from "@/hooks/use-pomodoro-sessions";
 import { useTasks } from "@/hooks/use-tasks";
 import notificationSound from "@/assets/notification.mp3";
+import successSound from "@/assets/sucess.mp3";
 
 export type TimerMode = "work" | "shortBreak" | "longBreak";
 
@@ -15,15 +16,15 @@ export function usePomodoroTimer() {
   const { addSession } = usePomodoroSessions();
   const { incrementPomodoro, addTimeSpent, tasks } = useTasks();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const startAudioRef = useRef<HTMLAudioElement | null>(null);
   const sessionStartRef = useRef<number | null>(null);
+  const notificationRepeatRef = useRef<number>(1);
 
-  // Refs para evitar stale closures
   const activeTaskRef = useRef(activeTask);
   const incrementPomodoroRef = useRef(incrementPomodoro);
   const addTimeSpentRef = useRef(addTimeSpent);
   const addSessionRef = useRef(addSession);
 
-  // Atualizar refs quando valores mudam
   useEffect(() => {
     activeTaskRef.current = activeTask;
   }, [activeTask]);
@@ -42,18 +43,47 @@ export function usePomodoroTimer() {
 
   useEffect(() => {
     audioRef.current = new Audio(notificationSound);
+    startAudioRef.current = new Audio(successSound);
   }, []);
 
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = personalizeSettings.notificationVolume / 100;
     }
-  }, [personalizeSettings.notificationVolume]);
+    if (startAudioRef.current) {
+      startAudioRef.current.volume =
+        personalizeSettings.notificationVolume / 100;
+    }
+    notificationRepeatRef.current = personalizeSettings.notificationRepeat ?? 1;
+  }, [
+    personalizeSettings.notificationVolume,
+    personalizeSettings.notificationRepeat
+  ]);
+
+  const playStartSound = useCallback(() => {
+    if (startAudioRef.current && personalizeSettings.notificationSound) {
+      startAudioRef.current.currentTime = 0;
+      startAudioRef.current.play().catch(() => {});
+    }
+  }, [personalizeSettings.notificationSound]);
 
   const playNotification = useCallback(() => {
     if (audioRef.current && personalizeSettings.notificationSound) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(() => {});
+      const repeatCount = notificationRepeatRef.current;
+      let currentRepeat = 0;
+
+      const playSound = () => {
+        if (currentRepeat < repeatCount && audioRef.current) {
+          audioRef.current.currentTime = 0;
+          audioRef.current.play().catch(() => {});
+          currentRepeat++;
+          if (currentRepeat < repeatCount) {
+            setTimeout(playSound, audioRef.current.duration * 1000 + 500);
+          }
+        }
+      };
+
+      playSound();
     }
   }, [personalizeSettings.notificationSound]);
 
@@ -214,12 +244,13 @@ export function usePomodoroTimer() {
   const toggleTimer = useCallback(() => {
     if (!isActive && mode === "work") {
       setHasStarted(true);
+      playStartSound();
     }
     if (!isActive) {
       sessionStartRef.current = Date.now();
     }
     setIsActive(!isActive);
-  }, [isActive, mode]);
+  }, [isActive, mode, playStartSound]);
 
   const resetTimer = useCallback(() => {
     setIsActive(false);

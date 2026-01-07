@@ -1,5 +1,21 @@
 import { useState, useRef } from "react";
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
   Calendar,
   Bell,
   Repeat,
@@ -8,16 +24,85 @@ import {
   Timer,
   Plus,
   Minus,
-  Focus
+  Clock
 } from "lucide-react";
 import { useTasks } from "@/hooks/use-tasks";
 import { usePomodoroSessions } from "@/hooks/use-pomodoro-sessions";
 import { useActiveTask } from "@/hooks/use-active-task";
+import { useConfig } from "@/hooks/use-config";
 import { TaskItem } from "./task-item";
 import { TaskDetails } from "./task-details";
 import { Task, TaskReminder } from "@/types/task.types";
 import { DateTimePickerPopover } from "@/components/ui/date-time-picker-popover";
 import { cn } from "@/lib/utils";
+
+interface SortableTaskItemProps {
+  task: Task;
+  isActive: boolean;
+  onToggleCompleted: (id: string) => void;
+  onToggleFavorite: (id: string) => void;
+  onSetDueDate: (id: string, date: number | null) => void;
+  onRemoveTask: (id: string) => void;
+  onClick: () => void;
+  onFocus: () => void;
+  expectedEndTime?: string;
+}
+
+function SortableTaskItem({
+  task,
+  isActive,
+  onToggleCompleted,
+  onToggleFavorite,
+  onSetDueDate,
+  onRemoveTask,
+  onClick,
+  onFocus,
+  expectedEndTime
+}: SortableTaskItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: task.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 1
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="relative group"
+    >
+      <div
+        className={cn(
+          "absolute -left-2 top-1/2 -translate-y-1/2 w-1 h-8 rounded-full transition-all",
+          isActive ? "bg-primary opacity-100" : "bg-transparent opacity-0"
+        )}
+      />
+      <TaskItem
+        task={task}
+        isActive={isActive}
+        onToggleCompleted={onToggleCompleted}
+        onToggleFavorite={onToggleFavorite}
+        onSetDueDate={onSetDueDate}
+        onRemoveTask={onRemoveTask}
+        onClick={onClick}
+        onFocus={onFocus}
+        expectedEndTime={expectedEndTime}
+      />
+    </div>
+  );
+}
 
 interface TaskListProps {
   onNavigateToPomodoro?: () => void;
@@ -49,10 +134,12 @@ export function TaskList({
     updateNote,
     removeNote,
     removeTask,
-    setEstimatedPomodoros
+    setEstimatedPomodoros,
+    reorderTasks
   } = useTasks();
   const { sessions } = usePomodoroSessions();
   const { activeTask, setActiveTask, clearActiveTask } = useActiveTask();
+  const { settings: timerSettings } = useConfig();
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -68,6 +155,31 @@ export function TaskList({
   const [showPomodoroInput, setShowPomodoroInput] = useState(false);
   const [completedCollapsed, setCompletedCollapsed] = useState(false);
   const inputContainerRef = useRef<HTMLDivElement>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8
+      }
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates
+    })
+  );
+
+  const incompleteTasks = tasks.filter((t) => !t.completed);
+  const completedTasks = tasks.filter((t) => t.completed);
+  const sortedTasks = [...incompleteTasks, ...completedTasks];
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = sortedTasks.findIndex((t) => t.id === active.id);
+      const newIndex = sortedTasks.findIndex((t) => t.id === over.id);
+      reorderTasks(oldIndex, newIndex);
+    }
+  };
 
   const handleAddTask = () => {
     if (newTaskTitle.trim()) {
@@ -140,17 +252,78 @@ export function TaskList({
     }
   };
 
-  const sortedTasks = [...tasks].sort((a, b) => {
-    if (a.favorite !== b.favorite) return a.favorite ? -1 : 1;
-    return b.createdAt - a.createdAt;
-  });
+  const calculateEstimatedEndTime = () => {
+    const pomodoroMinutes = timerSettings.pomodoro;
+    const shortBreakMinutes = timerSettings.shortBreak;
+    const longBreakInterval = timerSettings.longBreakInterval;
+    const longBreakMinutes = timerSettings.longBreak;
 
-  const pendingTasks = sortedTasks.filter((t) => !t.completed);
-  const completedTasks = sortedTasks.filter((t) => t.completed);
+    let totalMinutes = 0;
+    let pomodoroCount = 0;
+
+    incompleteTasks.forEach((task) => {
+      const pomodoros = task.estimatedPomodoros ?? 0;
+      for (let i = 0; i < pomodoros; i++) {
+        totalMinutes += pomodoroMinutes;
+        pomodoroCount++;
+        if (pomodoroCount % longBreakInterval === 0) {
+          totalMinutes += longBreakMinutes;
+        } else if (
+          i < pomodoros - 1 ||
+          incompleteTasks.indexOf(task) < incompleteTasks.length - 1
+        ) {
+          totalMinutes += shortBreakMinutes;
+        }
+      }
+    });
+
+    if (totalMinutes === 0) return null;
+
+    const now = new Date();
+    const endTime = new Date(now.getTime() + totalMinutes * 60 * 1000);
+    return endTime;
+  };
+
+  const formatEndTime = (date: Date): string => {
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    return `${hours}:${minutes}`;
+  };
+
+  const calculateTaskEndTime = (taskIndex: number): Date | null => {
+    const pomodoroMinutes = timerSettings.pomodoro;
+    const shortBreakMinutes = timerSettings.shortBreak;
+    const longBreakInterval = timerSettings.longBreakInterval;
+    const longBreakMinutes = timerSettings.longBreak;
+
+    let totalMinutes = 0;
+    let pomodoroCount = 0;
+
+    for (let i = 0; i <= taskIndex; i++) {
+      const task = incompleteTasks[i];
+      const pomodoros = task.estimatedPomodoros ?? 0;
+      for (let j = 0; j < pomodoros; j++) {
+        totalMinutes += pomodoroMinutes;
+        pomodoroCount++;
+        if (pomodoroCount % longBreakInterval === 0) {
+          totalMinutes += longBreakMinutes;
+        } else if (j < pomodoros - 1 || i < taskIndex) {
+          totalMinutes += shortBreakMinutes;
+        }
+      }
+    }
+
+    if (totalMinutes === 0) return null;
+
+    const now = new Date();
+    return new Date(now.getTime() + totalMinutes * 60 * 1000);
+  };
 
   const currentTask = selectedTask
     ? tasks.find((t) => t.id === selectedTask.id) || null
     : null;
+
+  const estimatedEndTime = calculateEstimatedEndTime();
 
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-2xl mx-auto">
@@ -338,55 +511,47 @@ export function TaskList({
         )}
       </div>
 
-      <div className="w-full space-y-2 max-h-[60vh] overflow-y-auto pr-2">
+      <div className="w-full space-y-2 max-h-[60vh] overflow-y-auto scrollbar-none">
         {sortedTasks.length === 0 ? (
           <div className="text-center text-white/40 py-8">
             No tasks yet. Add one above!
           </div>
         ) : (
           <>
-            {/* Pending Tasks */}
-            {pendingTasks.map((task) => (
-              <div key={task.id} className="relative group">
-                <div
-                  className={cn(
-                    "absolute -left-2 top-1/2 -translate-y-1/2 w-1 h-8 rounded-full transition-all",
-                    activeTask?.id === task.id
-                      ? "bg-primary opacity-100"
-                      : "bg-transparent opacity-0"
-                  )}
-                />
-                <TaskItem
-                  task={task}
-                  isActive={activeTask?.id === task.id}
-                  onToggleCompleted={toggleCompleted}
-                  onToggleFavorite={toggleFavorite}
-                  onSetDueDate={setDueDate}
-                  onRemoveTask={removeTask}
-                  onClick={() => handleTaskClick(task)}
-                  onFocus={() => handleFocusTask(task)}
-                />
-              </div>
-            ))}
-
-            {/* Free Focus Button */}
-            {activeTask && (
-              <button
-                onClick={() => {
-                  if (onClearTask) {
-                    onClearTask();
-                  } else {
-                    clearActiveTask();
-                  }
-                }}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 mt-2 rounded-lg text-xs text-muted-foreground hover:bg-accent/30 transition-colors border border-border/30"
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={incompleteTasks.map((t) => t.id)}
+                strategy={verticalListSortingStrategy}
               >
-                <Focus className="h-3.5 w-3.5" />
-                <span>Free focus</span>
-              </button>
-            )}
+                {incompleteTasks.map((task, index) => {
+                  const taskEndTime = task.estimatedPomodoros
+                    ? calculateTaskEndTime(index)
+                    : null;
+                  return (
+                    <div key={task.id} className="relative">
+                      <SortableTaskItem
+                        task={task}
+                        isActive={activeTask?.id === task.id}
+                        onToggleCompleted={toggleCompleted}
+                        onToggleFavorite={toggleFavorite}
+                        onSetDueDate={setDueDate}
+                        onRemoveTask={removeTask}
+                        onClick={() => handleFocusTask(task)}
+                        onFocus={() => handleTaskClick(task)}
+                        expectedEndTime={
+                          taskEndTime ? formatEndTime(taskEndTime) : undefined
+                        }
+                      />
+                    </div>
+                  );
+                })}
+              </SortableContext>
+            </DndContext>
 
-            {/* Completed Section */}
             {completedTasks.length > 0 && (
               <>
                 <button
@@ -426,8 +591,17 @@ export function TaskList({
       </div>
 
       {tasks.length > 0 && (
-        <div className="text-sm text-white/40">
-          {tasks.filter((t) => t.completed).length} of {tasks.length} completed
+        <div className="flex flex-col items-center gap-1">
+          <div className="text-sm text-white/40">
+            {tasks.filter((t) => t.completed).length} of {tasks.length}{" "}
+            completed
+          </div>
+          {estimatedEndTime && (
+            <div className="flex items-center gap-1.5 text-xs text-white/30">
+              <Clock className="w-3 h-3" />
+              <span>Expected end: {formatEndTime(estimatedEndTime)}</span>
+            </div>
+          )}
         </div>
       )}
 

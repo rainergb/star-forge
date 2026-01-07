@@ -1,15 +1,114 @@
 import { useState } from "react";
-import {
-  Timer,
-  Clock,
-  TrendingUp,
-  Calendar,
-  Flame
-} from "lucide-react";
+import { Timer, Clock, TrendingUp, Calendar, Flame, Star } from "lucide-react";
 import { usePomodoroSessions } from "@/hooks/use-pomodoro-sessions";
+import { useConfig } from "@/hooks/use-config";
 import { StatsPeriod } from "@/types/pomodoro.types";
 import { Button } from "@/components/ui/button";
-import { format, subDays, subMonths, subHours, isWithinInterval, startOfDay, endOfDay, startOfHour, endOfHour, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
+import {
+  format,
+  subDays,
+  subMonths,
+  subHours,
+  isWithinInterval,
+  startOfDay,
+  endOfDay,
+  startOfHour,
+  endOfHour,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth
+} from "date-fns";
+
+interface MiniCycleStarProps {
+  index: number;
+}
+
+function MiniCycleStar({ index }: MiniCycleStarProps) {
+  const positions = [
+    { x: 20, y: 30 },
+    { x: 70, y: 25 },
+    { x: 45, y: 60 },
+    { x: 15, y: 70 },
+    { x: 80, y: 65 },
+    { x: 35, y: 20 },
+    { x: 60, y: 75 },
+    { x: 25, y: 50 },
+    { x: 75, y: 45 },
+    { x: 50, y: 35 },
+    { x: 10, y: 40 },
+    { x: 85, y: 30 },
+    { x: 40, y: 80 },
+    { x: 65, y: 15 },
+    { x: 30, y: 85 },
+  ];
+
+  const pos = positions[index % positions.length];
+  const animationDelay = (index * 0.3) % 3;
+  const floatDuration = 3 + (index % 3);
+
+  return (
+    <div
+      className="absolute pointer-events-none"
+      style={{
+        left: `${pos.x}%`,
+        top: `${pos.y}%`,
+        transform: "translate(-50%, -50%)",
+        animation: `float ${floatDuration}s ease-in-out infinite`,
+        animationDelay: `${animationDelay}s`
+      }}
+    >
+      <div className="relative flex items-center justify-center">
+        <div className="absolute w-6 h-6 bg-primary/30 rounded-full blur-lg" />
+        <div className="absolute w-0.5 h-0.5 bg-white rounded-full shadow-[0_0_6px_rgba(255,255,255,1)] z-20" />
+        <div className="absolute w-4 h-px bg-linear-to-r from-transparent via-white to-transparent opacity-80" />
+        <div className="absolute w-px h-4 bg-linear-to-b from-transparent via-white to-transparent opacity-80" />
+        <div className="absolute w-2 h-px bg-linear-to-r from-transparent via-white/50 to-transparent rotate-45" />
+        <div className="absolute w-px h-2 bg-linear-to-b from-transparent via-white/50 to-transparent rotate-45" />
+        <div className="absolute w-2 h-2 bg-primary/40 rounded-full blur-sm" />
+      </div>
+    </div>
+  );
+}
+
+interface ChartBarProps {
+  item: { label: string; value: number; sessions: number };
+  maxMinutes: number;
+}
+
+function ChartBar({ item, maxMinutes }: ChartBarProps) {
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  return (
+    <div
+      className="flex-1 flex flex-col items-center gap-2 relative"
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+    >
+      {showTooltip && (
+        <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-[#1a1d3a] border border-white/20 rounded-lg px-3 py-2 shadow-xl z-10 whitespace-nowrap">
+          <div className="text-xs text-white/90 font-medium">{item.label}</div>
+          <div className="text-xs text-white/60 mt-1">
+            <span className="text-primary">{item.value}m</span> •{" "}
+            {item.sessions} sessions
+          </div>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
+            <div className="w-2 h-2 bg-[#1a1d3a] border-r border-b border-white/20 transform rotate-45" />
+          </div>
+        </div>
+      )}
+      <div className="w-full flex flex-col items-center justify-end h-24 cursor-pointer">
+        <div
+          className="w-full bg-primary/60 hover:bg-primary/80 rounded-t transition-all duration-300 min-h-1"
+          style={{
+            height: `${(item.value / maxMinutes) * 100}%`
+          }}
+        />
+      </div>
+      <span className="text-xs text-white/50">{item.label}</span>
+    </div>
+  );
+}
 
 const periodLabels: Record<StatsPeriod, string> = {
   day: "Today",
@@ -38,9 +137,12 @@ const formatDuration = (seconds: number): string => {
 
 export function PomodoroStats() {
   const { sessions, getStats } = usePomodoroSessions();
+  const { settings } = useConfig();
   const [period, setPeriod] = useState<StatsPeriod>("week");
 
   const stats = getStats(period);
+  const longBreakInterval = settings.longBreakInterval || 4;
+  const cycleStars = Math.floor(stats.completedCycles / longBreakInterval);
 
   const getChartData = () => {
     switch (period) {
@@ -108,7 +210,10 @@ export function PomodoroStats() {
             (s) =>
               s.completed &&
               s.mode === "work" &&
-              isWithinInterval(new Date(s.startedAt), { start: weekStart, end: weekEnd })
+              isWithinInterval(new Date(s.startedAt), {
+                start: weekStart,
+                end: weekEnd
+              })
           );
 
           const totalMinutes = Math.round(
@@ -183,7 +288,7 @@ export function PomodoroStats() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <div className="bg-background/50 border border-white/10 rounded-lg p-4">
           <div className="flex items-center gap-2 text-white/60 mb-2">
             <Timer className="w-4 h-4" />
@@ -213,7 +318,43 @@ export function PomodoroStats() {
             {stats.completedCycles}
           </div>
         </div>
+
+        <div className="bg-background/50 border border-white/10 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-white/60 mb-2">
+            <Star className="w-4 h-4" />
+            <span className="text-xs">Cycle Stars</span>
+          </div>
+          <div className="text-2xl font-bold text-white">{cycleStars}</div>
+        </div>
       </div>
+
+      {cycleStars > 0 && (
+        <div className="bg-background/50 border border-white/10 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 text-white/60">
+              <Star className="w-4 h-4" />
+              <span className="text-sm">Cycle Stars Collected</span>
+            </div>
+            <span className="text-sm text-white/50">{cycleStars} stars</span>
+          </div>
+          <div 
+            className="relative h-24 rounded-lg overflow-hidden"
+            style={{
+              background: "radial-gradient(ellipse at center, rgba(139, 92, 246, 0.1) 0%, rgba(15, 15, 30, 0.8) 70%)"
+            }}
+          >
+            <div className="absolute inset-0 bg-linear-to-t from-primary/5 to-transparent" />
+            {Array.from({ length: Math.min(cycleStars, 15) }).map((_, i) => (
+              <MiniCycleStar key={i} index={i} />
+            ))}
+            {cycleStars > 15 && (
+              <div className="absolute bottom-2 right-2 text-xs text-white/40">
+                +{cycleStars - 15} more
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="bg-background/50 border border-white/10 rounded-lg p-4">
         <div className="flex items-center gap-2 text-white/60 mb-4">
@@ -223,22 +364,15 @@ export function PomodoroStats() {
 
         <div className="flex items-end justify-between gap-2 h-32">
           {chartData.map((item, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center gap-2">
-              <div className="w-full flex flex-col items-center justify-end h-24">
-                <div
-                  className="w-full bg-primary/60 rounded-t transition-all duration-300 min-h-1"
-                  style={{
-                    height: `${(item.value / maxMinutes) * 100}%`
-                  }}
-                />
-              </div>
-              <span className="text-xs text-white/50">{item.label}</span>
-            </div>
+            <ChartBar key={i} item={item} maxMinutes={maxMinutes} />
           ))}
         </div>
 
         <div className="flex justify-center gap-4 mt-4 text-xs text-white/50">
-          <span>Total: {formatDuration(chartData.reduce((a, d) => a + d.value * 60, 0))}</span>
+          <span>
+            Total:{" "}
+            {formatDuration(chartData.reduce((a, d) => a + d.value * 60, 0))}
+          </span>
           <span>Sessions: {chartData.reduce((a, d) => a + d.sessions, 0)}</span>
         </div>
       </div>
@@ -250,7 +384,7 @@ export function PomodoroStats() {
             <span className="text-sm">Recent Sessions</span>
           </div>
 
-          <div className="space-y-2 max-h-48 overflow-y-auto">
+          <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-none">
             {sessions
               .filter((s) => s.completed && s.mode === "work")
               .slice(0, 10)

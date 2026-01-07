@@ -12,8 +12,7 @@ import {
   Bell,
   Repeat,
   Timer,
-  Clock,
-  Focus
+  Clock
 } from "lucide-react";
 import { Task } from "@/types/task.types";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
@@ -65,6 +64,7 @@ interface TaskItemProps {
   onRemoveTask: (id: string) => void;
   onClick: () => void;
   onFocus?: () => void;
+  expectedEndTime?: string;
 }
 
 interface ContextMenuPosition {
@@ -80,7 +80,8 @@ export function TaskItem({
   onSetDueDate,
   onRemoveTask,
   onClick,
-  onFocus
+  onFocus,
+  expectedEndTime
 }: TaskItemProps) {
   const [contextMenu, setContextMenu] = useState<ContextMenuPosition | null>(
     null
@@ -163,7 +164,8 @@ export function TaskItem({
         onContextMenu={handleContextMenu}
         className={cn(
           "flex items-center justify-between px-4 py-3 bg-background/50 border rounded-lg hover:bg-white/5 transition-colors cursor-pointer",
-          isActive ? "border-primary/50 bg-primary/5" : "border-white/10"
+          isActive ? "border-primary/50 bg-primary/5" : "border-white/10",
+          task.completed && "opacity-50"
         )}
       >
         <div className="flex items-center gap-3">
@@ -228,23 +230,11 @@ export function TaskItem({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {onFocus && !task.completed && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onFocus();
-              }}
-              className={cn(
-                "cursor-pointer transition-colors",
-                isActive
-                  ? "text-primary hover:text-primary/80"
-                  : "text-white/30 hover:text-primary"
-              )}
-              title={isActive ? "Remove focus" : "Set focus"}
-            >
-              <Focus className="w-5 h-5" />
-            </button>
+        <div className="flex items-center gap-3">
+          {expectedEndTime && !task.completed && (
+            <span className="text-[10px] text-white/30 whitespace-nowrap">
+              ~{expectedEndTime}
+            </span>
           )}
           <button
             onClick={(e) => {

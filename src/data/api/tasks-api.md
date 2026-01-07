@@ -37,6 +37,7 @@ interface Task {
   completed: boolean;
   favorite: boolean;
   createdAt: number;   // timestamp em ms
+  index: number;       // ordem da task na lista (para reordenação drag-and-drop)
   steps: TaskStep[];
   dueDate: number | null;
   reminder: TaskReminder | null;
@@ -206,6 +207,29 @@ Alterna o status de favorito.
 {
   "id": "1735570800000-abc123",
   "favorite": true
+}
+```
+
+### PATCH /api/tasks/reorder
+
+Reordena as tasks (drag-and-drop).
+
+**Request:**
+```json
+{
+  "taskIds": ["id1", "id2", "id3"]
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "tasks": [
+    { "id": "id1", "index": 0 },
+    { "id": "id2", "index": 1 },
+    { "id": "id3", "index": 2 }
+  ]
 }
 ```
 

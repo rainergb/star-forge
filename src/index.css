@@ -150,3 +150,12 @@
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(-50%, -50%) translateY(0px);
+  }
+  50% {
+    transform: translate(-50%, -50%) translateY(-8px);
+  }
+}
