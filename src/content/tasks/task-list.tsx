@@ -334,7 +334,7 @@ export function TaskList({
             value={newTaskTitle}
             onChange={(e) => setNewTaskTitle(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Add a new task..."
+            placeholder="Adicionar nova tarefa..."
             className="flex-1 bg-transparent text-white placeholder-white/30 focus:outline-none"
           />
           {newTaskTitle.trim() && (
@@ -503,7 +503,7 @@ export function TaskList({
                   }}
                   className="w-full mt-2 px-2 py-1 text-xs text-red-400 hover:bg-white/5 rounded cursor-pointer"
                 >
-                  Remove
+                  Remover
                 </button>
               )}
             </div>
@@ -514,7 +514,7 @@ export function TaskList({
       <div className="w-full space-y-2 max-h-[60vh] overflow-y-auto scrollbar-none">
         {sortedTasks.length === 0 ? (
           <div className="text-center text-white/40 py-8">
-            No tasks yet. Add one above!
+            Nenhuma tarefa ainda. Adicione uma acima!
           </div>
         ) : (
           <>
@@ -593,13 +593,13 @@ export function TaskList({
       {tasks.length > 0 && (
         <div className="flex flex-col items-center gap-1">
           <div className="text-sm text-white/40">
-            {tasks.filter((t) => t.completed).length} of {tasks.length}{" "}
-            completed
+            {tasks.filter((t) => t.completed).length} de {tasks.length}{" "}
+            concluídas
           </div>
           {estimatedEndTime && (
             <div className="flex items-center gap-1.5 text-xs text-white/30">
               <Clock className="w-3 h-3" />
-              <span>Expected end: {formatEndTime(estimatedEndTime)}</span>
+              <span>Previsão de término: {formatEndTime(estimatedEndTime)}</span>
             </div>
           )}
         </div>

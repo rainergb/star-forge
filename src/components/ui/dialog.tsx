@@ -43,8 +43,30 @@ const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
   <div className={cn("flex flex-col space-y-1.5 text-center sm:text-left", className)} {...props} />
 )
 
-const DialogTitle = ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
-  <h2 className={cn("text-lg font-semibold leading-none tracking-tight text-white", className)} {...props} />
-)
+const DialogFooter = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      className
+    )}
+    {...props}
+  />
+);
 
-export { Dialog, DialogContent, DialogHeader, DialogTitle }
+const DialogTitle = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLHeadingElement>) => (
+  <h2
+    className={cn(
+      "text-lg font-semibold leading-none tracking-tight text-white",
+      className
+    )}
+    {...props}
+  />
+);
+
+export { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle };

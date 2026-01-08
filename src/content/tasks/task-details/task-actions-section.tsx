@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { format } from "date-fns";
-import { enUS } from "date-fns/locale";
+import { ptBR } from "date-fns/locale";
 import { Bell, Calendar, Paperclip, X, Repeat } from "lucide-react";
 import { Task, TaskReminder, TaskFile, RepeatType } from "@/types/task.types";
 import { ReminderMenu } from "../reminder-menu";
@@ -8,16 +8,16 @@ import { DateTimePickerPopover } from "@/components/ui/date-time-picker-popover"
 import { TaskFilesList } from "./task-files-preview";
 
 const repeatOptions: { label: string; value: RepeatType }[] = [
-  { label: "Daily", value: "daily" },
-  { label: "Weekly", value: "weekly" },
-  { label: "Monthly", value: "monthly" },
-  { label: "Yearly", value: "yearly" }
+  { label: "Diário", value: "daily" },
+  { label: "Semanal", value: "weekly" },
+  { label: "Mensal", value: "monthly" },
+  { label: "Anual", value: "yearly" }
 ];
 
 const getRepeatLabel = (repeat: RepeatType): string => {
-  if (!repeat) return "Repeat";
+  if (!repeat) return "Repetir";
   const option = repeatOptions.find((o) => o.value === repeat);
-  return option?.label || "Repeat";
+  return option?.label || "Repetir";
 };
 
 const ACCEPTED_FILE_TYPES =
@@ -46,7 +46,7 @@ export function TaskActionsSection({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formatDueDate = (timestamp: number): string => {
-    return format(new Date(timestamp), "EEE, d MMM, HH:mm", { locale: enUS });
+    return format(new Date(timestamp), "EEE, d MMM, HH:mm", { locale: ptBR });
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { PomodoroTimer } from "@/content/pomodoro/pomodoro-timer";
 import { PomodoroStats } from "@/content/stats";
 import { TaskList } from "@/content/tasks/task-list";
+import { ProjectList } from "@/content/projects/project-list";
 import { TopBar } from "@/components/top-bar";
 import { AppDock } from "@/content/dock/app-dock";
 import { useToast } from "@/hooks/use-toast";
@@ -180,6 +181,7 @@ function AppContent() {
         {currentView === "tasks" && (
           <TaskList onNavigateToPomodoro={() => setCurrentView("pomodoro")} />
         )}
+        {currentView === "projects" && <ProjectList />}
         {currentView === "stats" && <PomodoroStats />}
       </div>
 

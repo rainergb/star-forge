@@ -34,6 +34,7 @@ export function useTasks() {
         dueDate?: number | null;
         reminder?: TaskReminder | null;
         estimatedPomodoros?: number | null;
+        projectId?: string | null;
       }
     ): string => {
       const id = generateId();
@@ -52,7 +53,8 @@ export function useTasks() {
         notes: [],
         estimatedPomodoros: options?.estimatedPomodoros ?? null,
         completedPomodoros: 0,
-        totalTimeSpent: 0
+        totalTimeSpent: 0,
+        projectId: options?.projectId ?? null
       };
       setState((prev) => ({ ...prev, tasks: [newTask, ...prev.tasks] }));
       return id;
@@ -370,6 +372,29 @@ export function useTasks() {
     [setState]
   );
 
+  const setProject = useCallback(
+    (taskId: string, projectId: string | null) => {
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
+          task.id === taskId ? { ...task, projectId } : task
+        )
+      }));
+    },
+    [setState]
+  );
+
+  const getTasksByProject = useCallback(
+    (projectId: string): Task[] => {
+      return state.tasks.filter((task) => task.projectId === projectId);
+    },
+    [state.tasks]
+  );
+
+  const getTasksWithoutProject = useCallback((): Task[] => {
+    return state.tasks.filter((task) => !task.projectId);
+  }, [state.tasks]);
+
   return {
     tasks: state.tasks,
     addTask,
@@ -394,6 +419,9 @@ export function useTasks() {
     setEstimatedPomodoros,
     clearCompleted,
     getTask,
-    reorderTasks
+    reorderTasks,
+    setProject,
+    getTasksByProject,
+    getTasksWithoutProject
   };
 }

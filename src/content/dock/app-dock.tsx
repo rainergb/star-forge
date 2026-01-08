@@ -1,4 +1,4 @@
-import { ListTodo, Clock } from "lucide-react";
+import { ListTodo, Clock, FolderKanban } from "lucide-react";
 import Dock, { DockItemData } from "./dock";
 import { AppView } from "@/types/app.types";
 
@@ -9,6 +9,13 @@ interface AppDockProps {
 
 export function AppDock({ currentView, onViewChange }: AppDockProps) {
   const dockItems: DockItemData[] = [
+    {
+      icon: <FolderKanban className="w-6 h-6 text-white" />,
+      label: "Projects",
+      onClick: () => onViewChange("projects"),
+      className:
+        currentView === "projects" ? "bg-primary/20 border-primary/50" : ""
+    },
     {
       icon: <ListTodo className="w-6 h-6 text-white" />,
       label: "Tasklist",

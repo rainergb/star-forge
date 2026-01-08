@@ -87,7 +87,7 @@ export function MiniTaskList({
   if (isPinned) {
     return (
       <FloatingContainer
-        title="Tasks"
+        title="Tarefas"
         isVisible={isVisible}
         isPinned={isPinned}
         position={position}
@@ -111,7 +111,7 @@ export function MiniTaskList({
   // Versão mini quando não fixado
   return (
     <FloatingContainer
-      title="Tasks"
+      title="Tarefas"
       isVisible={isVisible}
       isPinned={isPinned}
       position={position}
@@ -123,7 +123,7 @@ export function MiniTaskList({
       {sortedTasks.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 text-white/40">
           <ListTodo className="h-8 w-8 mb-2 opacity-50" />
-          <p className="text-xs">No tasks</p>
+          <p className="text-xs">Sem tarefas</p>
         </div>
       ) : (
         <div className="overflow-y-auto max-h-[340px] scrollbar-none p-2 space-y-0.5">

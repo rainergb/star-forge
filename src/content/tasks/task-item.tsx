@@ -18,31 +18,31 @@ import { Task } from "@/types/task.types";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { enUS } from "date-fns/locale";
+import { ptBR } from "date-fns/locale";
 import { format, isToday, isTomorrow, isPast } from "date-fns";
 import { usePersonalize } from "@/hooks/use-personalize";
 import successSound from "@/assets/sucess.mp3";
 
 const formatDueDate = (timestamp: number): string => {
   const date = new Date(timestamp);
-  if (isToday(date)) return "Today";
-  if (isTomorrow(date)) return "Tomorrow";
-  return format(date, "MM/dd");
+  if (isToday(date)) return "Hoje";
+  if (isTomorrow(date)) return "Amanhã";
+  return format(date, "dd/MM");
 };
 
 const formatReminderDate = (timestamp: number): string => {
   const date = new Date(timestamp);
-  if (isToday(date)) return "Today";
-  if (isTomorrow(date)) return "Tomorrow";
-  return format(date, "MM/dd");
+  if (isToday(date)) return "Hoje";
+  if (isTomorrow(date)) return "Amanhã";
+  return format(date, "dd/MM");
 };
 
 const getRepeatLabel = (repeat: string): string => {
   const labels: Record<string, string> = {
-    daily: "Daily",
-    weekly: "Weekly",
-    monthly: "Monthly",
-    yearly: "Yearly"
+    daily: "Diário",
+    weekly: "Semanal",
+    monthly: "Mensal",
+    yearly: "Anual"
   };
   return labels[repeat] || repeat;
 };
@@ -80,7 +80,6 @@ export function TaskItem({
   onSetDueDate,
   onRemoveTask,
   onClick,
-  onFocus,
   expectedEndTime
 }: TaskItemProps) {
   const [contextMenu, setContextMenu] = useState<ContextMenuPosition | null>(
@@ -269,21 +268,21 @@ export function TaskItem({
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
               >
                 <CalendarCheck className="w-4 h-4 text-white/60" />
-                Due today
+                Para hoje
               </button>
               <button
                 onClick={handleSetDueTomorrow}
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
               >
                 <CalendarDays className="w-4 h-4 text-white/60" />
-                Due tomorrow
+                Para amanhã
               </button>
               <button
                 onClick={handleChooseDate}
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
               >
                 <Calendar className="w-4 h-4 text-white/60" />
-                Choose a date
+                Escolher data
               </button>
 
               <div className="my-1 border-t border-white/10" />
@@ -294,9 +293,8 @@ export function TaskItem({
               >
                 <div className="flex items-center gap-3">
                   <Trash2 className="w-4 h-4" />
-                  Delete task
+                  Excluir tarefa
                 </div>
-                <span className="text-xs text-white/40">Delete</span>
               </button>
             </div>
           </>,
@@ -320,7 +318,7 @@ export function TaskItem({
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <span className="text-white/80 text-sm font-medium">
-                  Choose due date
+                  Escolher data
                 </span>
               </div>
 
@@ -328,7 +326,7 @@ export function TaskItem({
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
-                locale={enUS}
+                locale={ptBR}
                 initialFocus
               />
 
@@ -338,14 +336,14 @@ export function TaskItem({
                   className="flex-1 text-white/70"
                   onClick={() => setShowDatePicker(false)}
                 >
-                  Cancel
+                  Cancelar
                 </Button>
                 <Button
                   className="flex-1 bg-primary/80 hover:bg-primary text-white"
                   onClick={handleDateSave}
                   disabled={!selectedDate}
                 >
-                  Save
+                  Salvar
                 </Button>
               </div>
             </div>
