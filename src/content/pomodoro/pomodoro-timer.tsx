@@ -23,6 +23,7 @@ export function PomodoroTimer() {
     isWorkMode
   } = usePomodoroContext();
 
+
   const getHue = () => {
     if (mode === "work") return 0;
     if (mode === "longBreak") return 120;

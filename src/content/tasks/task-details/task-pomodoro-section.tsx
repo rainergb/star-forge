@@ -86,7 +86,7 @@ export function TaskPomodoroSection({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-white/60">
             <Timer className="w-4 h-4" />
-            <span className="text-sm">Concluídos</span>
+            <span className="text-sm">Completed</span>
           </div>
           <span className="text-sm text-white/90 font-medium">
             {completedPomodoros}
@@ -96,7 +96,7 @@ export function TaskPomodoroSection({
         {task.estimatedPomodoros && task.estimatedPomodoros > 0 && (
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-white/50">
-              <span>Progresso</span>
+              <span>Progress</span>
               <span>{Math.round(progress)}%</span>
             </div>
             <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
@@ -112,7 +112,7 @@ export function TaskPomodoroSection({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-white/60">
               <Clock className="w-4 h-4" />
-              <span className="text-sm">Tempo gasto</span>
+              <span className="text-sm">Time spent</span>
             </div>
             <span className="text-sm text-white/90 font-medium">
               {formatTime(task.totalTimeSpent)}
@@ -124,7 +124,7 @@ export function TaskPomodoroSection({
           <div className="mt-4 space-y-2">
             <div className="flex items-center gap-2 text-white/60">
               <History className="w-4 h-4" />
-              <span className="text-sm">Sessões Recentes</span>
+              <span className="text-sm">Recent Sessions</span>
             </div>
             <div className="space-y-1 max-h-32 overflow-y-auto">
               {sessions.slice(0, 5).map((session) => (

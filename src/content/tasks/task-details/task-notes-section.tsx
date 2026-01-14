@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import { Plus, Pencil, Trash2, X, Check, MessageSquare } from "lucide-react";
 import { TaskNote } from "@/types/task.types";
 
@@ -27,7 +27,7 @@ function NoteItem({ note, onUpdate, onRemove }: NoteItemProps) {
   };
 
   const formatDate = (timestamp: number) => {
-    return format(new Date(timestamp), "d MMM, HH:mm", { locale: ptBR });
+    return format(new Date(timestamp), "d MMM, HH:mm", { locale: enUS });
   };
 
   if (isEditing) {
@@ -59,10 +59,12 @@ function NoteItem({ note, onUpdate, onRemove }: NoteItemProps) {
 
   return (
     <div className="group bg-white/5 border border-white/10 rounded-lg p-3">
-      <p className="text-white/70 text-sm whitespace-pre-wrap">{note.content}</p>
+      <p className="text-white/70 text-sm whitespace-pre-wrap">
+        {note.content}
+      </p>
       <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
         <span className="text-white/30 text-xs">
-          {note.updatedAt > note.createdAt ? "Editado " : ""}
+          {note.updatedAt > note.createdAt ? "Edited " : ""}
           {formatDate(note.updatedAt)}
         </span>
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -91,11 +93,11 @@ interface TaskNotesSectionProps {
   onRemoveNote: (noteId: string) => void;
 }
 
-export function TaskNotesSection({ 
-  notes, 
-  onAddNote, 
-  onUpdateNote, 
-  onRemoveNote 
+export function TaskNotesSection({
+  notes,
+  onAddNote,
+  onUpdateNote,
+  onRemoveNote
 }: TaskNotesSectionProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [newContent, setNewContent] = useState("");
@@ -113,14 +115,16 @@ export function TaskNotesSection({
     setIsAdding(false);
   };
 
-  const sortedNotes = [...(notes || [])].sort((a, b) => b.createdAt - a.createdAt);
+  const sortedNotes = [...(notes || [])].sort(
+    (a, b) => b.createdAt - a.createdAt
+  );
 
   return (
     <div className="mt-4 border-t border-white/10 pt-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2 text-white/50">
           <MessageSquare className="w-4 h-4" />
-          <span className="text-sm">Anotações</span>
+          <span className="text-sm">Notes</span>
           {notes && notes.length > 0 && (
             <span className="text-xs text-white/30">({notes.length})</span>
           )}
@@ -140,7 +144,7 @@ export function TaskNotesSection({
           <textarea
             value={newContent}
             onChange={(e) => setNewContent(e.target.value)}
-            placeholder="Escreva sua anotação..."
+            placeholder="Write your note..."
             className="w-full min-h-20 bg-transparent border-none outline-none text-white/70 text-sm placeholder-white/40 resize-none"
             autoFocus
           />
@@ -149,14 +153,14 @@ export function TaskNotesSection({
               onClick={handleCancel}
               className="px-3 py-1.5 text-white/50 hover:text-white/70 text-sm rounded transition-colors cursor-pointer"
             >
-              Cancelar
+              Cancel
             </button>
             <button
               onClick={handleAdd}
               disabled={!newContent.trim()}
               className="px-3 py-1.5 bg-primary/80 hover:bg-primary text-white text-sm rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
-              Adicionar
+              Add
             </button>
           </div>
         </div>
@@ -168,7 +172,7 @@ export function TaskNotesSection({
             onClick={() => setIsAdding(true)}
             className="w-full py-4 text-white/30 text-sm hover:text-white/50 hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
           >
-            Clique para adicionar uma anotação
+            Click to add a note
           </button>
         ) : (
           sortedNotes.map((note) => (

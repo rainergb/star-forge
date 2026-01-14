@@ -27,10 +27,10 @@ function formatTime(seconds: number): string {
 }
 
 const STATUS_LABELS = {
-  active: "Ativo",
-  paused: "Pausado",
-  completed: "Concluído",
-  archived: "Arquivado"
+  active: "Active",
+  paused: "Paused",
+  completed: "Completed",
+  archived: "Archived"
 };
 
 interface ProjectItemProps {
@@ -50,9 +50,12 @@ export function ProjectItem({
   onToggleFavorite,
   onRemove
 }: ProjectItemProps) {
-  const [contextMenu, setContextMenu] = useState<ContextMenuPosition | null>(null);
+  const [contextMenu, setContextMenu] = useState<ContextMenuPosition | null>(
+    null
+  );
   const colors = PROJECT_COLORS[project.color];
-  const progress = tasksCount > 0 ? (completedTasksCount / tasksCount) * 100 : 0;
+  const progress =
+    tasksCount > 0 ? (completedTasksCount / tasksCount) * 100 : 0;
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -88,7 +91,13 @@ export function ProjectItem({
           <div className="flex flex-col">
             <span className="text-white/90">{project.name}</span>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={cn("text-xs px-1.5 py-0.5 rounded", colors.bg, colors.text)}>
+              <span
+                className={cn(
+                  "text-xs px-1.5 py-0.5 rounded",
+                  colors.bg,
+                  colors.text
+                )}
+              >
                 {STATUS_LABELS[project.status]}
               </span>
 
@@ -114,8 +123,14 @@ export function ProjectItem({
             {tasksCount > 0 && (
               <div className="mt-1.5 w-32 h-1 bg-white/10 rounded-full overflow-hidden">
                 <div
-                  className={cn("h-full rounded-full transition-all", colors.bg)}
-                  style={{ width: `${progress}%`, backgroundColor: colors.text.replace('text-', '') }}
+                  className={cn(
+                    "h-full rounded-full transition-all",
+                    colors.bg
+                  )}
+                  style={{
+                    width: `${progress}%`,
+                    backgroundColor: colors.text.replace("text-", "")
+                  }}
                 />
               </div>
             )}
@@ -151,29 +166,21 @@ export function ProjectItem({
                 top: contextMenu.y
               }}
             >
-              <button
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
-              >
+              <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer">
                 <Play className="w-4 h-4 text-green-400" />
-                Ativar projeto
+                Activate project
               </button>
-              <button
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
-              >
+              <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer">
                 <Pause className="w-4 h-4 text-yellow-400" />
-                Pausar projeto
+                Pause project
               </button>
-              <button
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
-              >
+              <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer">
                 <CheckCircle className="w-4 h-4 text-blue-400" />
-                Concluir projeto
+                Complete project
               </button>
-              <button
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
-              >
+              <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer">
                 <Archive className="w-4 h-4 text-white/60" />
-                Arquivar projeto
+                Archive project
               </button>
 
               <div className="my-1 border-t border-white/10" />
@@ -184,7 +191,7 @@ export function ProjectItem({
               >
                 <div className="flex items-center gap-3">
                   <Trash2 className="w-4 h-4" />
-                  Excluir projeto
+                  Delete project
                 </div>
               </button>
             </div>

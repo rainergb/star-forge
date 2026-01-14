@@ -32,6 +32,8 @@ interface TaskDetailsProps {
   onRemoveNote: (taskId: string, noteId: string) => void;
   onRemoveTask: (id: string) => void;
   onSetEstimatedPomodoros: (id: string, count: number | null) => void;
+  onSetProject: (taskId: string, projectId: string | null) => void;
+  onSetSkills: (taskId: string, skillIds: string[]) => void;
   onStartPomodoro?: (taskId: string) => void;
 }
 
@@ -55,7 +57,9 @@ export function TaskDetails({
   onUpdateNote,
   onRemoveNote,
   onRemoveTask,
-  onSetEstimatedPomodoros
+  onSetEstimatedPomodoros,
+  onSetProject,
+  onSetSkills
 }: TaskDetailsProps) {
   const handleDelete = () => {
     if (!task) return;
@@ -90,6 +94,10 @@ export function TaskDetails({
                 onSetRepeat={onSetRepeat}
                 onAddFile={onAddFile}
                 onRemoveFile={onRemoveFile}
+                onSetProject={(_, projectId) =>
+                  onSetProject(task.id, projectId)
+                }
+                onSetSkills={(_, skillIds) => onSetSkills(task.id, skillIds)}
               />
 
               <TaskPomodoroSection

@@ -40,7 +40,7 @@ export function TaskStepsSection({
           value={newStepTitle}
           onChange={(e) => setNewStepTitle(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Adicionar etapa"
+          placeholder="Add step"
           className="flex-1 bg-transparent border-none outline-none text-white/70 text-sm placeholder-white/40"
         />
       </div>

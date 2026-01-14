@@ -1,25 +1,6 @@
-import { useState } from "react";
-import {
-  Star,
-  Folder,
-  ChevronDown,
-  Play,
-  Pause,
-  CheckCircle,
-  Archive
-} from "lucide-react";
-import {
-  Project,
-  ProjectStatus,
-  ProjectColor,
-  PROJECT_COLORS
-} from "@/types/project.types";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+import { useState, useRef } from "react";
+import { Star, Folder, ImagePlus, X } from "lucide-react";
+import { Project, PROJECT_COLORS } from "@/types/project.types";
 import { cn } from "@/lib/utils";
 
 interface ProjectHeaderProps {
@@ -27,72 +8,23 @@ interface ProjectHeaderProps {
   onToggleFavorite: () => void;
   onUpdateName: (name: string) => void;
   onUpdateDescription: (description: string | null) => void;
-  onUpdateColor: (color: ProjectColor) => void;
-  onSetStatus: (status: ProjectStatus) => void;
+  onUpdateImage: (image: string | null) => void;
 }
-
-const STATUS_CONFIG: Record<
-  ProjectStatus,
-  { label: string; icon: React.ElementType; className: string }
-> = {
-  active: {
-    label: "Ativo",
-    icon: Play,
-    className: "text-green-400"
-  },
-  paused: {
-    label: "Pausado",
-    icon: Pause,
-    className: "text-yellow-400"
-  },
-  completed: {
-    label: "Concluído",
-    icon: CheckCircle,
-    className: "text-blue-400"
-  },
-  archived: {
-    label: "Arquivado",
-    icon: Archive,
-    className: "text-gray-400"
-  }
-};
-
-const COLOR_OPTIONS: { value: ProjectColor; label: string }[] = [
-  { value: "purple", label: "Roxo" },
-  { value: "blue", label: "Azul" },
-  { value: "green", label: "Verde" },
-  { value: "orange", label: "Laranja" },
-  { value: "red", label: "Vermelho" },
-  { value: "pink", label: "Rosa" },
-  { value: "cyan", label: "Ciano" },
-  { value: "yellow", label: "Amarelo" }
-];
 
 export function ProjectHeader({
   project,
   onToggleFavorite,
   onUpdateName,
   onUpdateDescription,
-  onUpdateColor,
-  onSetStatus
+  onUpdateImage
 }: ProjectHeaderProps) {
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [editedName, setEditedName] = useState(project.name);
-  const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [editedDescription, setEditedDescription] = useState(
     project.description || ""
   );
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const colors = PROJECT_COLORS[project.color];
-  const statusConfig = STATUS_CONFIG[project.status];
-  const StatusIcon = statusConfig.icon;
-
-  const handleSaveName = () => {
-    if (editedName.trim() && editedName !== project.name) {
-      onUpdateName(editedName.trim());
-    }
-    setIsEditingName(false);
-  };
 
   const handleSaveDescription = () => {
     const newDesc = editedDescription.trim() || null;
@@ -102,84 +34,103 @@ export function ProjectHeader({
     setIsEditingDescription(false);
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        onUpdateImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
-    <div className="p-4 border-b border-white/10">
-      <div className="flex items-start gap-3">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              className={cn(
-                "p-3 rounded-lg cursor-pointer transition-colors hover:opacity-80",
-                colors.bg
-              )}
-            >
-              <Folder className={cn("w-6 h-6", colors.text)} />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            {COLOR_OPTIONS.map((option) => (
-              <DropdownMenuItem
-                key={option.value}
-                onClick={() => onUpdateColor(option.value)}
-                className={cn(
-                  project.color === option.value && "bg-primary/20"
-                )}
+    <div className="space-y-4">
+      {/* Image Banner */}
+      <div className="relative -mx-6 -mt-6 mb-4">
+        {project.image ? (
+          <div className="relative group">
+            <img
+              src={project.image}
+              alt={project.name}
+              className="w-full h-32 object-cover"
+            />
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
               >
-                <div
-                  className={cn(
-                    "w-3 h-3 rounded-full mr-2",
-                    PROJECT_COLORS[option.value].bg
-                  )}
-                />
-                {option.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+                <ImagePlus className="w-5 h-5 text-white" />
+              </button>
+              <button
+                onClick={() => onUpdateImage(null)}
+                className="p-2 bg-red-500/50 rounded-lg hover:bg-red-500/70 transition-colors"
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full h-20 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-white/40 hover:text-white/60"
+          >
+            <ImagePlus className="w-5 h-5" />
+            <span className="text-sm">Add cover image</span>
+          </button>
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          className="hidden"
+        />
+      </div>
+
+      <div className="flex items-center gap-3 pr-8">
+        <div className={cn("p-2 rounded-lg shrink-0", colors.bg)}>
+          <Folder className={cn("w-6 h-6", colors.text)} />
+        </div>
 
         <div className="flex-1 min-w-0">
-          {isEditingName ? (
-            <input
-              type="text"
-              value={editedName}
-              onChange={(e) => setEditedName(e.target.value)}
-              onBlur={handleSaveName}
-              onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
-              className="w-full bg-transparent text-xl font-semibold text-white border-b border-primary/50 focus:outline-none"
-              autoFocus
-            />
-          ) : (
-            <h2
-              onClick={() => setIsEditingName(true)}
-              className="text-xl font-semibold text-white cursor-pointer hover:text-white/80"
-            >
-              {project.name}
-            </h2>
-          )}
+          <input
+            type="text"
+            value={project.name}
+            onChange={(e) => onUpdateName(e.target.value)}
+            className="w-full text-lg bg-transparent border-none outline-none text-white"
+          />
 
           {isEditingDescription ? (
             <textarea
               value={editedDescription}
               onChange={(e) => setEditedDescription(e.target.value)}
               onBlur={handleSaveDescription}
-              placeholder="Adicionar descrição..."
-              className="w-full mt-1 bg-transparent text-sm text-white/60 border border-white/10 rounded p-2 focus:outline-none focus:border-primary/50 resize-none"
-              rows={2}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  setEditedDescription(project.description || "");
+                  setIsEditingDescription(false);
+                }
+              }}
+              placeholder="Add description..."
+              className="w-full mt-1 bg-transparent text-sm text-white/60 border-b border-primary/50 focus:outline-none resize-none"
+              rows={1}
               autoFocus
             />
           ) : (
             <p
               onClick={() => setIsEditingDescription(true)}
-              className="text-sm text-white/50 mt-1 cursor-pointer hover:text-white/70"
+              className="text-sm text-white/50 cursor-pointer hover:text-white/70 truncate"
             >
-              {project.description || "Clique para adicionar descrição..."}
+              {project.description || "Click to add description..."}
             </p>
           )}
         </div>
 
         <button
           onClick={onToggleFavorite}
-          className="cursor-pointer text-white/30 hover:text-[#D6B8FF] transition-colors"
+          className="cursor-pointer text-white/30 hover:text-[#D6B8FF] transition-colors shrink-0"
         >
           <Star
             className={cn(
@@ -188,39 +139,6 @@ export function ProjectHeader({
             )}
           />
         </button>
-      </div>
-
-      <div className="mt-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              className={cn(
-                "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm cursor-pointer transition-colors",
-                "bg-white/5 hover:bg-white/10 border border-white/10"
-              )}
-            >
-              <StatusIcon className={cn("w-4 h-4", statusConfig.className)} />
-              <span className="text-white/80">{statusConfig.label}</span>
-              <ChevronDown className="w-3 h-3 text-white/40" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            {(Object.keys(STATUS_CONFIG) as ProjectStatus[]).map((status) => {
-              const config = STATUS_CONFIG[status];
-              const Icon = config.icon;
-              return (
-                <DropdownMenuItem
-                  key={status}
-                  onClick={() => onSetStatus(status)}
-                  className={cn(project.status === status && "bg-primary/20")}
-                >
-                  <Icon className={cn("w-4 h-4 mr-2", config.className)} />
-                  {config.label}
-                </DropdownMenuItem>
-              );
-            })}
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
     </div>
   );

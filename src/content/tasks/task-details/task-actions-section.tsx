@@ -1,23 +1,25 @@
 import { useState, useRef } from "react";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import { Bell, Calendar, Paperclip, X, Repeat } from "lucide-react";
 import { Task, TaskReminder, TaskFile, RepeatType } from "@/types/task.types";
 import { ReminderMenu } from "../reminder-menu";
 import { DateTimePickerPopover } from "@/components/ui/date-time-picker-popover";
 import { TaskFilesList } from "./task-files-preview";
+import { ProjectSelector } from "@/content/projects/project-selector";
+import { SkillSelector } from "@/content/maestry/skill-selector";
 
 const repeatOptions: { label: string; value: RepeatType }[] = [
-  { label: "Diário", value: "daily" },
-  { label: "Semanal", value: "weekly" },
-  { label: "Mensal", value: "monthly" },
-  { label: "Anual", value: "yearly" }
+  { label: "Daily", value: "daily" },
+  { label: "Weekly", value: "weekly" },
+  { label: "Monthly", value: "monthly" },
+  { label: "Yearly", value: "yearly" }
 ];
 
 const getRepeatLabel = (repeat: RepeatType): string => {
-  if (!repeat) return "Repetir";
+  if (!repeat) return "Repeat";
   const option = repeatOptions.find((o) => o.value === repeat);
-  return option?.label || "Repetir";
+  return option?.label || "Repeat";
 };
 
 const ACCEPTED_FILE_TYPES =
@@ -30,6 +32,8 @@ interface TaskActionsSectionProps {
   onSetRepeat: (taskId: string, repeat: RepeatType) => void;
   onAddFile: (taskId: string, file: Omit<TaskFile, "id" | "addedAt">) => void;
   onRemoveFile: (taskId: string, fileId: string) => void;
+  onSetProject: (taskId: string, projectId: string | null) => void;
+  onSetSkills: (taskId: string, skillIds: string[]) => void;
 }
 
 export function TaskActionsSection({
@@ -38,7 +42,9 @@ export function TaskActionsSection({
   onSetDueDate,
   onSetRepeat,
   onAddFile,
-  onRemoveFile
+  onRemoveFile,
+  onSetProject,
+  onSetSkills
 }: TaskActionsSectionProps) {
   const [showReminderMenu, setShowReminderMenu] = useState(false);
   const [showDueDatePicker, setShowDueDatePicker] = useState(false);
@@ -46,7 +52,7 @@ export function TaskActionsSection({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formatDueDate = (timestamp: number): string => {
-    return format(new Date(timestamp), "EEE, d MMM, HH:mm", { locale: ptBR });
+    return format(new Date(timestamp), "EEE, d MMM, HH:mm", { locale: enUS });
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,7 +136,7 @@ export function TaskActionsSection({
 
         {showDueDatePicker && (
           <DateTimePickerPopover
-            title="Data de conclusão"
+            title="Due date"
             initialDate={task.dueDate ? new Date(task.dueDate) : undefined}
             onSave={(date) => {
               onSetDueDate(task.id, date.getTime());
@@ -216,6 +222,18 @@ export function TaskActionsSection({
           onRemoveFile={(fileId) => onRemoveFile(task.id, fileId)}
         />
       </div>
+
+      {/* Project */}
+      <ProjectSelector
+        selectedProjectId={task.projectId}
+        onSelect={(projectId) => onSetProject(task.id, projectId)}
+      />
+
+      {/* Skills */}
+      <SkillSelector
+        selectedSkillIds={task.skillIds || []}
+        onSelect={(skillIds) => onSetSkills(task.id, skillIds)}
+      />
     </div>
   );
 }

@@ -15,12 +15,16 @@ import {
   useSortable
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronDown, ChevronRight, FolderPlus } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { useProjects } from "@/hooks/use-projects";
 import { useTasks } from "@/hooks/use-tasks";
 import { ProjectItem } from "./project-item";
 import { ProjectDetails } from "./project-details";
 import { Project } from "@/types/project.types";
+
+interface ProjectListProps {
+  onNavigateToTasks?: (projectId: string) => void;
+}
 
 interface SortableProjectItemProps {
   project: Project;
@@ -69,7 +73,7 @@ function SortableProjectItem({
   );
 }
 
-export function ProjectList() {
+export function ProjectList({ onNavigateToTasks }: ProjectListProps) {
   const {
     projects,
     addProject,
@@ -161,13 +165,12 @@ export function ProjectList() {
     <div className="flex flex-col items-center gap-6 w-full max-w-2xl mx-auto">
       <div className="w-full relative" ref={inputRef}>
         <div className="w-full flex items-center gap-2 px-4 py-3 bg-background/50 border border-white/10 rounded-lg focus-within:border-primary/50 transition-colors">
-          <FolderPlus className="w-5 h-5 text-white/30" />
           <input
             type="text"
             value={newProjectName}
             onChange={(e) => setNewProjectName(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Adicionar novo projeto..."
+            placeholder="Add new project..."
             className="flex-1 bg-transparent text-white placeholder-white/30 focus:outline-none"
           />
         </div>
@@ -176,7 +179,7 @@ export function ProjectList() {
       <div className="w-full space-y-2 max-h-[60vh] overflow-y-auto scrollbar-none">
         {projects.length === 0 ? (
           <div className="text-center text-white/40 py-8">
-            Nenhum projeto ainda. Adicione um acima!
+            No projects yet. Add one above!
           </div>
         ) : (
           <>
@@ -217,7 +220,7 @@ export function ProjectList() {
                   ) : (
                     <ChevronDown className="w-4 h-4" />
                   )}
-                  <span className="text-sm font-medium">Arquivados</span>
+                  <span className="text-sm font-medium">Archived</span>
                   <span className="text-sm text-white/40">
                     {archivedProjects.length}
                   </span>
@@ -250,8 +253,8 @@ export function ProjectList() {
       {projects.length > 0 && (
         <div className="flex flex-col items-center gap-1">
           <div className="text-sm text-white/40">
-            {projects.filter((p) => p.status === "completed").length} de{" "}
-            {projects.length} concluídos
+            {projects.filter((p) => p.status === "completed").length} of{" "}
+            {projects.length} completed
           </div>
         </div>
       )}
@@ -264,6 +267,7 @@ export function ProjectList() {
         onUpdateProject={updateProject}
         onSetStatus={setStatus}
         onRemoveProject={handleDeleteProject}
+        onNavigateToTasks={onNavigateToTasks}
       />
     </div>
   );

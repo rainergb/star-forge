@@ -64,7 +64,7 @@ export function TaskHeader({
 
       <button
         onClick={() => onToggleFavorite(task.id)}
-        className="cursor-pointer text-white/30 hover:text-[#D6B8FF] transition-colors flex-shrink-0"
+        className="cursor-pointer text-white/30 hover:text-[#D6B8FF] transition-colors shrink-0"
       >
         <Star
           className={`w-5 h-5 ${

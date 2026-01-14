@@ -1,7 +1,8 @@
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { Project, ProjectStatus } from "@/types/project.types";
+import { Project, ProjectStatus, ProjectColor } from "@/types/project.types";
 import { useTasks } from "@/hooks/use-tasks";
 import { ProjectHeader } from "./project-header";
+import { ProjectActionsSection } from "./project-actions-section";
 import { ProjectStatsSection } from "./project-stats-section";
 import { ProjectTasksSection } from "./project-tasks-section";
 import { ProjectFooter } from "./project-footer";
@@ -14,6 +15,7 @@ interface ProjectDetailsProps {
   onUpdateProject: (id: string, updates: Partial<Project>) => void;
   onSetStatus: (id: string, status: ProjectStatus) => void;
   onRemoveProject: (id: string) => void;
+  onNavigateToTasks?: (projectId: string) => void;
 }
 
 export function ProjectDetails({
@@ -23,7 +25,8 @@ export function ProjectDetails({
   onToggleFavorite,
   onUpdateProject,
   onSetStatus,
-  onRemoveProject
+  onRemoveProject,
+  onNavigateToTasks
 }: ProjectDetailsProps) {
   const { tasks, setProject, addTask } = useTasks();
 
@@ -39,7 +42,7 @@ export function ProjectDetails({
 
   const handleAddTask = (title: string) => {
     if (!project) return;
-    addTask(title, "Tarefas", { projectId: project.id });
+    addTask(title, "Tasks", { projectId: project.id });
   };
 
   const handleRemoveTaskFromProject = (taskId: string) => {
@@ -59,8 +62,20 @@ export function ProjectDetails({
                 onUpdateDescription={(description) =>
                   onUpdateProject(project.id, { description })
                 }
-                onUpdateColor={(color) => onUpdateProject(project.id, { color })}
-                onSetStatus={(status) => onSetStatus(project.id, status)}
+                onUpdateImage={(image) =>
+                  onUpdateProject(project.id, { image })
+                }
+              />
+
+              <ProjectActionsSection
+                status={project.status}
+                color={project.color}
+                onSetStatus={(status: ProjectStatus) =>
+                  onSetStatus(project.id, status)
+                }
+                onSetColor={(color: ProjectColor) =>
+                  onUpdateProject(project.id, { color })
+                }
               />
 
               <ProjectStatsSection project={project} tasks={projectTasks} />
@@ -69,6 +84,14 @@ export function ProjectDetails({
                 tasks={projectTasks}
                 onAddTask={handleAddTask}
                 onRemoveFromProject={handleRemoveTaskFromProject}
+                onNavigateToTasks={
+                  onNavigateToTasks
+                    ? () => {
+                        onNavigateToTasks(project.id);
+                        onOpenChange(false);
+                      }
+                    : undefined
+                }
               />
             </div>
 

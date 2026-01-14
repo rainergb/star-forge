@@ -3,6 +3,7 @@ import { PomodoroTimer } from "@/content/pomodoro/pomodoro-timer";
 import { PomodoroStats } from "@/content/stats";
 import { TaskList } from "@/content/tasks/task-list";
 import { ProjectList } from "@/content/projects/project-list";
+import { SkillList } from "@/content/maestry";
 import { TopBar } from "@/components/top-bar";
 import { AppDock } from "@/content/dock/app-dock";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +17,8 @@ import {
 import { MiniTaskList } from "@/components/floating/mini-task-list";
 import { MiniPomodoro } from "@/components/floating/mini-pomodoro";
 import { MiniMusicPlayer } from "@/components/floating/mini-music-player";
+import { MiniProjectList } from "@/components/floating/mini-project-list";
+import { MiniMaestryList } from "@/components/floating/mini-maestry-list";
 import { AppView } from "@/types/app.types";
 import { Task } from "@/types/task.types";
 import { WidgetPosition, WidgetType } from "@/types/widget.types";
@@ -47,12 +50,22 @@ function AppContent() {
   const [currentView, setCurrentView] = useState<AppView>("pomodoro");
   const [electronVersion, setElectronVersion] =
     useState<string>("Carregando...");
+  const [taskFilterProjectId, setTaskFilterProjectId] = useState<string | null>(
+    null
+  );
+
+  const handleNavigateToTasksWithProject = (projectId: string) => {
+    setTaskFilterProjectId(projectId);
+    setCurrentView("tasks");
+  };
 
   const getStackIndex = (widget: WidgetType): number => {
     const widgets: WidgetType[] = [
       "miniTaskList",
       "miniPomodoro",
-      "musicPlayer"
+      "musicPlayer",
+      "miniProjectList",
+      "miniMaestryList"
     ];
     const currentPosition = getPosition(widget);
 
@@ -123,6 +136,8 @@ function AppContent() {
         onToggleMiniTaskList={() => toggleVisibility("miniTaskList")}
         onToggleMiniPomodoro={() => toggleVisibility("miniPomodoro")}
         onToggleMusicPlayer={() => toggleVisibility("musicPlayer")}
+        onToggleMiniProjectList={() => toggleVisibility("miniProjectList")}
+        onToggleMiniMaestryList={() => toggleVisibility("miniMaestryList")}
         onViewStats={() => setCurrentView("stats")}
       />
 
@@ -139,6 +154,34 @@ function AppContent() {
           onSelectTask={handleSelectTaskFromMini}
           onClearTask={clearActiveTask}
           stackIndex={getStackIndex("miniTaskList")}
+        />
+      )}
+
+      {currentView === "pomodoro" && (
+        <MiniProjectList
+          isVisible={isVisible("miniProjectList")}
+          isPinned={isPinned("miniProjectList")}
+          position={getPosition("miniProjectList")}
+          onClose={() => toggleVisibility("miniProjectList")}
+          onTogglePin={() => togglePin("miniProjectList")}
+          onPositionChange={(pos: WidgetPosition) =>
+            setPosition("miniProjectList", pos)
+          }
+          stackIndex={getStackIndex("miniProjectList")}
+        />
+      )}
+
+      {currentView === "pomodoro" && (
+        <MiniMaestryList
+          isVisible={isVisible("miniMaestryList")}
+          isPinned={isPinned("miniMaestryList")}
+          position={getPosition("miniMaestryList")}
+          onClose={() => toggleVisibility("miniMaestryList")}
+          onTogglePin={() => togglePin("miniMaestryList")}
+          onPositionChange={(pos: WidgetPosition) =>
+            setPosition("miniMaestryList", pos)
+          }
+          stackIndex={getStackIndex("miniMaestryList")}
         />
       )}
 
@@ -179,13 +222,28 @@ function AppContent() {
       <div className="relative z-10 container max-w-[2000px] max-h-[2000px] w-full mx-auto p-5">
         {currentView === "pomodoro" && <PomodoroTimer />}
         {currentView === "tasks" && (
-          <TaskList onNavigateToPomodoro={() => setCurrentView("pomodoro")} />
+          <TaskList
+            onNavigateToPomodoro={() => setCurrentView("pomodoro")}
+            initialFilterProjectId={taskFilterProjectId}
+          />
         )}
-        {currentView === "projects" && <ProjectList />}
+        {currentView === "projects" && (
+          <ProjectList onNavigateToTasks={handleNavigateToTasksWithProject} />
+        )}
+        {currentView === "maestry" && <SkillList />}
         {currentView === "stats" && <PomodoroStats />}
       </div>
 
-      <AppDock currentView={currentView} onViewChange={setCurrentView} />
+      <AppDock
+        currentView={currentView}
+        onViewChange={(view) => {
+          // Clear task filter when navigating away from tasks or to tasks manually
+          if (view !== "tasks" || currentView !== "projects") {
+            setTaskFilterProjectId(null);
+          }
+          setCurrentView(view);
+        }}
+      />
     </div>
   );
 }

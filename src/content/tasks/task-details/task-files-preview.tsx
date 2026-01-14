@@ -49,7 +49,7 @@ export function TaskFilePreview({ file, onRemove }: TaskFilePreviewProps) {
           onClose={() => setShowLightbox(false)}
         />
       )}
-      
+
       <div className="relative group rounded-lg overflow-hidden bg-white/5 border border-white/10">
         {isImage ? (
           <div className="relative">
@@ -88,18 +88,20 @@ export function TaskFilePreview({ file, onRemove }: TaskFilePreviewProps) {
             <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center shrink-0">
               <FileText className="w-5 h-5 text-red-400" />
             </div>
-            <span className="text-white/70 text-sm truncate flex-1">{file.name}</span>
+            <span className="text-white/70 text-sm truncate flex-1">
+              {file.name}
+            </span>
           </a>
         ) : null}
 
-        {/* File name for images */}
         {isImage && (
           <div className="px-3 py-2 border-t border-white/10">
-            <span className="text-white/50 text-xs truncate block">{file.name}</span>
+            <span className="text-white/50 text-xs truncate block">
+              {file.name}
+            </span>
           </div>
         )}
 
-        {/* Remove button */}
         <button
           onClick={onRemove}
           className="absolute top-2 right-2 p-1 bg-black/50 rounded-full text-white/50 hover:text-white hover:bg-black/70 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"

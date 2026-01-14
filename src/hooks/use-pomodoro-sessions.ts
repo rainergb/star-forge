@@ -67,9 +67,13 @@ export function usePomodoroSessions() {
   );
 
   const getStats = useCallback(
-    (period: StatsPeriod): PomodoroStats => {
+    (
+      period: StatsPeriod,
+      customSessions?: PomodoroSession[]
+    ): PomodoroStats => {
       const startTime = getPeriodStartTime(period);
-      const filteredSessions = state.sessions.filter(
+      const sourceSessions = customSessions || state.sessions;
+      const filteredSessions = sourceSessions.filter(
         (session) => session.startedAt >= startTime
       );
 
@@ -78,10 +82,20 @@ export function usePomodoroSessions() {
         (s) => s.mode === "shortBreak" || s.mode === "longBreak"
       );
 
-      const totalWorkTime = workSessions.reduce((acc, s) => acc + s.duration, 0);
-      const totalBreakTime = breakSessions.reduce((acc, s) => acc + s.duration, 0);
-      const completedSessions = filteredSessions.filter((s) => s.completed).length;
-      const completedWorkSessions = workSessions.filter((s) => s.completed).length;
+      const totalWorkTime = workSessions.reduce(
+        (acc, s) => acc + s.duration,
+        0
+      );
+      const totalBreakTime = breakSessions.reduce(
+        (acc, s) => acc + s.duration,
+        0
+      );
+      const completedSessions = filteredSessions.filter(
+        (s) => s.completed
+      ).length;
+      const completedWorkSessions = workSessions.filter(
+        (s) => s.completed
+      ).length;
 
       return {
         period,

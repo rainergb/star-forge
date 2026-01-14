@@ -51,6 +51,7 @@ export function useProjects() {
         description: options?.description ?? null,
         color: options?.color ?? "purple",
         icon: options?.icon ?? { type: "lucide", value: "Folder" },
+        image: null,
         status: "active",
         favorite: false,
         createdAt: now,

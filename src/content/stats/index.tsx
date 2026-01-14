@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { TrendingUp } from "lucide-react";
 import { usePomodoroSessions } from "@/hooks/use-pomodoro-sessions";
-import { StatsPeriod } from "@/types/pomodoro.types";
+import { useTasks } from "@/hooks/use-tasks";
+import { useProjects } from "@/hooks/use-projects";
+import { useSkills } from "@/hooks/use-skills";
+import { StatsPeriod, PomodoroSession } from "@/types/pomodoro.types";
 import { Button } from "@/components/ui/button";
 import {
   format,
@@ -19,25 +22,56 @@ import {
   endOfMonth
 } from "date-fns";
 
+import {
+  StatsViewSelector,
+  StatsView,
+  VIEW_ORDER,
+  getViewIndex
+} from "./stats-view-selector";
+import { ProjectFilter } from "./project-filter";
+import { GeneralStatsView } from "./general-stats-view";
 import { StatsCards } from "./stats-cards";
 import { CycleStarsAquarium } from "./cycle-stars-aquarium";
 import { StatsChart } from "./stats-chart";
 import { RecentSessions } from "./recent-sessions";
+import { TasksStatsView } from "./tasks-stats-view";
+import { ProjectsStatsView } from "./projects-stats-view";
+import { MaestryStatsView } from "./maestry-stats-view";
 
 const periodLabels: Record<StatsPeriod, string> = {
   day: "Today",
-  week: "This Week",
-  month: "This Month",
-  year: "This Year",
-  all: "All Time"
+  week: "Week",
+  month: "Month",
+  year: "Year",
+  all: "All"
 };
 
 export function PomodoroStats() {
   const { sessions, getStats } = usePomodoroSessions();
-  const [period, setPeriod] = useState<StatsPeriod>("week");
+  const { tasks, getTask } = useTasks();
+  const { projects, getProjectStats } = useProjects();
+  const { skills, getSkillStats } = useSkills();
 
-  const stats = getStats(period);
+  const [currentView, setCurrentView] = useState<StatsView>("general");
+  const [period, setPeriod] = useState<StatsPeriod>("week");
+  const [filterProjectId, setFilterProjectId] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const filterSessionsByProject = (
+    sessionsToFilter: PomodoroSession[]
+  ): PomodoroSession[] => {
+    if (!filterProjectId) return sessionsToFilter;
+    return sessionsToFilter.filter((session) => {
+      if (!session.taskId) return false;
+      const task = getTask(session.taskId);
+      return task?.projectId === filterProjectId;
+    });
+  };
+
+  const filteredSessions = filterSessionsByProject(sessions);
+  const stats = getStats(period, filteredSessions);
   const cycleStars = stats.completedCycles;
+  const activeProjects = projects.filter((p) => p.status === "active");
 
   const getChartData = () => {
     switch (period) {
@@ -48,7 +82,7 @@ export function PomodoroStats() {
           const start = startOfHour(hour);
           const end = endOfHour(hour);
 
-          const hourSessions = sessions.filter(
+          const hourSessions = filteredSessions.filter(
             (s) =>
               s.completed &&
               s.mode === "work" &&
@@ -75,7 +109,7 @@ export function PomodoroStats() {
           const start = startOfDay(date);
           const end = endOfDay(date);
 
-          const daySessions = sessions.filter(
+          const daySessions = filteredSessions.filter(
             (s) =>
               s.completed &&
               s.mode === "work" &&
@@ -101,7 +135,7 @@ export function PomodoroStats() {
           const weekStart = startOfWeek(subDays(new Date(), i * 7));
           const weekEnd = endOfWeek(subDays(new Date(), i * 7));
 
-          const weekSessions = sessions.filter(
+          const weekSessions = filteredSessions.filter(
             (s) =>
               s.completed &&
               s.mode === "work" &&
@@ -116,7 +150,7 @@ export function PomodoroStats() {
           );
 
           data.push({
-            label: `W${4 - i}`,
+            label: `S${4 - i}`,
             value: totalMinutes,
             sessions: weekSessions.length
           });
@@ -132,7 +166,7 @@ export function PomodoroStats() {
           const start = startOfMonth(month);
           const end = endOfMonth(month);
 
-          const monthSessions = sessions.filter(
+          const monthSessions = filteredSessions.filter(
             (s) =>
               s.completed &&
               s.mode === "work" &&
@@ -158,10 +192,33 @@ export function PomodoroStats() {
   };
 
   const chartData = getChartData();
+  const currentIndex = getViewIndex(currentView);
+
+  const renderPomodoroView = () => (
+    <div className="space-y-4">
+      <ProjectFilter
+        projects={activeProjects}
+        selectedProjectId={filterProjectId}
+        onSelectProject={setFilterProjectId}
+      />
+
+      <StatsCards
+        completedSessions={stats.completedSessions}
+        totalWorkTime={stats.totalWorkTime}
+        completedCycles={stats.completedCycles}
+      />
+
+      <CycleStarsAquarium cycleStars={cycleStars} />
+
+      <StatsChart period={period} chartData={chartData} />
+
+      <RecentSessions sessions={filteredSessions} />
+    </div>
+  );
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-2xl mx-auto">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-4 w-full max-w-2xl mx-auto h-full">
+      <div className="flex items-center justify-between shrink-0">
         <h2 className="text-xl font-semibold text-white/90 flex items-center gap-2">
           <TrendingUp className="w-5 h-5" />
           Statistics
@@ -182,17 +239,64 @@ export function PomodoroStats() {
         </div>
       </div>
 
-      <StatsCards
-        completedSessions={stats.completedSessions}
-        totalWorkTime={stats.totalWorkTime}
-        completedCycles={stats.completedCycles}
+      <StatsViewSelector
+        currentView={currentView}
+        onViewChange={setCurrentView}
       />
 
-      <CycleStarsAquarium cycleStars={cycleStars} />
-
-      <StatsChart period={period} chartData={chartData} />
-
-      <RecentSessions sessions={sessions} />
+      <div className="flex-1 overflow-hidden" ref={containerRef}>
+        <div
+          className="flex h-full transition-transform duration-300 ease-in-out"
+          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        >
+          {VIEW_ORDER.map((view) => (
+            <div
+              key={view}
+              className="w-full shrink-0 h-full overflow-y-auto scrollbar-none px-0.5"
+            >
+              {view === "general" && (
+                <GeneralStatsView
+                  sessions={filteredSessions}
+                  tasks={tasks}
+                  projects={projects}
+                  skills={skills}
+                  totalWorkTime={stats.totalWorkTime}
+                  completedCycles={stats.completedCycles}
+                />
+              )}
+              {view === "pomodoro" && renderPomodoroView()}
+              {view === "tasks" && (
+                <TasksStatsView
+                  tasks={tasks}
+                  period={period}
+                  projectId={filterProjectId}
+                />
+              )}
+              {view === "projects" && (
+                <div className="space-y-4">
+                  <ProjectFilter
+                    projects={activeProjects}
+                    selectedProjectId={filterProjectId}
+                    onSelectProject={setFilterProjectId}
+                  />
+                  <ProjectsStatsView
+                    projects={projects}
+                    getProjectStats={getProjectStats}
+                    period={period}
+                    selectedProjectId={filterProjectId}
+                  />
+                </div>
+              )}
+              {view === "maestry" && (
+                <MaestryStatsView
+                  skills={skills}
+                  getSkillStats={getSkillStats}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

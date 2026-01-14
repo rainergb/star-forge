@@ -4,6 +4,7 @@ import { usePersonalize } from "@/hooks/use-personalize";
 import { useActiveTask } from "@/hooks/use-active-task";
 import { usePomodoroSessions } from "@/hooks/use-pomodoro-sessions";
 import { useTasks } from "@/hooks/use-tasks";
+import { useProjects } from "@/hooks/use-projects";
 import notificationSound from "@/assets/notification.mp3";
 import successSound from "@/assets/sucess.mp3";
 
@@ -14,7 +15,11 @@ export function usePomodoroTimer() {
   const { settings: personalizeSettings } = usePersonalize();
   const { activeTask, clearActiveTask } = useActiveTask();
   const { addSession } = usePomodoroSessions();
-  const { incrementPomodoro, addTimeSpent, tasks } = useTasks();
+  const { incrementPomodoro, addTimeSpent, tasks, getTask } = useTasks();
+  const {
+    incrementPomodoro: incrementProjectPomodoro,
+    addTimeSpent: addProjectTimeSpent
+  } = useProjects();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const startAudioRef = useRef<HTMLAudioElement | null>(null);
   const sessionStartRef = useRef<number | null>(null);
@@ -24,6 +29,9 @@ export function usePomodoroTimer() {
   const incrementPomodoroRef = useRef(incrementPomodoro);
   const addTimeSpentRef = useRef(addTimeSpent);
   const addSessionRef = useRef(addSession);
+  const incrementProjectPomodoroRef = useRef(incrementProjectPomodoro);
+  const addProjectTimeSpentRef = useRef(addProjectTimeSpent);
+  const getTaskRef = useRef(getTask);
 
   useEffect(() => {
     activeTaskRef.current = activeTask;
@@ -40,6 +48,18 @@ export function usePomodoroTimer() {
   useEffect(() => {
     addSessionRef.current = addSession;
   }, [addSession]);
+
+  useEffect(() => {
+    incrementProjectPomodoroRef.current = incrementProjectPomodoro;
+  }, [incrementProjectPomodoro]);
+
+  useEffect(() => {
+    addProjectTimeSpentRef.current = addProjectTimeSpent;
+  }, [addProjectTimeSpent]);
+
+  useEffect(() => {
+    getTaskRef.current = getTask;
+  }, [getTask]);
 
   useEffect(() => {
     audioRef.current = new Audio(notificationSound);
@@ -194,6 +214,12 @@ export function usePomodoroTimer() {
         if (currentActiveTask) {
           incrementPomodoroRef.current(currentActiveTask.id);
           addTimeSpentRef.current(currentActiveTask.id, sessionDuration);
+
+          const task = getTaskRef.current(currentActiveTask.id);
+          if (task?.projectId) {
+            incrementProjectPomodoroRef.current(task.projectId);
+            addProjectTimeSpentRef.current(task.projectId, sessionDuration);
+          }
         }
 
         const newCycles = completedCycles + 1;

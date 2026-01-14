@@ -68,10 +68,10 @@ export function MiniMusicPlayer({
         setShowAddForm(false);
         setError(null);
       } else {
-        setError("URL inválida. Use links do YouTube ou Spotify.");
+        setError("Invalid URL. Use YouTube or Spotify links.");
       }
     } catch (err) {
-      setError("Erro ao adicionar música. Tente novamente.");
+      setError("Error adding music. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -133,9 +133,9 @@ export function MiniMusicPlayer({
           ) : (
             <div className="flex flex-col items-center justify-center py-8 text-white/40 bg-background/30 border border-white/10 rounded-lg mx-4 mt-4">
               <Music className="h-12 w-12 mb-3 opacity-30" />
-              <p className="text-sm">Nenhuma música selecionada</p>
+              <p className="text-sm">No music selected</p>
               <p className="text-xs mt-1 opacity-70">
-                Adicione um link do YouTube ou Spotify
+                Add a YouTube or Spotify link
               </p>
             </div>
           )}
@@ -190,11 +190,9 @@ export function MiniMusicPlayer({
                 disabled={isLoading}
               />
             </div>
-            {error && (
-              <p className="text-xs text-destructive mt-1">{error}</p>
-            )}
+            {error && <p className="text-xs text-destructive mt-1">{error}</p>}
             {isLoading && (
-              <p className="text-xs text-white/40 mt-1">Carregando...</p>
+              <p className="text-xs text-white/40 mt-1">Loading...</p>
             )}
           </div>
 
@@ -203,7 +201,7 @@ export function MiniMusicPlayer({
             {playlist.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-white/40">
                 <ListMusic className="h-8 w-8 mb-2 opacity-50" />
-                <p className="text-xs">Playlist vazia</p>
+                <p className="text-xs">Empty playlist</p>
               </div>
             ) : (
               <div className="p-2 space-y-1">
@@ -226,11 +224,20 @@ export function MiniMusicPlayer({
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={cn(
-                        "text-sm truncate",
-                        index === currentIndex ? "text-white/90" : "text-white/70"
-                      )}>
-                        {track.title || `${track.provider === "youtube" ? "YouTube Video" : "Spotify Track"}`}
+                      <p
+                        className={cn(
+                          "text-sm truncate",
+                          index === currentIndex
+                            ? "text-white/90"
+                            : "text-white/70"
+                        )}
+                      >
+                        {track.title ||
+                          `${
+                            track.provider === "youtube"
+                              ? "YouTube Video"
+                              : "Spotify Track"
+                          }`}
                       </p>
                     </div>
                     {index === currentIndex && isPlaying && (
@@ -280,16 +287,20 @@ export function MiniMusicPlayer({
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-black/30">
               {currentTrack.thumbnail ? (
-                <img 
-                  src={currentTrack.thumbnail} 
+                <img
+                  src={currentTrack.thumbnail}
                   alt="Track thumbnail"
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className={cn(
-                  "w-full h-full flex items-center justify-center",
-                  currentTrack.provider === "youtube" ? "bg-red-500/20" : "bg-green-500/20"
-                )}>
+                <div
+                  className={cn(
+                    "w-full h-full flex items-center justify-center",
+                    currentTrack.provider === "youtube"
+                      ? "bg-red-500/20"
+                      : "bg-green-500/20"
+                  )}
+                >
                   {currentTrack.provider === "youtube" ? (
                     <Youtube className="h-5 w-5 text-red-500" />
                   ) : (
@@ -301,7 +312,12 @@ export function MiniMusicPlayer({
             <div className="flex-1 min-w-0">
               <p className="text-xs text-white/40">Playing</p>
               <p className="text-sm font-medium text-white/90 truncate">
-                {currentTrack.title || `${currentTrack.provider === "youtube" ? "YouTube Video" : "Spotify Track"}`}
+                {currentTrack.title ||
+                  `${
+                    currentTrack.provider === "youtube"
+                      ? "YouTube Video"
+                      : "Spotify Track"
+                  }`}
               </p>
             </div>
             {isPlaying && (
@@ -335,7 +351,9 @@ export function MiniMusicPlayer({
             size="icon"
             className={cn(
               "h-8 w-8 rounded-full",
-              isPlaying ? "bg-primary/20 text-primary hover:bg-primary/30" : "bg-white/10 text-white/60 hover:bg-white/20"
+              isPlaying
+                ? "bg-primary/20 text-primary hover:bg-primary/30"
+                : "bg-white/10 text-white/60 hover:bg-white/20"
             )}
             onClick={togglePlay}
             disabled={!currentTrack}
@@ -372,12 +390,8 @@ export function MiniMusicPlayer({
               autoFocus
               disabled={isLoading}
             />
-            {error && (
-              <p className="text-xs text-destructive">{error}</p>
-            )}
-            {isLoading && (
-              <p className="text-xs text-white/40">Carregando...</p>
-            )}
+            {error && <p className="text-xs text-destructive">{error}</p>}
+            {isLoading && <p className="text-xs text-white/40">Loading...</p>}
           </div>
         ) : (
           <Button
@@ -400,7 +414,7 @@ export function MiniMusicPlayer({
           </div>
         )}
       </div>
-      
+
       {/* Hidden iframe for audio playback in mini mode */}
       {currentTrack?.embedUrl && (
         <iframe

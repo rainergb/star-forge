@@ -42,6 +42,7 @@ export interface Task {
   completedPomodoros: number;
   totalTimeSpent: number;
   projectId: string | null;
+  skillIds: string[];
 }
 
 export interface TasksState {

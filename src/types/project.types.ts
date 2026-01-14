@@ -21,6 +21,7 @@ export interface Project {
   description: string | null;
   color: ProjectColor;
   icon: ProjectIcon;
+  image: string | null;
   status: ProjectStatus;
   favorite: boolean;
   createdAt: number;

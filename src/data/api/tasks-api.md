@@ -47,6 +47,8 @@ interface Task {
   estimatedPomodoros: number | null;  // pomodoros estimados para a task
   completedPomodoros: number;         // pomodoros concluídos
   totalTimeSpent: number;             // tempo total gasto em segundos
+  projectId: string | null;           // id do projeto associado
+  skillIds: string[];                 // array de ids de skills associadas (Maestry)
 }
 ```
 
@@ -107,7 +109,9 @@ Retorna todas as tasks do usuário.
           "createdAt": 1735572000000,
           "updatedAt": 1735572000000
         }
-      ]
+      ],
+      "projectId": null,
+      "skillIds": ["skill-typescript-123", "skill-programming-456"]
     }
   ]
 }
@@ -138,7 +142,9 @@ Cria uma nova task.
   "dueDate": null,
   "reminder": null,
   "files": [],
-  "notes": []
+  "notes": [],
+  "projectId": null,
+  "skillIds": []
 }
 ```
 
@@ -230,6 +236,25 @@ Reordena as tasks (drag-and-drop).
     { "id": "id2", "index": 1 },
     { "id": "id3", "index": 2 }
   ]
+}
+```
+
+### PUT /api/tasks/:id/skills
+
+Updates skills linked to a task (Maestry integration).
+
+**Request:**
+```json
+{
+  "skillIds": ["skill-typescript-123", "skill-programming-456"]
+}
+```
+
+**Response:**
+```json
+{
+  "id": "1735570800000-abc123",
+  "skillIds": ["skill-typescript-123", "skill-programming-456"]
 }
 ```
 

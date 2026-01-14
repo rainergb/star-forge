@@ -16,7 +16,10 @@ function formatTime(seconds: number): string {
   return "0m";
 }
 
-export function ProjectStatsSection({ project, tasks }: ProjectStatsSectionProps) {
+export function ProjectStatsSection({
+  project,
+  tasks
+}: ProjectStatsSectionProps) {
   const completedTasks = tasks.filter((t) => t.completed).length;
   const totalTasks = tasks.length;
   const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
@@ -38,48 +41,49 @@ export function ProjectStatsSection({ project, tasks }: ProjectStatsSectionProps
   const colors = PROJECT_COLORS[project.color];
 
   return (
-    <div className="p-4 border-b border-white/10">
-      <h3 className="text-sm font-medium text-white/60 mb-3">Progresso</h3>
-
-      <div className="mb-4">
-        <div className="flex items-center justify-between text-xs text-white/40 mb-1">
-          <span>Tarefas concluídas</span>
-          <span>
-            {completedTasks}/{totalTasks}
-          </span>
-        </div>
-        <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-          <div
-            className={cn("h-full rounded-full transition-all", colors.bg)}
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+    <div className="mt-4 border-t border-white/10 pt-4">
+      <div className="flex items-center gap-2 text-white/50 px-2 mb-3">
+        <ListTodo className="w-4 h-4" />
+        <span className="text-sm">Progress</span>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        <div className="flex flex-col items-center p-3 bg-white/5 rounded-lg">
-          <ListTodo className="w-4 h-4 text-white/40 mb-1" />
-          <span className="text-lg font-semibold text-white">
-            {completedTasks}/{totalTasks}
-          </span>
-          <span className="text-xs text-white/40">Tarefas</span>
+      <div className="space-y-3 px-2">
+        <div>
+          <div className="flex items-center justify-between text-xs text-white/40 mb-1">
+            <span>Completed tasks</span>
+            <span>
+              {completedTasks}/{totalTasks}
+            </span>
+          </div>
+          <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+            <div
+              className={cn("h-full rounded-full transition-all", colors.bg)}
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
 
-        <div className="flex flex-col items-center p-3 bg-white/5 rounded-lg">
-          <Timer className="w-4 h-4 text-[#B57CFF] mb-1" />
-          <span className="text-lg font-semibold text-white">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-white/60">
+            <Timer className="w-4 h-4" />
+            <span className="text-sm">Pomodoros</span>
+          </div>
+          <span className="text-sm text-white/90 font-medium">
             {completedPomodoros}/{totalPomodoros || "-"}
           </span>
-          <span className="text-xs text-white/40">Pomodoros</span>
         </div>
 
-        <div className="flex flex-col items-center p-3 bg-white/5 rounded-lg">
-          <Clock className="w-4 h-4 text-[#1A7FFF] mb-1" />
-          <span className="text-lg font-semibold text-white">
-            {formatTime(totalTimeSpent)}
-          </span>
-          <span className="text-xs text-white/40">Tempo</span>
-        </div>
+        {totalTimeSpent > 0 && (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-white/60">
+              <Clock className="w-4 h-4" />
+              <span className="text-sm">Time spent</span>
+            </div>
+            <span className="text-sm text-white/90 font-medium">
+              {formatTime(totalTimeSpent)}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

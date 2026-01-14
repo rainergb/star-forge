@@ -20,11 +20,11 @@ export function RecentSessions({ sessions }: RecentSessionsProps) {
         <span className="text-sm">Recent Sessions</span>
       </div>
 
-      <div className="space-y-2 max-h-[95px] overflow-y-auto scrollbar-none">
+      <div className="space-y-1 max-h-[95px] overflow-y-auto scrollbar-none">
         {recentSessions.map((session) => (
           <div
             key={session.id}
-            className="flex items-center justify-between py-2 px-3 bg-white/5 rounded"
+            className="flex items-center justify-between py-1.5 px-3 bg-white/5 rounded"
           >
             <div className="flex flex-col">
               <span className="text-sm text-white/80">

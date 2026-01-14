@@ -15,34 +15,36 @@ import {
   Clock
 } from "lucide-react";
 import { Task } from "@/types/task.types";
+import { PROJECT_COLORS } from "@/types/project.types";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ptBR } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import { format, isToday, isTomorrow, isPast } from "date-fns";
 import { usePersonalize } from "@/hooks/use-personalize";
+import { useProjects } from "@/hooks/use-projects";
 import successSound from "@/assets/sucess.mp3";
 
 const formatDueDate = (timestamp: number): string => {
   const date = new Date(timestamp);
-  if (isToday(date)) return "Hoje";
-  if (isTomorrow(date)) return "Amanhã";
-  return format(date, "dd/MM");
+  if (isToday(date)) return "Today";
+  if (isTomorrow(date)) return "Tomorrow";
+  return format(date, "MM/dd");
 };
 
 const formatReminderDate = (timestamp: number): string => {
   const date = new Date(timestamp);
-  if (isToday(date)) return "Hoje";
-  if (isTomorrow(date)) return "Amanhã";
-  return format(date, "dd/MM");
+  if (isToday(date)) return "Today";
+  if (isTomorrow(date)) return "Tomorrow";
+  return format(date, "MM/dd");
 };
 
 const getRepeatLabel = (repeat: string): string => {
   const labels: Record<string, string> = {
-    daily: "Diário",
-    weekly: "Semanal",
-    monthly: "Mensal",
-    yearly: "Anual"
+    daily: "Daily",
+    weekly: "Weekly",
+    monthly: "Monthly",
+    yearly: "Yearly"
   };
   return labels[repeat] || repeat;
 };
@@ -63,6 +65,7 @@ interface TaskItemProps {
   onSetDueDate: (id: string, date: number | null) => void;
   onRemoveTask: (id: string) => void;
   onClick: () => void;
+  onDoubleClick?: () => void;
   onFocus?: () => void;
   expectedEndTime?: string;
 }
@@ -80,6 +83,7 @@ export function TaskItem({
   onSetDueDate,
   onRemoveTask,
   onClick,
+  onDoubleClick,
   expectedEndTime
 }: TaskItemProps) {
   const [contextMenu, setContextMenu] = useState<ContextMenuPosition | null>(
@@ -91,7 +95,10 @@ export function TaskItem({
   );
 
   const { settings: personalizeSettings } = usePersonalize();
+  const { getProject } = useProjects();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const project = task.projectId ? getProject(task.projectId) : null;
 
   useEffect(() => {
     audioRef.current = new Audio(successSound);
@@ -160,6 +167,7 @@ export function TaskItem({
     <>
       <div
         onClick={onClick}
+        onDoubleClick={onDoubleClick}
         onContextMenu={handleContextMenu}
         className={cn(
           "flex items-center justify-between px-4 py-3 bg-background/50 border rounded-lg hover:bg-white/5 transition-colors cursor-pointer",
@@ -168,6 +176,13 @@ export function TaskItem({
         )}
       >
         <div className="flex items-center gap-3">
+          {project && (
+            <div
+              className="w-2 h-8 rounded-full shrink-0"
+              style={{ backgroundColor: PROJECT_COLORS[project.color].solid }}
+              title={project.name}
+            />
+          )}
           <button
             onClick={handleToggleCompleted}
             className="cursor-pointer text-white/70 hover:text-white transition-colors"
@@ -188,6 +203,17 @@ export function TaskItem({
               {task.title}
             </span>
             <div className="flex items-center gap-2 flex-wrap">
+              {project && (
+                <span
+                  className="text-xs px-1.5 py-0.5 rounded"
+                  style={{
+                    backgroundColor: `${PROJECT_COLORS[project.color].solid}20`,
+                    color: PROJECT_COLORS[project.color].solid
+                  }}
+                >
+                  {project.name}
+                </span>
+              )}
               <span className="text-xs text-white/40">{task.category}</span>
               {task.dueDate && (
                 <span
@@ -251,7 +277,6 @@ export function TaskItem({
         </div>
       </div>
 
-      {/* Context Menu */}
       {contextMenu &&
         createPortal(
           <>
@@ -268,21 +293,21 @@ export function TaskItem({
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
               >
                 <CalendarCheck className="w-4 h-4 text-white/60" />
-                Para hoje
+                Due today
               </button>
               <button
                 onClick={handleSetDueTomorrow}
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
               >
                 <CalendarDays className="w-4 h-4 text-white/60" />
-                Para amanhã
+                Due tomorrow
               </button>
               <button
                 onClick={handleChooseDate}
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
               >
                 <Calendar className="w-4 h-4 text-white/60" />
-                Escolher data
+                Choose date
               </button>
 
               <div className="my-1 border-t border-white/10" />
@@ -293,7 +318,7 @@ export function TaskItem({
               >
                 <div className="flex items-center gap-3">
                   <Trash2 className="w-4 h-4" />
-                  Excluir tarefa
+                  Delete task
                 </div>
               </button>
             </div>
@@ -301,7 +326,6 @@ export function TaskItem({
           document.body
         )}
 
-      {/* Date Picker Modal */}
       {showDatePicker &&
         createPortal(
           <>
@@ -318,7 +342,7 @@ export function TaskItem({
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <span className="text-white/80 text-sm font-medium">
-                  Escolher data
+                  Choose date
                 </span>
               </div>
 
@@ -326,7 +350,7 @@ export function TaskItem({
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
-                locale={ptBR}
+                locale={enUS}
                 initialFocus
               />
 
@@ -336,14 +360,14 @@ export function TaskItem({
                   className="flex-1 text-white/70"
                   onClick={() => setShowDatePicker(false)}
                 >
-                  Cancelar
+                  Cancel
                 </Button>
                 <Button
                   className="flex-1 bg-primary/80 hover:bg-primary text-white"
                   onClick={handleDateSave}
                   disabled={!selectedDate}
                 >
-                  Salvar
+                  Save
                 </Button>
               </div>
             </div>

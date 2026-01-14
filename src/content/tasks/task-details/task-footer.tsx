@@ -13,10 +13,11 @@ export function TaskFooter({ createdAt, onDelete }: TaskFooterProps) {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return "Criada há alguns instantes";
-    if (minutes < 60) return `Criada há ${minutes} minuto${minutes > 1 ? "s" : ""}`;
-    if (hours < 24) return `Criada há ${hours} hora${hours > 1 ? "s" : ""}`;
-    return `Criada há ${days} dia${days > 1 ? "s" : ""}`;
+    if (minutes < 1) return "Created just now";
+    if (minutes < 60)
+      return `Created ${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+    if (hours < 24) return `Created ${hours} hour${hours > 1 ? "s" : ""} ago`;
+    return `Created ${days} day${days > 1 ? "s" : ""} ago`;
   };
 
   return (

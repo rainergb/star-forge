@@ -10,13 +10,15 @@ export type WidgetType =
   | "miniTaskList"
   | "miniPomodoro"
   | "musicPlayer"
-  | "miniProjectList";
+  | "miniProjectList"
+  | "miniMaestryList";
 
 export interface FloatingWidgetsState {
   miniTaskList: WidgetState;
   miniPomodoro: WidgetState;
   musicPlayer: WidgetState;
   miniProjectList: WidgetState;
+  miniMaestryList: WidgetState;
 }
 
 export const DEFAULT_WIDGET_STATE: WidgetState = {
@@ -34,6 +36,11 @@ export const DEFAULT_FLOATING_WIDGETS_STATE: FloatingWidgetsState = {
     isVisible: false
   },
   miniProjectList: {
+    ...DEFAULT_WIDGET_STATE,
+    position: "top-right",
+    isVisible: false
+  },
+  miniMaestryList: {
     ...DEFAULT_WIDGET_STATE,
     position: "top-right",
     isVisible: false
