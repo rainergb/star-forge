@@ -4,6 +4,7 @@ import { PomodoroStats } from "@/content/stats";
 import { TaskList } from "@/content/tasks/task-list";
 import { ProjectList } from "@/content/projects/project-list";
 import { SkillList } from "@/content/maestry";
+import { DiaryList } from "@/content/diary/diary-list";
 import { TopBar } from "@/components/top-bar";
 import { AppDock } from "@/content/dock/app-dock";
 import { useToast } from "@/hooks/use-toast";
@@ -231,6 +232,7 @@ function AppContent() {
           <ProjectList onNavigateToTasks={handleNavigateToTasksWithProject} />
         )}
         {currentView === "maestry" && <SkillList />}
+        {currentView === "diary" && <DiaryList />}
         {currentView === "stats" && <PomodoroStats />}
       </div>
 
