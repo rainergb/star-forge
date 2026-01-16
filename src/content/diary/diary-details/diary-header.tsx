@@ -1,7 +1,6 @@
-import { Star } from "lucide-react";
 import { DiaryEntry, ENTRY_TYPE_CONFIG } from "@/types/diary.types";
-import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { FavoriteButton } from "@/components/shared/favorite-button";
 
 interface DiaryHeaderProps {
   entry: DiaryEntry;
@@ -35,20 +34,12 @@ export function DiaryHeader({ entry, onToggleFavorite }: DiaryHeaderProps) {
           </div>
         </div>
 
-        <button
-          onClick={onToggleFavorite}
-          className={cn(
-            "p-2 rounded-full transition-colors",
-            entry.favorite
-              ? "text-yellow-400 bg-yellow-400/10"
-              : "text-white/30 hover:text-yellow-400 hover:bg-white/5"
-          )}
-        >
-          <Star
-            className="w-5 h-5"
-            fill={entry.favorite ? "currentColor" : "none"}
-          />
-        </button>
+        <FavoriteButton
+          isFavorite={entry.favorite}
+          onToggle={onToggleFavorite}
+          color="yellow"
+          className={entry.favorite ? "p-2 rounded-full bg-yellow-400/10" : "p-2 rounded-full hover:bg-white/5"}
+        />
       </div>
     </div>
   );

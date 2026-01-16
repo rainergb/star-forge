@@ -1,6 +1,11 @@
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { Zap } from "lucide-react";
 import { Skill } from "@/types/skill.types";
 import { SkillItem } from "./skill-item";
+import {
+  ListContainer,
+  CollapsibleSection,
+  EmptyState
+} from "@/components/shared/list-container";
 
 interface SkillListContentProps {
   skills: Skill[];
@@ -16,6 +21,7 @@ interface SkillListContentProps {
 }
 
 export function SkillListContent({
+  skills,
   activeSkills,
   archivedSkills,
   hasActiveFilter,
@@ -26,62 +32,50 @@ export function SkillListContent({
   onSkillClick,
   onSkillDoubleClick
 }: SkillListContentProps) {
-  const sortedSkills = [...activeSkills, ...archivedSkills];
+  if (skills.length === 0 || (activeSkills.length === 0 && archivedSkills.length === 0)) {
+    return (
+      <EmptyState
+        icon={Zap}
+        message="No skills yet"
+        hint="Add one above to start tracking!"
+        hasFilter={hasActiveFilter}
+        filterMessage="No skills found with the applied filters."
+      />
+    );
+  }
 
   return (
-    <>
-      <div className="w-full space-y-2 max-h-[60vh] overflow-y-auto scrollbar-none">
-        {sortedSkills.length === 0 ? (
-          <div className="text-center text-white/40 py-8">
-            {hasActiveFilter
-              ? "No skills found with the applied filters."
-              : "No skills yet. Add one above!"}
-          </div>
-        ) : (
-          <>
-            {activeSkills.map((skill) => (
-              <SkillItem
-                key={skill.id}
-                skill={skill}
-                onClick={() => onSkillClick(skill)}
-                onDoubleClick={() => onSkillDoubleClick(skill)}
-                onRemoveSkill={onRemoveSkill}
-                onToggleArchive={onToggleArchive}
-              />
-            ))}
+    <ListContainer>
+      {activeSkills.map((skill) => (
+        <SkillItem
+          key={skill.id}
+          skill={skill}
+          onClick={() => onSkillClick(skill)}
+          onDoubleClick={() => onSkillDoubleClick(skill)}
+          onRemoveSkill={onRemoveSkill}
+          onToggleArchive={onToggleArchive}
+        />
+      ))}
 
-            {archivedSkills.length > 0 && (
-              <>
-                <button
-                  onClick={onToggleArchivedCollapsed}
-                  className="w-full flex items-center gap-2 px-2 py-2 text-white/50 hover:text-white/70 transition-colors cursor-pointer"
-                >
-                  {archivedCollapsed ? (
-                    <ChevronRight className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
-                  <span className="text-sm">
-                    Archived ({archivedSkills.length})
-                  </span>
-                </button>
-
-                {!archivedCollapsed &&
-                  archivedSkills.map((skill) => (
-                    <SkillItem
-                      key={skill.id}
-                      skill={skill}
-                      onClick={() => onSkillClick(skill)}
-                      onDoubleClick={() => onSkillDoubleClick(skill)}
-                      onRemoveSkill={onRemoveSkill}
-                      onToggleArchive={onToggleArchive}
-                    />
-                  ))}
-              </>
-            )}
-          </>
-        )}
-      </div>
-    </>
+      {archivedSkills.length > 0 && (
+        <CollapsibleSection
+          label="Archived"
+          count={archivedSkills.length}
+          collapsed={archivedCollapsed}
+          onToggle={onToggleArchivedCollapsed}
+        >
+          {archivedSkills.map((skill) => (
+            <SkillItem
+              key={skill.id}
+              skill={skill}
+              onClick={() => onSkillClick(skill)}
+              onDoubleClick={() => onSkillDoubleClick(skill)}
+              onRemoveSkill={onRemoveSkill}
+              onToggleArchive={onToggleArchive}
+            />
+          ))}
+        </CollapsibleSection>
+      )}
+    </ListContainer>
   );
 }

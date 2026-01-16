@@ -1,7 +1,4 @@
-import { useState } from "react";
-import { createPortal } from "react-dom";
 import {
-  Star,
   Folder,
   ListTodo,
   Clock,
@@ -13,11 +10,13 @@ import {
 } from "lucide-react";
 import { Project, PROJECT_COLORS } from "@/types/project.types";
 import { cn } from "@/lib/utils";
-
-interface ContextMenuPosition {
-  x: number;
-  y: number;
-}
+import { FavoriteButton } from "@/components/shared/favorite-button";
+import {
+  ContextMenu,
+  ContextMenuItem,
+  ContextMenuDivider,
+  useContextMenu
+} from "@/components/shared/context-menu";
 
 function formatTime(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
@@ -50,22 +49,10 @@ export function ProjectItem({
   onToggleFavorite,
   onRemove
 }: ProjectItemProps) {
-  const [contextMenu, setContextMenu] = useState<ContextMenuPosition | null>(
-    null
-  );
+  const { position: contextMenu, handleContextMenu, close: closeContextMenu } = useContextMenu();
   const colors = PROJECT_COLORS[project.color];
   const progress =
     tasksCount > 0 ? (completedTasksCount / tasksCount) * 100 : 0;
-
-  const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setContextMenu({ x: e.clientX, y: e.clientY });
-  };
-
-  const closeContextMenu = () => {
-    setContextMenu(null);
-  };
 
   const handleDelete = () => {
     onRemove();
@@ -138,66 +125,46 @@ export function ProjectItem({
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={(e) => {
+          <FavoriteButton
+            isFavorite={project.favorite}
+            onToggle={(e) => {
               e.stopPropagation();
               onToggleFavorite();
             }}
-            className="cursor-pointer text-white/30 hover:text-[#D6B8FF] transition-colors"
-          >
-            <Star
-              className={cn(
-                "w-5 h-5",
-                project.favorite && "fill-[#D6B8FF] text-[#D6B8FF]"
-              )}
-            />
-          </button>
+            color="purple"
+          />
         </div>
       </div>
 
-      {contextMenu &&
-        createPortal(
-          <>
-            <div className="fixed inset-0 z-50" onClick={closeContextMenu} />
-            <div
-              className="fixed z-50 min-w-[200px] bg-[#2d2d2d] border border-white/10 rounded-lg shadow-xl py-1 animate-in fade-in-0 zoom-in-95"
-              style={{
-                left: contextMenu.x,
-                top: contextMenu.y
-              }}
-            >
-              <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer">
-                <Play className="w-4 h-4 text-green-400" />
-                Activate project
-              </button>
-              <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer">
-                <Pause className="w-4 h-4 text-yellow-400" />
-                Pause project
-              </button>
-              <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer">
-                <CheckCircle className="w-4 h-4 text-blue-400" />
-                Complete project
-              </button>
-              <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer">
-                <Archive className="w-4 h-4 text-white/60" />
-                Archive project
-              </button>
-
-              <div className="my-1 border-t border-white/10" />
-
-              <button
-                onClick={handleDelete}
-                className="w-full flex items-center justify-between px-3 py-2 text-sm text-red-400 hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  <Trash2 className="w-4 h-4" />
-                  Delete project
-                </div>
-              </button>
-            </div>
-          </>,
-          document.body
-        )}
+      <ContextMenu position={contextMenu} onClose={closeContextMenu}>
+        <ContextMenuItem
+          icon={<Play className="w-4 h-4 text-green-400" />}
+          label="Activate project"
+          onClick={closeContextMenu}
+        />
+        <ContextMenuItem
+          icon={<Pause className="w-4 h-4 text-yellow-400" />}
+          label="Pause project"
+          onClick={closeContextMenu}
+        />
+        <ContextMenuItem
+          icon={<CheckCircle className="w-4 h-4 text-blue-400" />}
+          label="Complete project"
+          onClick={closeContextMenu}
+        />
+        <ContextMenuItem
+          icon={<Archive className="w-4 h-4 text-white/60" />}
+          label="Archive project"
+          onClick={closeContextMenu}
+        />
+        <ContextMenuDivider />
+        <ContextMenuItem
+          icon={<Trash2 className="w-4 h-4" />}
+          label="Delete project"
+          onClick={handleDelete}
+          variant="danger"
+        />
+      </ContextMenu>
     </>
   );
 }

@@ -1,5 +1,3 @@
-import { useState } from "react";
-import { createPortal } from "react-dom";
 import { Trash2, Clock, Archive } from "lucide-react";
 import {
   Skill,
@@ -9,6 +7,12 @@ import {
   getProgressToNextLevel
 } from "@/types/skill.types";
 import { cn } from "@/lib/utils";
+import {
+  ContextMenu,
+  ContextMenuItem,
+  ContextMenuDivider,
+  useContextMenu
+} from "@/components/shared/context-menu";
 
 import maestry1 from "@/assets/maestry/maestry1.png";
 import maestry2 from "@/assets/maestry/maestry2.png";
@@ -44,11 +48,6 @@ interface SkillItemProps {
   onToggleArchive: (id: string) => void;
 }
 
-interface ContextMenuPosition {
-  x: number;
-  y: number;
-}
-
 export function SkillItem({
   skill,
   onClick,
@@ -56,22 +55,10 @@ export function SkillItem({
   onRemoveSkill,
   onToggleArchive
 }: SkillItemProps) {
-  const [contextMenu, setContextMenu] = useState<ContextMenuPosition | null>(
-    null
-  );
+  const { position: contextMenu, handleContextMenu, close: closeContextMenu } = useContextMenu();
 
   const levelInfo = MASTERY_LEVELS[skill.currentLevel - 1];
   const progress = getProgressToNextLevel(skill.totalTimeSpent);
-
-  const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setContextMenu({ x: e.clientX, y: e.clientY });
-  };
-
-  const closeContextMenu = () => {
-    setContextMenu(null);
-  };
 
   const handleArchive = () => {
     onToggleArchive(skill.id);
@@ -144,36 +131,20 @@ export function SkillItem({
         </div>
       </div>
 
-      {contextMenu &&
-        createPortal(
-          <>
-            <div
-              className="fixed inset-0 z-100"
-              onClick={closeContextMenu}
-            />
-            <div
-              className="fixed z-101 bg-[#1a1d3a] border border-white/10 rounded-lg shadow-xl py-1 min-w-40"
-              style={{ left: contextMenu.x, top: contextMenu.y }}
-            >
-              <button
-                onClick={handleArchive}
-                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white/70 hover:bg-white/5 transition-colors cursor-pointer"
-              >
-                <Archive className="w-4 h-4" />
-                {skill.archived ? "Unarchive" : "Archive"}
-              </button>
-              <div className="border-t border-white/10 my-1" />
-              <button
-                onClick={handleDelete}
-                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-red-400/10 transition-colors cursor-pointer"
-              >
-                <Trash2 className="w-4 h-4" />
-                Delete
-              </button>
-            </div>
-          </>,
-          document.body
-        )}
+      <ContextMenu position={contextMenu} onClose={closeContextMenu}>
+        <ContextMenuItem
+          icon={<Archive className="w-4 h-4" />}
+          label={skill.archived ? "Unarchive" : "Archive"}
+          onClick={handleArchive}
+        />
+        <ContextMenuDivider />
+        <ContextMenuItem
+          icon={<Trash2 className="w-4 h-4" />}
+          label="Delete"
+          onClick={handleDelete}
+          variant="danger"
+        />
+      </ContextMenu>
     </>
   );
 }

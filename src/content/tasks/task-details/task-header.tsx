@@ -1,7 +1,9 @@
 import { useRef, useEffect } from "react";
-import { Circle, CheckCircle2, Star } from "lucide-react";
+import { Circle, CheckCircle2 } from "lucide-react";
 import { Task } from "@/types/task.types";
 import { usePersonalize } from "@/hooks/use-personalize";
+import { FavoriteButton } from "@/components/shared/favorite-button";
+import { EditableTitle } from "@/components/shared/editable-title";
 import successSound from "@/assets/sucess.mp3";
 
 interface TaskHeaderProps {
@@ -53,25 +55,18 @@ export function TaskHeader({
         )}
       </button>
 
-      <input
-        type="text"
+      <EditableTitle
         value={task.title}
-        onChange={(e) => onUpdateTitle(e.target.value)}
-        className={`flex-1 text-lg bg-transparent border-none outline-none text-white ${
-          task.completed ? "line-through text-white/50" : ""
-        }`}
+        onChange={onUpdateTitle}
+        mode="always-editable"
+        inputClassName={`text-lg ${task.completed ? "line-through text-white/50" : ""}`}
       />
 
-      <button
-        onClick={() => onToggleFavorite(task.id)}
-        className="cursor-pointer text-white/30 hover:text-[#D6B8FF] transition-colors shrink-0"
-      >
-        <Star
-          className={`w-5 h-5 ${
-            task.favorite ? "fill-[#D6B8FF] text-[#D6B8FF]" : ""
-          }`}
-        />
-      </button>
+      <FavoriteButton
+        isFavorite={task.favorite}
+        onToggle={() => onToggleFavorite(task.id)}
+        color="purple"
+      />
     </div>
   );
 }

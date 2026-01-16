@@ -14,10 +14,16 @@ import {
   useSortable
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronDown, ChevronRight, Clock } from "lucide-react";
+import { Clock, ListTodo } from "lucide-react";
 import { Task } from "@/types/task.types";
 import { TaskItem } from "./task-item";
 import { cn } from "@/lib/utils";
+import {
+  ListContainer,
+  CollapsibleSection,
+  EmptyState,
+  ListSummary
+} from "@/components/shared/list-container";
 
 interface SortableTaskItemProps {
   task: Task;
@@ -149,96 +155,86 @@ export function TaskListContent({
     }
   };
 
+  if (sortedTasks.length === 0) {
+    return (
+      <EmptyState
+        icon={ListTodo}
+        message="No tasks yet"
+        hint="Add one above to get started!"
+        hasFilter={hasActiveFilter}
+        filterMessage="No tasks found with the applied filters."
+      />
+    );
+  }
+
   return (
     <>
-      <div className="w-full space-y-2 max-h-[60vh] overflow-y-auto scrollbar-none">
-        {sortedTasks.length === 0 ? (
-          <div className="text-center text-white/40 py-8">
-            {hasActiveFilter
-              ? "No tasks found with the applied filters."
-              : "No tasks yet. Add one above!"}
-          </div>
-        ) : (
-          <>
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={incompleteTasks.map((t) => t.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                {incompleteTasks.map((task, index) => {
-                  const taskEndTime = task.estimatedPomodoros
-                    ? calculateTaskEndTime(index)
-                    : null;
-                  return (
-                    <div key={task.id} className="relative">
-                      <SortableTaskItem
-                        task={task}
-                        isActive={activeTaskId === task.id}
-                        onToggleCompleted={onToggleCompleted}
-                        onToggleFavorite={onToggleFavorite}
-                        onSetDueDate={onSetDueDate}
-                        onRemoveTask={onRemoveTask}
-                        onClick={() => onTaskClick(task)}
-                        onDoubleClick={() => onTaskDoubleClick(task)}
-                        expectedEndTime={
-                          taskEndTime ? formatEndTime(taskEndTime) : undefined
-                        }
-                      />
-                    </div>
-                  );
-                })}
-              </SortableContext>
-            </DndContext>
+      <ListContainer>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={incompleteTasks.map((t) => t.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {incompleteTasks.map((task, index) => {
+              const taskEndTime = task.estimatedPomodoros
+                ? calculateTaskEndTime(index)
+                : null;
+              return (
+                <div key={task.id} className="relative">
+                  <SortableTaskItem
+                    task={task}
+                    isActive={activeTaskId === task.id}
+                    onToggleCompleted={onToggleCompleted}
+                    onToggleFavorite={onToggleFavorite}
+                    onSetDueDate={onSetDueDate}
+                    onRemoveTask={onRemoveTask}
+                    onClick={() => onTaskClick(task)}
+                    onDoubleClick={() => onTaskDoubleClick(task)}
+                    expectedEndTime={
+                      taskEndTime ? formatEndTime(taskEndTime) : undefined
+                    }
+                  />
+                </div>
+              );
+            })}
+          </SortableContext>
+        </DndContext>
 
-            {completedTasks.length > 0 && (
-              <>
-                <button
-                  onClick={onToggleCompletedCollapsed}
-                  className="flex items-center gap-2 w-full py-2 text-white/60 hover:text-white/80 transition-colors cursor-pointer"
-                >
-                  {completedCollapsed ? (
-                    <ChevronRight className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
-                  <span className="text-sm font-medium">Completed</span>
-                  <span className="text-sm text-white/40">
-                    {completedTasks.length}
-                  </span>
-                </button>
-
-                {!completedCollapsed && (
-                  <div className="space-y-2">
-                    {completedTasks.map((task) => (
-                      <TaskItem
-                        key={task.id}
-                        task={task}
-                        onToggleCompleted={onToggleCompleted}
-                        onToggleFavorite={onToggleFavorite}
-                        onSetDueDate={onSetDueDate}
-                        onRemoveTask={onRemoveTask}
-                        onClick={() => onTaskClick(task)}
-                        onDoubleClick={() => onTaskDoubleClick(task)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </>
+        {completedTasks.length > 0 && (
+          <CollapsibleSection
+            label="Completed"
+            count={completedTasks.length}
+            collapsed={completedCollapsed}
+            onToggle={onToggleCompletedCollapsed}
+          >
+            <div className="space-y-2">
+              {completedTasks.map((task) => (
+                <TaskItem
+                  key={task.id}
+                  task={task}
+                  onToggleCompleted={onToggleCompleted}
+                  onToggleFavorite={onToggleFavorite}
+                  onSetDueDate={onSetDueDate}
+                  onRemoveTask={onRemoveTask}
+                  onClick={() => onTaskClick(task)}
+                  onDoubleClick={() => onTaskDoubleClick(task)}
+                />
+              ))}
+            </div>
+          </CollapsibleSection>
         )}
-      </div>
+      </ListContainer>
 
       {tasks.length > 0 && (
         <div className="flex flex-col items-center gap-1">
-          <div className="text-sm text-white/40">
-            {tasks.filter((t) => t.completed).length} of {tasks.length}{" "}
-            completed
-          </div>
+          <ListSummary
+            completed={tasks.filter((t) => t.completed).length}
+            total={tasks.length}
+          />
           {estimatedEndTime && (
             <div className="flex items-center gap-1.5 text-xs text-white/30">
               <Clock className="w-3 h-3" />

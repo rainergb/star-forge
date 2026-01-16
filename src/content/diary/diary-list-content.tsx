@@ -1,6 +1,7 @@
 import { DiaryEntry } from "@/types/diary.types";
 import { DiaryItem } from "./diary-item";
 import { BookOpen } from "lucide-react";
+import { EmptyState } from "@/components/shared/list-container";
 
 interface DiaryListContentProps {
   entries: DiaryEntry[];
@@ -19,11 +20,11 @@ export function DiaryListContent({
 }: DiaryListContentProps) {
   if (entries.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-white/40">
-        <BookOpen className="w-12 h-12 mb-3 opacity-50" />
-        <p className="text-sm">{emptyMessage}</p>
-        <p className="text-xs mt-1">Start writing to add your first entry</p>
-      </div>
+      <EmptyState
+        icon={BookOpen}
+        message={emptyMessage}
+        hint="Start writing to add your first entry"
+      />
     );
   }
 

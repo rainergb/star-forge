@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import {
   Circle,
   CheckCircle2,
-  Star,
   CalendarCheck,
   CalendarDays,
   Calendar,
@@ -23,6 +22,13 @@ import { enUS } from "date-fns/locale";
 import { format, isToday, isTomorrow, isPast } from "date-fns";
 import { usePersonalize } from "@/hooks/use-personalize";
 import { useProjects } from "@/hooks/use-projects";
+import {
+  ContextMenu,
+  ContextMenuItem,
+  ContextMenuDivider,
+  useContextMenu
+} from "@/components/shared/context-menu";
+import { FavoriteButton } from "@/components/shared/favorite-button";
 import successSound from "@/assets/sucess.mp3";
 
 const formatDueDate = (timestamp: number): string => {
@@ -70,11 +76,6 @@ interface TaskItemProps {
   expectedEndTime?: string;
 }
 
-interface ContextMenuPosition {
-  x: number;
-  y: number;
-}
-
 export function TaskItem({
   task,
   isActive,
@@ -86,9 +87,7 @@ export function TaskItem({
   onDoubleClick,
   expectedEndTime
 }: TaskItemProps) {
-  const [contextMenu, setContextMenu] = useState<ContextMenuPosition | null>(
-    null
-  );
+  const { contextMenu, openContextMenu, closeContextMenu } = useContextMenu();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     task.dueDate ? new Date(task.dueDate) : undefined
@@ -119,16 +118,6 @@ export function TaskItem({
       playSuccessSound();
     }
     onToggleCompleted(task.id);
-  };
-
-  const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setContextMenu({ x: e.clientX, y: e.clientY });
-  };
-
-  const closeContextMenu = () => {
-    setContextMenu(null);
   };
 
   const handleSetDueToday = () => {
@@ -168,7 +157,7 @@ export function TaskItem({
       <div
         onClick={onClick}
         onDoubleClick={onDoubleClick}
-        onContextMenu={handleContextMenu}
+        onContextMenu={openContextMenu}
         className={cn(
           "flex items-center justify-between px-4 py-3 bg-background/50 border rounded-lg hover:bg-white/5 transition-colors cursor-pointer",
           isActive ? "border-primary/50 bg-primary/5" : "border-white/10",
@@ -261,70 +250,38 @@ export function TaskItem({
               ~{expectedEndTime}
             </span>
           )}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleFavorite(task.id);
-            }}
-            className="cursor-pointer text-white/30 hover:text-[#D6B8FF] transition-colors"
-          >
-            <Star
-              className={`w-5 h-5 ${
-                task.favorite ? "fill-[#D6B8FF] text-[#D6B8FF]" : ""
-              }`}
-            />
-          </button>
+          <FavoriteButton
+            isFavorite={task.favorite}
+            onToggle={() => onToggleFavorite(task.id)}
+            color="purple"
+          />
         </div>
       </div>
 
-      {contextMenu &&
-        createPortal(
-          <>
-            <div className="fixed inset-0 z-50" onClick={closeContextMenu} />
-            <div
-              className="fixed z-50 min-w-[200px] bg-[#2d2d2d] border border-white/10 rounded-lg shadow-xl py-1 animate-in fade-in-0 zoom-in-95"
-              style={{
-                left: contextMenu.x,
-                top: contextMenu.y
-              }}
-            >
-              <button
-                onClick={handleSetDueToday}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                <CalendarCheck className="w-4 h-4 text-white/60" />
-                Due today
-              </button>
-              <button
-                onClick={handleSetDueTomorrow}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                <CalendarDays className="w-4 h-4 text-white/60" />
-                Due tomorrow
-              </button>
-              <button
-                onClick={handleChooseDate}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                <Calendar className="w-4 h-4 text-white/60" />
-                Choose date
-              </button>
-
-              <div className="my-1 border-t border-white/10" />
-
-              <button
-                onClick={handleDelete}
-                className="w-full flex items-center justify-between px-3 py-2 text-sm text-red-400 hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  <Trash2 className="w-4 h-4" />
-                  Delete task
-                </div>
-              </button>
-            </div>
-          </>,
-          document.body
-        )}
+      <ContextMenu position={contextMenu} onClose={closeContextMenu}>
+        <ContextMenuItem
+          icon={CalendarCheck}
+          label="Due today"
+          onClick={handleSetDueToday}
+        />
+        <ContextMenuItem
+          icon={CalendarDays}
+          label="Due tomorrow"
+          onClick={handleSetDueTomorrow}
+        />
+        <ContextMenuItem
+          icon={Calendar}
+          label="Choose date"
+          onClick={handleChooseDate}
+        />
+        <ContextMenuDivider />
+        <ContextMenuItem
+          icon={Trash2}
+          label="Delete task"
+          onClick={handleDelete}
+          variant="danger"
+        />
+      </ContextMenu>
 
       {showDatePicker &&
         createPortal(
