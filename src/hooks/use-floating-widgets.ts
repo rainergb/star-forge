@@ -4,12 +4,18 @@ import {
   WidgetType,
   WidgetPosition,
   DEFAULT_FLOATING_WIDGETS_STATE,
-  DEFAULT_WIDGET_STATE
+  DEFAULT_WIDGET_STATE,
+  ALL_WIDGET_TYPES
 } from "@/types/widget.types";
 
+/**
+ * Legacy hook for floating widgets management.
+ * For new code, prefer using useFloatingWidgetsContext from context/floating-widgets-context.tsx
+ * which provides better stacking and expansion control.
+ */
 export function useFloatingWidgets() {
   const { value: widgetsState, setValue: setWidgetsState } = useLocalStorage<FloatingWidgetsState>(
-    "star-habit-floating-widgets",
+    "star-habit-floating-widgets-v2",
     DEFAULT_FLOATING_WIDGETS_STATE
   );
 
@@ -43,7 +49,8 @@ export function useFloatingWidgets() {
       ...prev,
       [widget]: {
         ...(prev[widget] || DEFAULT_WIDGET_STATE),
-        isVisible: false
+        isVisible: false,
+        isExpanded: false
       }
     }));
   };
@@ -76,8 +83,77 @@ export function useFloatingWidgets() {
     return getWidgetState(widget).isPinned;
   };
 
+  const isExpanded = (widget: WidgetType): boolean => {
+    return getWidgetState(widget).isExpanded;
+  };
+
   const getPosition = (widget: WidgetType): WidgetPosition => {
     return getWidgetState(widget).position || "top-left";
+  };
+
+  // Get widgets at a position for stacking calculation
+  const getWidgetsAtPosition = (position: WidgetPosition): WidgetType[] => {
+    return ALL_WIDGET_TYPES.filter(w => {
+      const state = widgetsState[w] || DEFAULT_WIDGET_STATE;
+      return state.isVisible && state.position === position;
+    });
+  };
+
+  // Calculate stack index for a widget
+  const getStackIndex = (widget: WidgetType): number => {
+    const position = getPosition(widget);
+    const widgetsAtPosition = getWidgetsAtPosition(position);
+    
+    // Sort: expanded first, then by original order
+    const sorted = [...widgetsAtPosition].sort((a, b) => {
+      const aExp = isExpanded(a);
+      const bExp = isExpanded(b);
+      if (aExp && !bExp) return -1;
+      if (!aExp && bExp) return 1;
+      return ALL_WIDGET_TYPES.indexOf(a) - ALL_WIDGET_TYPES.indexOf(b);
+    });
+    
+    return sorted.indexOf(widget);
+  };
+
+  // Toggle expand with limit
+  const toggleExpand = (widget: WidgetType) => {
+    setWidgetsState((prev: FloatingWidgetsState) => {
+      const currentlyExpanded = prev[widget]?.isExpanded ?? false;
+      
+      if (currentlyExpanded) {
+        // Collapse
+        return {
+          ...prev,
+          [widget]: { ...prev[widget], isExpanded: false }
+        };
+      }
+      
+      // Count expanded
+      const expandedCount = ALL_WIDGET_TYPES.filter(w => 
+        prev[w]?.isVisible && prev[w]?.isExpanded
+      ).length;
+      
+      if (expandedCount >= 2) {
+        // Find oldest to collapse
+        const oldest = ALL_WIDGET_TYPES.find(w => 
+          prev[w]?.isVisible && prev[w]?.isExpanded
+        );
+        
+        if (oldest) {
+          return {
+            ...prev,
+            [oldest]: { ...prev[oldest], isExpanded: false },
+            [widget]: { ...(prev[widget] || DEFAULT_WIDGET_STATE), isExpanded: true }
+          };
+        }
+      }
+      
+      return {
+        ...prev,
+        [widget]: { ...(prev[widget] || DEFAULT_WIDGET_STATE), isExpanded: true }
+      };
+    });
   };
 
   return {
@@ -89,6 +165,10 @@ export function useFloatingWidgets() {
     setPosition,
     isVisible,
     isPinned,
-    getPosition
+    isExpanded,
+    getPosition,
+    getStackIndex,
+    getWidgetsAtPosition,
+    toggleExpand
   };
 }

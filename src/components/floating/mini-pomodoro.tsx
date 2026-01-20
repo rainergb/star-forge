@@ -10,6 +10,7 @@ import { WidgetPosition } from "@/types/widget.types";
 interface MiniPomodoroProps {
   isVisible: boolean;
   isPinned: boolean;
+  isExpanded?: boolean;
   position: WidgetPosition;
   timeLeft: number;
   isActive: boolean;
@@ -17,6 +18,7 @@ interface MiniPomodoroProps {
   hasStarted: boolean;
   onClose: () => void;
   onTogglePin: () => void;
+  onToggleExpand?: () => void;
   onPositionChange: (position: WidgetPosition) => void;
   onToggle: () => void;
   onReset: () => void;
@@ -33,6 +35,7 @@ function formatTime(seconds: number): string {
 export function MiniPomodoro({
   isVisible,
   isPinned,
+  isExpanded = false,
   position,
   timeLeft,
   isActive,
@@ -40,6 +43,7 @@ export function MiniPomodoro({
   hasStarted,
   onClose,
   onTogglePin,
+  onToggleExpand,
   onPositionChange,
   onToggle,
   onReset,
@@ -57,16 +61,18 @@ export function MiniPomodoro({
     ? ((25 * 60 - timeLeft) / (25 * 60)) * 100
     : ((5 * 60 - timeLeft) / (5 * 60)) * 100;
 
-  // Renderiza PomodoroTimer completo quando fixado
-  if (isPinned) {
+  // Renderiza PomodoroTimer completo quando expandido
+  if (isExpanded) {
     return (
       <FloatingContainer
         title="Pomodoro"
         isVisible={isVisible}
         isPinned={isPinned}
+        isExpanded={isExpanded}
         position={position}
         onClose={onClose}
         onTogglePin={onTogglePin}
+        onToggleExpand={onToggleExpand}
         onPositionChange={onPositionChange}
         expandedClassName="w-[420px] max-h-[calc(100vh-120px)]"
         stackIndex={stackIndex}
@@ -78,15 +84,17 @@ export function MiniPomodoro({
     );
   }
 
-  // Versão mini quando não fixado
+  // Versão mini quando não expandido
   return (
     <FloatingContainer
       title="Pomodoro"
       isVisible={isVisible}
       isPinned={isPinned}
+      isExpanded={isExpanded}
       position={position}
       onClose={onClose}
       onTogglePin={onTogglePin}
+      onToggleExpand={onToggleExpand}
       onPositionChange={onPositionChange}
       className="w-64"
       stackIndex={stackIndex}

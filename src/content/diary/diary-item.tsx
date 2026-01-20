@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Star, Trash2, Clock, Tag, FileText, Image } from "lucide-react";
+import { Trash2, Clock, Tag, FileText, Image } from "lucide-react";
 import { DiaryEntry, ENTRY_TYPE_CONFIG } from "@/types/diary.types";
 import { MoodDisplay } from "./mood-selector";
 import { cn } from "@/lib/utils";
+import { FavoriteButton } from "@/components/shared/favorite-button";
 
 interface DiaryItemProps {
   entry: DiaryEntry;
@@ -22,11 +23,6 @@ export function DiaryItem({
   const typeConfig = ENTRY_TYPE_CONFIG[entry.type];
   const hasFiles = entry.files.length > 0;
   const hasImages = entry.files.some((f) => f.type === "image");
-
-  const handleFavoriteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onToggleFavorite(entry.id);
-  };
 
   const handleRemoveClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -69,20 +65,12 @@ export function DiaryItem({
               showActions ? "opacity-100" : "opacity-0"
             )}
           >
-            <button
-              onClick={handleFavoriteClick}
-              className={cn(
-                "p-1 rounded-full transition-colors",
-                entry.favorite
-                  ? "text-yellow-400"
-                  : "text-white/30 hover:text-yellow-400"
-              )}
-            >
-              <Star
-                className="w-4 h-4"
-                fill={entry.favorite ? "currentColor" : "none"}
-              />
-            </button>
+            <FavoriteButton
+              isFavorite={entry.favorite}
+              onToggle={() => onToggleFavorite(entry.id)}
+              size="sm"
+              color="yellow"
+            />
             <button
               onClick={handleRemoveClick}
               className="p-1 rounded-full text-white/30 hover:text-red-400 transition-colors"

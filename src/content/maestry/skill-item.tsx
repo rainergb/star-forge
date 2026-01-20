@@ -6,13 +6,20 @@ import {
   MasteryLevel,
   getProgressToNextLevel
 } from "@/types/skill.types";
-import { cn } from "@/lib/utils";
 import {
   ContextMenu,
   ContextMenuItem,
   ContextMenuDivider,
   useContextMenu
 } from "@/components/shared/context-menu";
+import {
+  ListItem,
+  ListItemTitle,
+  ListItemMeta,
+  ListItemBadge,
+  ListItemStat,
+  ListItemProgress
+} from "@/components/shared/list-item";
 
 import maestry1 from "@/assets/maestry/maestry1.png";
 import maestry2 from "@/assets/maestry/maestry2.png";
@@ -72,64 +79,44 @@ export function SkillItem({
 
   return (
     <>
-      <div
+      <ListItem
         onClick={onClick}
         onDoubleClick={onDoubleClick}
         onContextMenu={handleContextMenu}
-        className={cn(
-          "flex items-center justify-between px-4 py-3 bg-background/50 border rounded-lg hover:bg-white/5 transition-colors cursor-pointer",
-          "border-white/10",
-          skill.archived && "opacity-50"
-        )}
-      >
-        <div className="flex items-center gap-3">
+        isDisabled={skill.archived}
+        leading={
           <img
             src={MASTERY_IMAGES[skill.currentLevel]}
             alt={`Level ${skill.currentLevel}`}
             className="w-10 h-10 object-contain shrink-0"
           />
-
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <span className="text-white/90">{skill.name}</span>
-              <span
-                className="px-1.5 py-0.5 rounded text-xs font-medium"
-                style={{
-                  backgroundColor: `${SKILL_COLORS[skill.color].solid}20`,
-                  color: SKILL_COLORS[skill.color].solid
-                }}
-              >
-                Lv.{skill.currentLevel}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3 mt-1">
-              <span className="text-xs text-white/40">{levelInfo.name}</span>
-              {skill.totalTimeSpent > 0 && (
-                <div className="flex items-center gap-1 text-xs text-white/40">
-                  <Clock className="w-3 h-3" />
-                  <span>{formatTimeSpent(skill.totalTimeSpent)}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
+        }
+        trailing={
+          <ListItemProgress
+            value={progress.progressPercentage}
+            color={SKILL_COLORS[skill.color].solid}
+          />
+        }
+      >
         <div className="flex items-center gap-2">
-          <div className="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-300"
-              style={{
-                width: `${Math.min(100, progress.progressPercentage)}%`,
-                backgroundColor: SKILL_COLORS[skill.color].solid
-              }}
-            />
-          </div>
-          <span className="text-xs text-white/40 w-8 text-right">
-            {Math.round(progress.progressPercentage)}%
-          </span>
+          <ListItemTitle>{skill.name}</ListItemTitle>
+          <ListItemBadge
+            color={SKILL_COLORS[skill.color].solid}
+            bgColor={`${SKILL_COLORS[skill.color].solid}20`}
+          >
+            Lv.{skill.currentLevel}
+          </ListItemBadge>
         </div>
-      </div>
+
+        <ListItemMeta>
+          <span className="text-xs text-white/40">{levelInfo.name}</span>
+          {skill.totalTimeSpent > 0 && (
+            <ListItemStat icon={<Clock className="w-3 h-3" />} color="text-white/40">
+              {formatTimeSpent(skill.totalTimeSpent)}
+            </ListItemStat>
+          )}
+        </ListItemMeta>
+      </ListItem>
 
       <ContextMenu position={contextMenu} onClose={closeContextMenu}>
         <ContextMenuItem

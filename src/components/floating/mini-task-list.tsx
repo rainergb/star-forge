@@ -24,9 +24,11 @@ import { ListTodo, Focus } from "lucide-react";
 interface MiniTaskListProps {
   isVisible: boolean;
   isPinned: boolean;
+  isExpanded?: boolean;
   position: WidgetPosition;
   onClose: () => void;
   onTogglePin: () => void;
+  onToggleExpand?: () => void;
   onPositionChange: (position: WidgetPosition) => void;
   onSelectTask: (task: Task) => void;
   onClearTask: () => void;
@@ -36,9 +38,11 @@ interface MiniTaskListProps {
 export function MiniTaskList({
   isVisible,
   isPinned,
+  isExpanded = false,
   position,
   onClose,
   onTogglePin,
+  onToggleExpand,
   onPositionChange,
   onSelectTask,
   onClearTask,
@@ -83,16 +87,18 @@ export function MiniTaskList({
 
   if (!isVisible) return null;
 
-  // Render full TaskList when pinned
-  if (isPinned) {
+  // Render full TaskList when expanded
+  if (isExpanded) {
     return (
       <FloatingContainer
         title="Tasks"
         isVisible={isVisible}
         isPinned={isPinned}
+        isExpanded={isExpanded}
         position={position}
         onClose={onClose}
         onTogglePin={onTogglePin}
+        onToggleExpand={onToggleExpand}
         onPositionChange={onPositionChange}
         expandedClassName="w-[420px] max-h-[calc(100vh-120px)]"
         stackIndex={stackIndex}
@@ -108,15 +114,17 @@ export function MiniTaskList({
     );
   }
 
-  // Mini version when not pinned
+  // Mini version when not expanded
   return (
     <FloatingContainer
       title="Tasks"
       isVisible={isVisible}
       isPinned={isPinned}
+      isExpanded={isExpanded}
       position={position}
       onClose={onClose}
       onTogglePin={onTogglePin}
+      onToggleExpand={onToggleExpand}
       onPositionChange={onPositionChange}
       stackIndex={stackIndex}
     >

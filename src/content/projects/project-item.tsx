@@ -9,7 +9,6 @@ import {
   CheckCircle
 } from "lucide-react";
 import { Project, PROJECT_COLORS } from "@/types/project.types";
-import { cn } from "@/lib/utils";
 import { FavoriteButton } from "@/components/shared/favorite-button";
 import {
   ContextMenu,
@@ -17,6 +16,14 @@ import {
   ContextMenuDivider,
   useContextMenu
 } from "@/components/shared/context-menu";
+import {
+  ListItem,
+  ListItemTitle,
+  ListItemMeta,
+  ListItemBadge,
+  ListItemStat,
+  ListItemIcon
+} from "@/components/shared/list-item";
 
 function formatTime(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
@@ -51,8 +58,7 @@ export function ProjectItem({
 }: ProjectItemProps) {
   const { position: contextMenu, handleContextMenu, close: closeContextMenu } = useContextMenu();
   const colors = PROJECT_COLORS[project.color];
-  const progress =
-    tasksCount > 0 ? (completedTasksCount / tasksCount) * 100 : 0;
+  const progress = tasksCount > 0 ? (completedTasksCount / tasksCount) * 100 : 0;
 
   const handleDelete = () => {
     onRemove();
@@ -61,80 +67,63 @@ export function ProjectItem({
 
   return (
     <>
-      <div
+      <ListItem
         onClick={onClick}
         onContextMenu={handleContextMenu}
-        className={cn(
-          "flex items-center justify-between px-4 py-3 bg-background/50 border rounded-lg hover:bg-white/5 transition-colors cursor-pointer",
-          colors.border,
-          project.status === "archived" && "opacity-50"
-        )}
-      >
-        <div className="flex items-center gap-3">
-          <div className={cn("p-2 rounded-lg", colors.bg)}>
-            <Folder className={cn("w-5 h-5", colors.text)} />
-          </div>
-
-          <div className="flex flex-col">
-            <span className="text-white/90">{project.name}</span>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span
-                className={cn(
-                  "text-xs px-1.5 py-0.5 rounded",
-                  colors.bg,
-                  colors.text
-                )}
-              >
-                {STATUS_LABELS[project.status]}
-              </span>
-
-              <span className="flex items-center gap-1 text-xs text-white/50">
-                <ListTodo className="w-3 h-3" />
-                {completedTasksCount}/{tasksCount}
-              </span>
-
-              {project.estimatedPomodoros && project.estimatedPomodoros > 0 && (
-                <span className="flex items-center gap-1 text-xs text-[#B57CFF]">
-                  🍅 {project.completedPomodoros}/{project.estimatedPomodoros}
-                </span>
-              )}
-
-              {project.totalTimeSpent > 0 && (
-                <span className="flex items-center gap-1 text-xs text-[#1A7FFF]">
-                  <Clock className="w-3 h-3" />
-                  {formatTime(project.totalTimeSpent)}
-                </span>
-              )}
-            </div>
-
-            {tasksCount > 0 && (
-              <div className="mt-1.5 w-32 h-1 bg-white/10 rounded-full overflow-hidden">
-                <div
-                  className={cn(
-                    "h-full rounded-full transition-all",
-                    colors.bg
-                  )}
-                  style={{
-                    width: `${progress}%`,
-                    backgroundColor: colors.text.replace("text-", "")
-                  }}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
+        isDisabled={project.status === "archived"}
+        leading={
+          <ListItemIcon
+            icon={<Folder className="w-5 h-5" />}
+            bgColor={colors.bg.replace("bg-", "")}
+            color={colors.solid}
+          />
+        }
+        trailing={
           <FavoriteButton
             isFavorite={project.favorite}
             onToggle={(e) => {
-              e.stopPropagation();
+              e?.stopPropagation();
               onToggleFavorite();
             }}
             color="purple"
           />
-        </div>
-      </div>
+        }
+      >
+        <ListItemTitle>{project.name}</ListItemTitle>
+        <ListItemMeta>
+          <ListItemBadge color={colors.solid} bgColor={`${colors.solid}20`}>
+            {STATUS_LABELS[project.status]}
+          </ListItemBadge>
+
+          <ListItemStat icon={<ListTodo className="w-3 h-3" />}>
+            {completedTasksCount}/{tasksCount}
+          </ListItemStat>
+
+          {project.estimatedPomodoros && project.estimatedPomodoros > 0 && (
+            <ListItemStat icon={<span>🍅</span>} color="text-[#B57CFF]">
+              {project.completedPomodoros}/{project.estimatedPomodoros}
+            </ListItemStat>
+          )}
+
+          {project.totalTimeSpent > 0 && (
+            <ListItemStat icon={<Clock className="w-3 h-3" />} color="text-[#1A7FFF]">
+              {formatTime(project.totalTimeSpent)}
+            </ListItemStat>
+          )}
+        </ListItemMeta>
+
+        {tasksCount > 0 && (
+          <div className="mt-1.5 w-32 h-1 bg-white/10 rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all"
+              style={{
+                width: `${progress}%`,
+                backgroundColor: colors.solid
+              }}
+            />
+          </div>
+        )}
+      </ListItem>
 
       <ContextMenu position={contextMenu} onClose={closeContextMenu}>
         <ContextMenuItem

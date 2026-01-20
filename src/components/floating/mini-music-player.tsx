@@ -20,9 +20,11 @@ import { WidgetPosition } from "@/types/widget.types";
 interface MiniMusicPlayerProps {
   isVisible: boolean;
   isPinned: boolean;
+  isExpanded?: boolean;
   position: WidgetPosition;
   onClose: () => void;
   onTogglePin: () => void;
+  onToggleExpand?: () => void;
   onPositionChange: (position: WidgetPosition) => void;
   stackIndex?: number;
 }
@@ -30,9 +32,11 @@ interface MiniMusicPlayerProps {
 export function MiniMusicPlayer({
   isVisible,
   isPinned,
+  isExpanded = false,
   position,
   onClose,
   onTogglePin,
+  onToggleExpand,
   onPositionChange,
   stackIndex
 }: MiniMusicPlayerProps) {
@@ -103,16 +107,18 @@ export function MiniMusicPlayer({
 
   if (!isVisible) return null;
 
-  // Expanded version when pinned
-  if (isPinned) {
+  // Expanded version when expanded
+  if (isExpanded) {
     return (
       <FloatingContainer
         title="Music Player"
         isVisible={isVisible}
         isPinned={isPinned}
+        isExpanded={isExpanded}
         position={position}
         onClose={onClose}
         onTogglePin={onTogglePin}
+        onToggleExpand={onToggleExpand}
         onPositionChange={onPositionChange}
         expandedClassName="w-[420px] max-h-[calc(100vh-120px)]"
         stackIndex={stackIndex}
@@ -268,15 +274,17 @@ export function MiniMusicPlayer({
     );
   }
 
-  // Mini version when not pinned
+  // Mini version when not expanded
   return (
     <FloatingContainer
       title="Music"
       isVisible={isVisible}
       isPinned={isPinned}
+      isExpanded={isExpanded}
       position={position}
       onClose={onClose}
       onTogglePin={onTogglePin}
+      onToggleExpand={onToggleExpand}
       onPositionChange={onPositionChange}
       className="w-56"
       stackIndex={stackIndex}

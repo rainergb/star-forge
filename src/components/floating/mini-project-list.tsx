@@ -26,9 +26,11 @@ import { cn } from "@/lib/utils";
 interface MiniProjectListProps {
   isVisible: boolean;
   isPinned: boolean;
+  isExpanded?: boolean;
   position: WidgetPosition;
   onClose: () => void;
   onTogglePin: () => void;
+  onToggleExpand?: () => void;
   onPositionChange: (position: WidgetPosition) => void;
   onSelectProject?: (project: Project) => void;
   stackIndex?: number;
@@ -115,9 +117,11 @@ function MiniProjectItem({
 export function MiniProjectList({
   isVisible,
   isPinned,
+  isExpanded = false,
   position,
   onClose,
   onTogglePin,
+  onToggleExpand,
   onPositionChange,
   onSelectProject,
   stackIndex
@@ -158,16 +162,18 @@ export function MiniProjectList({
 
   if (!isVisible) return null;
 
-  // Render full ProjectList when pinned
-  if (isPinned) {
+  // Render full ProjectList when expanded
+  if (isExpanded) {
     return (
       <FloatingContainer
         title="Projects"
         isVisible={isVisible}
         isPinned={isPinned}
+        isExpanded={isExpanded}
         position={position}
         onClose={onClose}
         onTogglePin={onTogglePin}
+        onToggleExpand={onToggleExpand}
         onPositionChange={onPositionChange}
         expandedClassName="w-[420px] max-h-[calc(100vh-120px)]"
         stackIndex={stackIndex}
@@ -179,15 +185,17 @@ export function MiniProjectList({
     );
   }
 
-  // Mini version when not pinned
+  // Mini version when not expanded
   return (
     <FloatingContainer
       title="Projects"
       isVisible={isVisible}
       isPinned={isPinned}
+      isExpanded={isExpanded}
       position={position}
       onClose={onClose}
       onTogglePin={onTogglePin}
+      onToggleExpand={onToggleExpand}
       onPositionChange={onPositionChange}
       stackIndex={stackIndex}
     >

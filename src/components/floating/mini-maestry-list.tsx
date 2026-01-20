@@ -30,9 +30,11 @@ import { cn } from "@/lib/utils";
 interface MiniMaestryListProps {
   isVisible: boolean;
   isPinned: boolean;
+  isExpanded?: boolean;
   position: WidgetPosition;
   onClose: () => void;
   onTogglePin: () => void;
+  onToggleExpand?: () => void;
   onPositionChange: (position: WidgetPosition) => void;
   onSelectSkill?: (skill: Skill) => void;
   stackIndex?: number;
@@ -115,9 +117,11 @@ function MiniSkillItem({ skill, tasksCount, onSelect }: MiniSkillItemProps) {
 export function MiniMaestryList({
   isVisible,
   isPinned,
+  isExpanded = false,
   position,
   onClose,
   onTogglePin,
+  onToggleExpand,
   onPositionChange,
   onSelectSkill,
   stackIndex
@@ -155,16 +159,18 @@ export function MiniMaestryList({
 
   if (!isVisible) return null;
 
-  // Render full SkillList when pinned
-  if (isPinned) {
+  // Render full SkillList when expanded
+  if (isExpanded) {
     return (
       <FloatingContainer
         title="Maestry"
         isVisible={isVisible}
         isPinned={isPinned}
+        isExpanded={isExpanded}
         position={position}
         onClose={onClose}
         onTogglePin={onTogglePin}
+        onToggleExpand={onToggleExpand}
         onPositionChange={onPositionChange}
         expandedClassName="w-[420px] max-h-[calc(100vh-120px)]"
         stackIndex={stackIndex}
@@ -176,15 +182,17 @@ export function MiniMaestryList({
     );
   }
 
-  // Mini version when not pinned
+  // Mini version when not expanded
   return (
     <FloatingContainer
       title="Maestry"
       isVisible={isVisible}
       isPinned={isPinned}
+      isExpanded={isExpanded}
       position={position}
       onClose={onClose}
       onTogglePin={onTogglePin}
+      onToggleExpand={onToggleExpand}
       onPositionChange={onPositionChange}
       stackIndex={stackIndex}
     >

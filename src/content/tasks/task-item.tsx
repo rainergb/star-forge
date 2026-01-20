@@ -17,7 +17,6 @@ import { Task } from "@/types/task.types";
 import { PROJECT_COLORS } from "@/types/project.types";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { enUS } from "date-fns/locale";
 import { format, isToday, isTomorrow, isPast } from "date-fns";
 import { usePersonalize } from "@/hooks/use-personalize";
@@ -29,6 +28,14 @@ import {
   useContextMenu
 } from "@/components/shared/context-menu";
 import { FavoriteButton } from "@/components/shared/favorite-button";
+import {
+  ListItem,
+  ListItemTitle,
+  ListItemMeta,
+  ListItemBadge,
+  ListItemStat,
+  ListItemColorBar
+} from "@/components/shared/list-item";
 import successSound from "@/assets/sucess.mp3";
 
 const formatDueDate = (timestamp: number): string => {
@@ -154,109 +161,87 @@ export function TaskItem({
 
   return (
     <>
-      <div
+      <ListItem
         onClick={onClick}
         onDoubleClick={onDoubleClick}
         onContextMenu={openContextMenu}
-        className={cn(
-          "flex items-center justify-between px-4 py-3 bg-background/50 border rounded-lg hover:bg-white/5 transition-colors cursor-pointer",
-          isActive ? "border-primary/50 bg-primary/5" : "border-white/10",
-          task.completed && "opacity-50"
-        )}
-      >
-        <div className="flex items-center gap-3">
-          {project && (
-            <div
-              className="w-2 h-8 rounded-full shrink-0"
-              style={{ backgroundColor: PROJECT_COLORS[project.color].solid }}
-              title={project.name}
-            />
-          )}
-          <button
-            onClick={handleToggleCompleted}
-            className="cursor-pointer text-white/70 hover:text-white transition-colors"
-          >
-            {task.completed ? (
-              <CheckCircle2 className="w-5 h-5 text-primary" />
-            ) : (
-              <Circle className="w-5 h-5" />
+        isActive={isActive}
+        isDisabled={task.completed}
+        leading={
+          <>
+            {project && (
+              <ListItemColorBar
+                color={PROJECT_COLORS[project.color].solid}
+              />
             )}
-          </button>
-
-          <div className="flex flex-col">
-            <span
-              className={`text-white/90 ${
-                task.completed ? "line-through text-white/50" : ""
-              }`}
+            <button
+              onClick={handleToggleCompleted}
+              className="cursor-pointer text-white/70 hover:text-white transition-colors"
             >
-              {task.title}
-            </span>
-            <div className="flex items-center gap-2 flex-wrap">
-              {project && (
-                <span
-                  className="text-xs px-1.5 py-0.5 rounded"
-                  style={{
-                    backgroundColor: `${PROJECT_COLORS[project.color].solid}20`,
-                    color: PROJECT_COLORS[project.color].solid
-                  }}
-                >
-                  {project.name}
-                </span>
+              {task.completed ? (
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+              ) : (
+                <Circle className="w-5 h-5" />
               )}
-              <span className="text-xs text-white/40">{task.category}</span>
-              {task.dueDate && (
-                <span
-                  className={`flex items-center gap-1 text-xs ${
-                    isPast(new Date(task.dueDate)) && !task.completed
-                      ? "text-red-400"
-                      : "text-white/50"
-                  }`}
-                >
-                  <Calendar className="w-3 h-3" />
-                  {formatDueDate(task.dueDate)}
-                </span>
-              )}
-              {task.reminder && (
-                <span className="flex items-center gap-1 text-xs text-[#1A7FFF]">
-                  <Bell className="w-3 h-3" />
-                  {formatReminderDate(task.reminder.date)}
-                </span>
-              )}
-              {task.repeat && (
-                <span className="flex items-center gap-1 text-xs text-[#B57CFF]">
-                  <Repeat className="w-3 h-3" />
-                  {getRepeatLabel(task.repeat)}
-                </span>
-              )}
-              {task.estimatedPomodoros && task.estimatedPomodoros > 0 && (
-                <span className="flex items-center gap-1 text-xs text-[#B57CFF]">
-                  <Timer className="w-3 h-3" />
-                  {task.completedPomodoros ?? 0}/{task.estimatedPomodoros}
-                </span>
-              )}
-              {task.totalTimeSpent > 0 && (
-                <span className="flex items-center gap-1 text-xs text-[#1A7FFF]">
-                  <Clock className="w-3 h-3" />
-                  {formatTimeSpent(task.totalTimeSpent)}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {expectedEndTime && !task.completed && (
-            <span className="text-[10px] text-white/30 whitespace-nowrap">
-              ~{expectedEndTime}
-            </span>
+            </button>
+          </>
+        }
+        trailing={
+          <>
+            {expectedEndTime && !task.completed && (
+              <span className="text-[10px] text-white/30 whitespace-nowrap">
+                ~{expectedEndTime}
+              </span>
+            )}
+            <FavoriteButton
+              isFavorite={task.favorite}
+              onToggle={() => onToggleFavorite(task.id)}
+              color="purple"
+            />
+          </>
+        }
+      >
+        <ListItemTitle strikethrough={task.completed}>{task.title}</ListItemTitle>
+        <ListItemMeta>
+          {project && (
+            <ListItemBadge
+              color={PROJECT_COLORS[project.color].solid}
+              bgColor={`${PROJECT_COLORS[project.color].solid}20`}
+            >
+              {project.name}
+            </ListItemBadge>
           )}
-          <FavoriteButton
-            isFavorite={task.favorite}
-            onToggle={() => onToggleFavorite(task.id)}
-            color="purple"
-          />
-        </div>
-      </div>
+          <span className="text-xs text-white/40">{task.category}</span>
+          {task.dueDate && (
+            <ListItemStat
+              icon={<Calendar className="w-3 h-3" />}
+              color={isPast(new Date(task.dueDate)) && !task.completed ? "text-red-400" : "text-white/50"}
+            >
+              {formatDueDate(task.dueDate)}
+            </ListItemStat>
+          )}
+          {task.reminder && (
+            <ListItemStat icon={<Bell className="w-3 h-3" />} color="text-[#1A7FFF]">
+              {formatReminderDate(task.reminder.date)}
+            </ListItemStat>
+          )}
+          {task.repeat && (
+            <ListItemStat icon={<Repeat className="w-3 h-3" />} color="text-[#B57CFF]">
+              {getRepeatLabel(task.repeat)}
+            </ListItemStat>
+          )}
+          {task.estimatedPomodoros && task.estimatedPomodoros > 0 && (
+            <ListItemStat icon={<Timer className="w-3 h-3" />} color="text-[#B57CFF]">
+              {task.completedPomodoros ?? 0}/{task.estimatedPomodoros}
+            </ListItemStat>
+          )}
+          {task.totalTimeSpent > 0 && (
+            <ListItemStat icon={<Clock className="w-3 h-3" />} color="text-[#1A7FFF]">
+              {formatTimeSpent(task.totalTimeSpent)}
+            </ListItemStat>
+          )}
+        </ListItemMeta>
+      </ListItem>
 
       <ContextMenu position={contextMenu} onClose={closeContextMenu}>
         <ContextMenuItem

@@ -1,5 +1,5 @@
 import { ReactNode, useState, useRef, useCallback } from "react";
-import { X, Pin, PinOff, GripVertical } from "lucide-react";
+import { X, Pin, PinOff, GripVertical, Maximize2, Minimize2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { WidgetPosition } from "@/types/widget.types";
@@ -9,16 +9,23 @@ interface FloatingContainerProps {
   children: ReactNode;
   isVisible: boolean;
   isPinned: boolean;
+  isExpanded?: boolean;
   position: WidgetPosition;
   onClose: () => void;
   onTogglePin: () => void;
+  onToggleExpand?: () => void;
   onPositionChange: (position: WidgetPosition) => void;
   className?: string;
   expandedClassName?: string;
-  stackIndex?: number; // For stacking widgets in same position
+  stackIndex?: number;
+  canExpand?: boolean; // Whether expansion is allowed (max 2 limit)
+  showExpandButton?: boolean;
 }
 
-const STACK_OFFSET = 90; // Pixels to offset each stacked widget
+// Base heights for stacking calculation
+const COLLAPSED_HEIGHT = 340; // max-h-[340px]
+const EXPANDED_HEIGHT = 500; // max-h-[500px]
+const STACK_GAP = 12; // Gap between stacked widgets
 
 const positionClasses: Record<WidgetPosition, string> = {
   "top-left": "top-20 left-4",
@@ -32,13 +39,17 @@ export function FloatingContainer({
   children,
   isVisible,
   isPinned,
+  isExpanded = false,
   position,
   onClose,
   onTogglePin,
+  onToggleExpand,
   onPositionChange,
   className,
   expandedClassName,
-  stackIndex = 0
+  stackIndex = 0,
+  canExpand = true,
+  showExpandButton = true
 }: FloatingContainerProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -46,12 +57,22 @@ export function FloatingContainer({
   const dragStartPos = useRef({ x: 0, y: 0 });
 
   // Calculate stack offset based on position and index
+  // Each widget below the first gets offset by previous widgets' heights
   const getStackTransform = () => {
     if (stackIndex === 0) return '';
-    const offset = stackIndex * STACK_OFFSET;
     
-    // Stack vertically (downwards)
-    return `translateY(${offset}px)`;
+    // Approximate offset based on average widget height
+    // In a real scenario, we'd measure actual heights
+    const baseOffset = stackIndex * (COLLAPSED_HEIGHT + STACK_GAP);
+    
+    // For top positions, stack downwards
+    // For bottom positions, stack upwards
+    const isBottomPosition = position.startsWith('bottom');
+    
+    if (isBottomPosition) {
+      return `translateY(-${baseOffset}px)`;
+    }
+    return `translateY(${baseOffset}px)`;
   };
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -148,8 +169,8 @@ export function FloatingContainer({
           !isDragging && "animate-in fade-in-0 duration-200",
           !isDragging && "transition-all duration-300 ease-out",
           isDragging && "cursor-grabbing shadow-2xl shadow-primary/20 scale-[1.02]",
-          isPinned
-            ? cn("w-[420px] max-h-[600px]", expandedClassName)
+          isExpanded
+            ? cn("w-[420px] max-h-[500px]", expandedClassName)
             : cn("w-72 max-h-[340px]", className)
         )}
       >
@@ -170,6 +191,28 @@ export function FloatingContainer({
             <span className="text-sm font-medium text-white/90">{title}</span>
           </div>
           <div className="flex items-center gap-1">
+            {showExpandButton && onToggleExpand && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "h-7 w-7 hover:bg-white/10",
+                  isExpanded
+                    ? "text-primary hover:text-primary"
+                    : "text-white/60 hover:text-white/90",
+                  !canExpand && !isExpanded && "opacity-50 cursor-not-allowed"
+                )}
+                onClick={onToggleExpand}
+                disabled={!canExpand && !isExpanded}
+                title={!canExpand && !isExpanded ? "Maximum 2 expanded widgets" : isExpanded ? "Collapse" : "Expand"}
+              >
+                {isExpanded ? (
+                  <Minimize2 className="h-4 w-4" />
+                ) : (
+                  <Maximize2 className="h-4 w-4" />
+                )}
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
