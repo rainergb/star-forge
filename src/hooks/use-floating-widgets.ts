@@ -116,6 +116,11 @@ export function useFloatingWidgets() {
     return sorted.indexOf(widget);
   };
 
+  // Reset all widget positions to default
+  const resetPositions = () => {
+    setWidgetsState(DEFAULT_FLOATING_WIDGETS_STATE);
+  };
+
   // Toggle expand with limit
   const toggleExpand = (widget: WidgetType) => {
     setWidgetsState((prev: FloatingWidgetsState) => {
@@ -169,6 +174,7 @@ export function useFloatingWidgets() {
     getPosition,
     getStackIndex,
     getWidgetsAtPosition,
-    toggleExpand
+    toggleExpand,
+    resetPositions
   };
 }

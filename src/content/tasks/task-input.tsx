@@ -1,7 +1,8 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Calendar, Bell, Repeat, Timer, Plus, Minus } from "lucide-react";
 import { TaskReminder } from "@/types/task.types";
 import { DateTimePickerPopover } from "@/components/ui/date-time-picker-popover";
+import { ControlledListInput } from "@/components/shared/list-input";
 
 interface TaskInputProps {
   onAddTask: (
@@ -33,7 +34,6 @@ export function TaskInput({ onAddTask }: TaskInputProps) {
   const [showReminderPicker, setShowReminderPicker] = useState(false);
   const [showRepeatMenu, setShowRepeatMenu] = useState(false);
   const [showPomodoroInput, setShowPomodoroInput] = useState(false);
-  const inputContainerRef = useRef<HTMLDivElement>(null);
 
   const handleAddTask = () => {
     if (newTaskTitle.trim()) {
@@ -60,77 +60,61 @@ export function TaskInput({ onAddTask }: TaskInputProps) {
     setShowReminderPicker(false);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleAddTask();
-    }
-  };
-
-  return (
-    <div className="w-full relative" ref={inputContainerRef}>
-      <div className="w-full flex items-center gap-2 px-4 py-3 bg-background/50 border border-white/10 rounded-lg focus-within:border-primary/50 transition-colors">
-        <input
-          type="text"
-          value={newTaskTitle}
-          onChange={(e) => setNewTaskTitle(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Add new task..."
-          className="flex-1 bg-transparent text-white placeholder-white/30 focus:outline-none"
-        />
-        {newTaskTitle.trim() && (
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setShowDueDatePicker(!showDueDatePicker)}
-              className={`p-1.5 rounded-md transition-colors cursor-pointer ${
-                newTaskDueDate
-                  ? "text-primary bg-primary/20"
-                  : "text-white/40 hover:text-white/70 hover:bg-white/5"
-              }`}
-              title="Due date"
-            >
-              <Calendar className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setShowReminderPicker(!showReminderPicker)}
-              className={`p-1.5 rounded-md transition-colors cursor-pointer ${
-                newTaskReminder
-                  ? "text-primary bg-primary/20"
-                  : "text-white/40 hover:text-white/70 hover:bg-white/5"
-              }`}
-              title="Reminder"
-            >
-              <Bell className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setShowRepeatMenu(!showRepeatMenu)}
-              className={`p-1.5 rounded-md transition-colors cursor-pointer ${
-                newTaskRepeat
-                  ? "text-primary bg-primary/20"
-                  : "text-white/40 hover:text-white/70 hover:bg-white/5"
-              }`}
-              title="Repeat"
-            >
-              <Repeat className="w-4 h-4" />
-            </button>
-            <div className="w-px h-4 bg-white/10 mx-1" />
-            <button
-              onClick={() => setShowPomodoroInput(!showPomodoroInput)}
-              className={`p-1.5 rounded-md transition-colors cursor-pointer flex items-center gap-1 ${
-                newTaskPomodoros
-                  ? "text-primary bg-primary/20"
-                  : "text-white/40 hover:text-white/70 hover:bg-white/5"
-              }`}
-              title="Estimated pomodoros"
-            >
-              <Timer className="w-4 h-4" />
-              {newTaskPomodoros && (
-                <span className="text-xs">{newTaskPomodoros}</span>
-              )}
-            </button>
-          </div>
+  const taskActions = (
+    <div className="flex items-center gap-1">
+      <button
+        onClick={() => setShowDueDatePicker(!showDueDatePicker)}
+        className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+          newTaskDueDate
+            ? "text-primary bg-primary/20"
+            : "text-white/40 hover:text-white/70 hover:bg-white/5"
+        }`}
+        title="Due date"
+      >
+        <Calendar className="w-4 h-4" />
+      </button>
+      <button
+        onClick={() => setShowReminderPicker(!showReminderPicker)}
+        className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+          newTaskReminder
+            ? "text-primary bg-primary/20"
+            : "text-white/40 hover:text-white/70 hover:bg-white/5"
+        }`}
+        title="Reminder"
+      >
+        <Bell className="w-4 h-4" />
+      </button>
+      <button
+        onClick={() => setShowRepeatMenu(!showRepeatMenu)}
+        className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+          newTaskRepeat
+            ? "text-primary bg-primary/20"
+            : "text-white/40 hover:text-white/70 hover:bg-white/5"
+        }`}
+        title="Repeat"
+      >
+        <Repeat className="w-4 h-4" />
+      </button>
+      <div className="w-px h-4 bg-white/10 mx-1" />
+      <button
+        onClick={() => setShowPomodoroInput(!showPomodoroInput)}
+        className={`p-1.5 rounded-md transition-colors cursor-pointer flex items-center gap-1 ${
+          newTaskPomodoros
+            ? "text-primary bg-primary/20"
+            : "text-white/40 hover:text-white/70 hover:bg-white/5"
+        }`}
+        title="Estimated pomodoros"
+      >
+        <Timer className="w-4 h-4" />
+        {newTaskPomodoros && (
+          <span className="text-xs">{newTaskPomodoros}</span>
         )}
-      </div>
+      </button>
+    </div>
+  );
 
+  const taskPopovers = (
+    <>
       {showDueDatePicker && (
         <DateTimePickerPopover
           title="Due date"
@@ -245,6 +229,17 @@ export function TaskInput({ onAddTask }: TaskInputProps) {
           </div>
         </>
       )}
-    </div>
+    </>
+  );
+
+  return (
+    <ControlledListInput
+      value={newTaskTitle}
+      onChange={setNewTaskTitle}
+      onSubmit={handleAddTask}
+      placeholder="Add new task..."
+      actions={taskActions}
+      popoverContent={taskPopovers}
+    />
   );
 }

@@ -35,7 +35,6 @@ export interface Skill {
   totalTimeSpent: number;
   totalPomodoros: number;
   currentLevel: MasteryLevel;
-  archived: boolean;
 }
 
 export interface SkillsState {

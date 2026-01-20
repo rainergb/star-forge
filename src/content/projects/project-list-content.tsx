@@ -19,7 +19,6 @@ import { Project } from "@/types/project.types";
 import { ProjectItem } from "./project-item";
 import {
   ListContainer,
-  CollapsibleSection,
   EmptyState
 } from "@/components/shared/list-container";
 
@@ -62,7 +61,7 @@ function SortableProjectItem({
         project={project}
         tasksCount={tasksCount}
         completedTasksCount={completedTasksCount}
-        onClick={onClick}
+        onDoubleClick={onClick}
         onToggleFavorite={onToggleFavorite}
         onRemove={onRemove}
       />
@@ -72,10 +71,6 @@ function SortableProjectItem({
 
 interface ProjectListContentProps {
   projects: Project[];
-  activeProjects: Project[];
-  archivedProjects: Project[];
-  archivedCollapsed: boolean;
-  onToggleArchivedCollapsed: () => void;
   onProjectClick: (project: Project) => void;
   onToggleFavorite: (id: string) => void;
   onRemoveProject: (id: string) => void;
@@ -85,10 +80,6 @@ interface ProjectListContentProps {
 
 export function ProjectListContent({
   projects,
-  activeProjects,
-  archivedProjects,
-  archivedCollapsed,
-  onToggleArchivedCollapsed,
   onProjectClick,
   onToggleFavorite,
   onRemoveProject,
@@ -108,10 +99,10 @@ export function ProjectListContent({
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = activeProjects.findIndex((p) => p.id === active.id);
-      const newIndex = activeProjects.findIndex((p) => p.id === over.id);
+      const oldIndex = projects.findIndex((p) => p.id === active.id);
+      const newIndex = projects.findIndex((p) => p.id === over.id);
 
-      const newOrder = [...activeProjects];
+      const newOrder = [...projects];
       const [removed] = newOrder.splice(oldIndex, 1);
       newOrder.splice(newIndex, 0, removed);
 
@@ -137,10 +128,10 @@ export function ProjectListContent({
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={activeProjects.map((p) => p.id)}
+          items={projects.map((p) => p.id)}
           strategy={verticalListSortingStrategy}
         >
-          {activeProjects.map((project) => {
+          {projects.map((project) => {
             const counts = getTaskCounts(project.id);
             return (
               <SortableProjectItem
@@ -156,32 +147,6 @@ export function ProjectListContent({
           })}
         </SortableContext>
       </DndContext>
-
-      {archivedProjects.length > 0 && (
-        <CollapsibleSection
-          label="Archived"
-          count={archivedProjects.length}
-          collapsed={archivedCollapsed}
-          onToggle={onToggleArchivedCollapsed}
-        >
-          <div className="space-y-2">
-            {archivedProjects.map((project) => {
-              const counts = getTaskCounts(project.id);
-              return (
-                <ProjectItem
-                  key={project.id}
-                  project={project}
-                  tasksCount={counts.total}
-                  completedTasksCount={counts.completed}
-                  onClick={() => onProjectClick(project)}
-                  onToggleFavorite={() => onToggleFavorite(project.id)}
-                  onRemove={() => onRemoveProject(project.id)}
-                />
-              );
-            })}
-          </div>
-        </CollapsibleSection>
-      )}
     </ListContainer>
   );
 }

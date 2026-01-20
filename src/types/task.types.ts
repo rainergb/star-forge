@@ -32,6 +32,7 @@ export interface Task {
   completed: boolean;
   favorite: boolean;
   createdAt: number;
+  image: string | null;
   steps: TaskStep[];
   dueDate: number | null;
   reminder: TaskReminder | null;

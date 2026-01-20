@@ -9,13 +9,15 @@ interface DateTimePickerPopoverProps {
   initialDate?: Date;
   onSave: (date: Date) => void;
   onClose: () => void;
+  showTime?: boolean;
 }
 
 export function DateTimePickerPopover({
   title,
   initialDate,
   onSave,
-  onClose
+  onClose,
+  showTime = true
 }: DateTimePickerPopoverProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(initialDate);
   const [hours, setHours] = useState(
@@ -46,8 +48,8 @@ export function DateTimePickerPopover({
 
   return (
     <>
-      <div className="fixed inset-0 z-10" onClick={onClose} />
-      <div className="absolute left-0 top-full mt-1 bg-[#1a1d3a] border border-white/10 rounded-lg shadow-xl z-20 overflow-hidden">
+      <div className="fixed inset-0 z-50" onClick={onClose} />
+      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#1a1d3a] border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
         <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10">
           <button
             onClick={onClose}
@@ -66,23 +68,25 @@ export function DateTimePickerPopover({
           initialFocus
         />
 
-        <div className="flex items-center justify-center gap-2 border-t border-white/10 py-4 px-4">
-          <input
-            type="text"
-            value={hours}
-            onChange={(e) => handleTimeChange("hours", e.target.value)}
-            className="w-12 h-10 text-center bg-white/5 border border-white/10 rounded-md text-white text-lg focus:outline-none focus:border-primary/50"
-            maxLength={2}
-          />
-          <span className="text-white/50 text-lg">:</span>
-          <input
-            type="text"
-            value={minutes}
-            onChange={(e) => handleTimeChange("minutes", e.target.value)}
-            className="w-12 h-10 text-center bg-white/5 border border-white/10 rounded-md text-white text-lg focus:outline-none focus:border-primary/50"
-            maxLength={2}
-          />
-        </div>
+        {showTime && (
+          <div className="flex items-center justify-center gap-2 border-t border-white/10 py-4 px-4">
+            <input
+              type="text"
+              value={hours}
+              onChange={(e) => handleTimeChange("hours", e.target.value)}
+              className="w-12 h-10 text-center bg-white/5 border border-white/10 rounded-md text-white text-lg focus:outline-none focus:border-primary/50"
+              maxLength={2}
+            />
+            <span className="text-white/50 text-lg">:</span>
+            <input
+              type="text"
+              value={minutes}
+              onChange={(e) => handleTimeChange("minutes", e.target.value)}
+              className="w-12 h-10 text-center bg-white/5 border border-white/10 rounded-md text-white text-lg focus:outline-none focus:border-primary/50"
+              maxLength={2}
+            />
+          </div>
+        )}
           
         <div className="flex gap-2 border-t border-white/10 p-4">
           <Button

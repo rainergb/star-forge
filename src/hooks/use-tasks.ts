@@ -46,6 +46,7 @@ export function useTasks() {
         completed: false,
         favorite: false,
         createdAt: Date.now(),
+        image: null,
         steps: [],
         dueDate: options?.dueDate ?? null,
         reminder: options?.reminder ?? null,

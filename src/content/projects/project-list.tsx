@@ -25,10 +25,6 @@ export function ProjectList({ onNavigateToTasks }: ProjectListProps) {
 
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [archivedCollapsed, setArchivedCollapsed] = useState(true);
-
-  const activeProjects = projects.filter((p) => p.status !== "archived");
-  const archivedProjects = projects.filter((p) => p.status === "archived");
 
   const handleAddProject = (
     name: string,
@@ -73,10 +69,6 @@ export function ProjectList({ onNavigateToTasks }: ProjectListProps) {
 
       <ProjectListContent
         projects={projects}
-        activeProjects={activeProjects}
-        archivedProjects={archivedProjects}
-        archivedCollapsed={archivedCollapsed}
-        onToggleArchivedCollapsed={() => setArchivedCollapsed(!archivedCollapsed)}
         onProjectClick={handleProjectClick}
         onToggleFavorite={toggleFavorite}
         onRemoveProject={handleDeleteProject}

@@ -39,12 +39,12 @@ function SkillStatsCard({ skill, stats }: { skill: Skill; stats: SkillStats | nu
   const levelInfo = MASTERY_LEVELS[skill.currentLevel - 1];
 
   return (
-    <div className="bg-background/50 border border-white/10 rounded-lg p-4">
-      <div className="flex items-center gap-3 mb-3">
+    <div className="bg-background/50 border border-white/10 rounded-lg p-3">
+      <div className="flex items-center gap-2 mb-2">
         <img
           src={MASTERY_IMAGES[skill.currentLevel]}
           alt={`Level ${skill.currentLevel}`}
-          className="w-10 h-10 object-contain"
+          className="w-8 h-8 object-contain"
         />
         <div className="flex-1 min-w-0">
           <span className="text-sm font-medium text-white truncate block">
@@ -63,7 +63,7 @@ function SkillStatsCard({ skill, stats }: { skill: Skill; stats: SkillStats | nu
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+      <div className="grid grid-cols-2 gap-1 text-xs mb-2">
         <div>
           <span className="text-white/50">Total Hours</span>
           <div className="text-white font-medium">
@@ -77,7 +77,7 @@ function SkillStatsCard({ skill, stats }: { skill: Skill; stats: SkillStats | nu
       </div>
 
       <div>
-        <div className="flex justify-between text-xs text-white/50 mb-1">
+        <div className="flex justify-between text-xs text-white/50 mb-0.5">
           <span>Next Level</span>
           <span>{Math.round(stats.progressPercentage)}%</span>
         </div>
@@ -96,22 +96,20 @@ function SkillStatsCard({ skill, stats }: { skill: Skill; stats: SkillStats | nu
 }
 
 export function MaestryStatsView({ skills, getSkillStats }: MaestryStatsViewProps) {
-  const activeSkills = skills.filter((s) => !s.archived);
-
-  const totalTimeSpent = activeSkills.reduce((acc, s) => acc + s.totalTimeSpent, 0);
-  const totalPomodoros = activeSkills.reduce((acc, s) => acc + s.totalPomodoros, 0);
+  const totalTimeSpent = skills.reduce((acc, s) => acc + s.totalTimeSpent, 0);
+  const totalPomodoros = skills.reduce((acc, s) => acc + s.totalPomodoros, 0);
   const avgLevel =
-    activeSkills.length > 0
-      ? activeSkills.reduce((acc, s) => acc + s.currentLevel, 0) / activeSkills.length
+    skills.length > 0
+      ? skills.reduce((acc, s) => acc + s.currentLevel, 0) / skills.length
       : 0;
 
-  const highestLevelSkill = activeSkills.reduce(
+  const highestLevelSkill = skills.reduce(
     (highest, skill) =>
       !highest || skill.currentLevel > highest.currentLevel ? skill : highest,
     null as Skill | null
   );
 
-  const levelDistribution = activeSkills.reduce(
+  const levelDistribution = skills.reduce(
     (acc, skill) => {
       acc[skill.currentLevel] = (acc[skill.currentLevel] || 0) + 1;
       return acc;
@@ -120,48 +118,48 @@ export function MaestryStatsView({ skills, getSkillStats }: MaestryStatsViewProp
   );
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-background/50 border border-white/10 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-white/60 mb-2">
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-1">
+        <div className="bg-background/50 border border-white/10 rounded-lg p-3">
+          <div className="flex items-center gap-1 text-white/60 mb-0.5">
             <Sparkles className="w-4 h-4" />
-            <span className="text-xs">Active Skills</span>
+            <span className="text-xs">Skills</span>
           </div>
-          <div className="text-2xl font-bold text-white">
-            {activeSkills.length}
+          <div className="text-xl font-bold text-white">
+            {skills.length}
           </div>
-          <div className="text-xs text-white/40 mt-1">
+          <div className="text-xs text-white/40">
             Avg. Lv.{avgLevel.toFixed(1)}
           </div>
         </div>
 
-        <div className="bg-background/50 border border-white/10 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-white/60 mb-2">
+        <div className="bg-background/50 border border-white/10 rounded-lg p-3">
+          <div className="flex items-center gap-1 text-white/60 mb-0.5">
             <Clock className="w-4 h-4" />
             <span className="text-xs">Total Time</span>
           </div>
-          <div className="text-2xl font-bold text-white">
+          <div className="text-xl font-bold text-white">
             {formatDuration(totalTimeSpent)}
           </div>
-          <div className="text-xs text-white/40 mt-1">
+          <div className="text-xs text-white/40">
             {totalPomodoros} pomodoros
           </div>
         </div>
 
         {highestLevelSkill && (
-          <div className="col-span-2 bg-background/50 border border-white/10 rounded-lg p-4">
-            <div className="flex items-center gap-2 text-white/60 mb-2">
+          <div className="col-span-2 bg-background/50 border border-white/10 rounded-lg p-3">
+            <div className="flex items-center gap-1 text-white/60 mb-1">
               <Award className="w-4 h-4" />
               <span className="text-xs">Highest Level Skill</span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <img
                 src={MASTERY_IMAGES[highestLevelSkill.currentLevel]}
                 alt={`Level ${highestLevelSkill.currentLevel}`}
-                className="w-12 h-12 object-contain"
+                className="w-10 h-10 object-contain"
               />
               <div>
-                <div className="text-lg font-bold text-white">
+                <div className="text-base font-bold text-white">
                   {highestLevelSkill.name}
                 </div>
                 <div className="text-xs text-white/50">
@@ -174,11 +172,11 @@ export function MaestryStatsView({ skills, getSkillStats }: MaestryStatsViewProp
         )}
       </div>
 
-      {activeSkills.length > 0 && (
-        <div className="space-y-2">
+      {skills.length > 0 && (
+        <div className="space-y-1">
           <h3 className="text-sm font-medium text-white/70">Level Distribution</h3>
-          <div className="bg-background/50 border border-white/10 rounded-lg p-4">
-            <div className="flex items-end gap-2 h-20">
+          <div className="bg-background/50 border border-white/10 rounded-lg p-3">
+            <div className="flex items-end gap-2 h-16">
               {[1, 2, 3, 4, 5, 6, 7].map((level) => {
                 const count = levelDistribution[level] || 0;
                 const maxCount = Math.max(...Object.values(levelDistribution), 1);
@@ -193,7 +191,7 @@ export function MaestryStatsView({ skills, getSkillStats }: MaestryStatsViewProp
                     <img
                       src={MASTERY_IMAGES[level as MasteryLevel]}
                       alt={`Level ${level}`}
-                      className="w-6 h-6 object-contain opacity-60"
+                      className="w-5 h-5 object-contain opacity-60"
                     />
                   </div>
                 );
@@ -203,11 +201,11 @@ export function MaestryStatsView({ skills, getSkillStats }: MaestryStatsViewProp
         </div>
       )}
 
-      {activeSkills.length > 0 && (
-        <div className="space-y-2">
+      {skills.length > 0 && (
+        <div className="space-y-1">
           <h3 className="text-sm font-medium text-white/70">Skills Progress</h3>
-          <div className="grid grid-cols-1 gap-2 max-h-[180px] overflow-y-auto scrollbar-none">
-            {activeSkills.slice(0, 4).map((skill) => (
+          <div className="grid grid-cols-1 gap-1 max-h-[140px] overflow-y-auto scrollbar-none">
+            {skills.slice(0, 4).map((skill) => (
               <SkillStatsCard
                 key={skill.id}
                 skill={skill}

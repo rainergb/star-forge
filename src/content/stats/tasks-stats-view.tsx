@@ -78,70 +78,70 @@ export function TasksStatsView({ tasks, period, projectId }: TasksStatsViewProps
     totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-background/50 border border-white/10 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-white/60 mb-2">
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-1">
+        <div className="bg-background/50 border border-white/10 rounded-lg p-3">
+          <div className="flex items-center gap-1 text-white/60 mb-0.5">
             <CheckSquare className="w-4 h-4" />
             <span className="text-xs">Completed</span>
           </div>
-          <div className="text-2xl font-bold text-white">
+          <div className="text-xl font-bold text-white">
             {completedTasks.length}
           </div>
-          <div className="text-xs text-white/40 mt-1">
+          <div className="text-xs text-white/40">
             {completionRate}% completion rate
           </div>
         </div>
 
-        <div className="bg-background/50 border border-white/10 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-white/60 mb-2">
+        <div className="bg-background/50 border border-white/10 rounded-lg p-3">
+          <div className="flex items-center gap-1 text-white/60 mb-0.5">
             <ListTodo className="w-4 h-4" />
             <span className="text-xs">Pending</span>
           </div>
-          <div className="text-2xl font-bold text-white">
+          <div className="text-xl font-bold text-white">
             {pendingTasks.length}
           </div>
-          <div className="text-xs text-white/40 mt-1">
+          <div className="text-xs text-white/40">
             {filteredTasks.length} total tasks
           </div>
         </div>
 
-        <div className="bg-background/50 border border-white/10 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-white/60 mb-2">
+        <div className="bg-background/50 border border-white/10 rounded-lg p-3">
+          <div className="flex items-center gap-1 text-white/60 mb-0.5">
             <Clock className="w-4 h-4" />
             <span className="text-xs">Time Spent</span>
           </div>
-          <div className="text-2xl font-bold text-white">
+          <div className="text-xl font-bold text-white">
             {formatDuration(totalTimeSpent)}
           </div>
-          <div className="text-xs text-white/40 mt-1">
+          <div className="text-xs text-white/40">
             {totalPomodoros} pomodoros
           </div>
         </div>
 
-        <div className="bg-background/50 border border-white/10 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-white/60 mb-2">
+        <div className="bg-background/50 border border-white/10 rounded-lg p-3">
+          <div className="flex items-center gap-1 text-white/60 mb-0.5">
             <CalendarCheck className="w-4 h-4" />
             <span className="text-xs">Steps</span>
           </div>
-          <div className="text-2xl font-bold text-white">
+          <div className="text-xl font-bold text-white">
             {completedSteps}/{totalSteps}
           </div>
-          <div className="text-xs text-white/40 mt-1">
+          <div className="text-xs text-white/40">
             {stepsCompletionRate}% completed
           </div>
         </div>
       </div>
 
-      <div className="bg-background/50 border border-white/10 rounded-lg p-4">
-        <h3 className="text-sm font-medium text-white/70 mb-3">Task Progress</h3>
-        <div className="space-y-3">
+      <div className="bg-background/50 border border-white/10 rounded-lg p-3">
+        <h3 className="text-sm font-medium text-white/70 mb-2">Task Progress</h3>
+        <div className="space-y-2">
           <div>
             <div className="flex justify-between text-xs text-white/50 mb-1">
               <span>Tasks Completion</span>
               <span>{completionRate}%</span>
             </div>
-            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary rounded-full transition-all duration-300"
                 style={{ width: `${completionRate}%` }}
@@ -153,7 +153,7 @@ export function TasksStatsView({ tasks, period, projectId }: TasksStatsViewProps
               <span>Steps Completion</span>
               <span>{stepsCompletionRate}%</span>
             </div>
-            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
               <div
                 className="h-full bg-green-500 rounded-full transition-all duration-300"
                 style={{ width: `${stepsCompletionRate}%` }}

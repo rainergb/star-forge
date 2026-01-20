@@ -14,10 +14,10 @@ export function SkillSelector({
   onSelect,
   className
 }: SkillSelectorProps) {
-  const { activeSkills, addSkill } = useSkills();
+  const { skills, addSkill } = useSkills();
 
   // Transformar skills para o formato esperado pelo DropdownSelector
-  const items = activeSkills.map((s) => ({
+  const items = skills.map((s) => ({
     id: s.id,
     name: s.name,
     color: SKILL_COLORS[s.color].solid

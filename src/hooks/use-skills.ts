@@ -53,8 +53,7 @@ export function useSkills() {
         updatedAt: now,
         totalTimeSpent: 0,
         totalPomodoros: 0,
-        currentLevel: 1,
-        archived: false
+        currentLevel: 1
       };
 
       setState((prev) => ({
@@ -86,20 +85,6 @@ export function useSkills() {
       setState((prev) => ({
         ...prev,
         skills: prev.skills.filter((skill) => skill.id !== id)
-      }));
-    },
-    [setState]
-  );
-
-  const toggleArchive = useCallback(
-    (id: string) => {
-      setState((prev) => ({
-        ...prev,
-        skills: prev.skills.map((skill) =>
-          skill.id === id
-            ? { ...skill, archived: !skill.archived, updatedAt: Date.now() }
-            : skill
-        )
       }));
     },
     [setState]
@@ -203,14 +188,6 @@ export function useSkills() {
     [getSkill, tasks]
   );
 
-  const activeSkills = useMemo(() => {
-    return state.skills.filter((skill) => !skill.archived);
-  }, [state.skills]);
-
-  const archivedSkills = useMemo(() => {
-    return state.skills.filter((skill) => skill.archived);
-  }, [state.skills]);
-
   const getSkillsByIds = useCallback(
     (ids: string[]): Skill[] => {
       return state.skills.filter((skill) => ids.includes(skill.id));
@@ -220,12 +197,9 @@ export function useSkills() {
 
   return {
     skills: state.skills,
-    activeSkills,
-    archivedSkills,
     addSkill,
     updateSkill,
     removeSkill,
-    toggleArchive,
     addTime,
     addTimeToMultiple,
     getSkill,

@@ -1,30 +1,58 @@
+import { BookOpen } from "lucide-react";
 import { DiaryEntry } from "@/types/diary.types";
 import { DiaryItem } from "./diary-item";
-import { BookOpen } from "lucide-react";
-import { EmptyState } from "@/components/shared/list-container";
+import {
+  ListContainer,
+  EmptyState,
+  ListSummary
+} from "@/components/shared/list-container";
 
 interface DiaryListContentProps {
   entries: DiaryEntry[];
+  selectedDate: string;
   onToggleFavorite: (id: string) => void;
   onRemove: (id: string) => void;
   onEntryClick: (entry: DiaryEntry) => void;
-  emptyMessage?: string;
 }
+
+const formatDateDisplay = (date: string) => {
+  const [year, month, day] = date.split("-").map(Number);
+  const dateObj = new Date(year, month - 1, day);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const isToday = dateObj.getTime() === today.getTime();
+
+  if (isToday) return "Today";
+
+  return dateObj.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric"
+  });
+};
 
 export function DiaryListContent({
   entries,
+  selectedDate,
   onToggleFavorite,
   onRemove,
-  onEntryClick,
-  emptyMessage = "No entries for this day"
+  onEntryClick
 }: DiaryListContentProps) {
   if (entries.length === 0) {
     return (
-      <EmptyState
-        icon={BookOpen}
-        message={emptyMessage}
-        hint="Start writing to add your first entry"
-      />
+      <>
+        <ListSummary
+          label={formatDateDisplay(selectedDate)}
+          count={0}
+          countLabel="entries"
+        />
+        <EmptyState
+          icon={BookOpen}
+          message="No entries for this day"
+          hint="Start writing to add your first entry"
+        />
+      </>
     );
   }
 
@@ -36,16 +64,23 @@ export function DiaryListContent({
   });
 
   return (
-    <div className="flex flex-col gap-2">
-      {sortedEntries.map((entry) => (
-        <DiaryItem
-          key={entry.id}
-          entry={entry}
-          onToggleFavorite={onToggleFavorite}
-          onRemove={onRemove}
-          onClick={() => onEntryClick(entry)}
-        />
-      ))}
-    </div>
+    <>
+      <ListSummary
+        label={formatDateDisplay(selectedDate)}
+        count={entries.length}
+        countLabel={entries.length === 1 ? "entry" : "entries"}
+      />
+      <ListContainer>
+        {sortedEntries.map((entry) => (
+          <DiaryItem
+            key={entry.id}
+            entry={entry}
+            onToggleFavorite={onToggleFavorite}
+            onRemove={onRemove}
+            onDoubleClick={() => onEntryClick(entry)}
+          />
+        ))}
+      </ListContainer>
+    </>
   );
 }

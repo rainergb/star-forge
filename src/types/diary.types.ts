@@ -2,6 +2,57 @@ export type MoodLevel = 1 | 2 | 3 | 4 | 5;
 
 export type MoodEmoji = "😢" | "😕" | "😐" | "🙂" | "😄";
 
+// Emotion types for detailed mood tracking
+export type EmotionType =
+  | "happy"
+  | "energetic"
+  | "calm"
+  | "anxious"
+  | "angry"
+  | "sad"
+  | "exhausted"
+  | "grateful"
+  | "excited"
+  | "stressed"
+  | "hopeful"
+  | "lonely";
+
+export interface EmotionConfig {
+  emoji: string;
+  label: string;
+  color: string;
+}
+
+export const EMOTION_CONFIG: Record<EmotionType, EmotionConfig> = {
+  happy: { emoji: "😊", label: "Happy", color: "#22c55e" },
+  energetic: { emoji: "⚡", label: "Energetic", color: "#f59e0b" },
+  calm: { emoji: "😌", label: "Calm", color: "#06b6d4" },
+  anxious: { emoji: "😰", label: "Anxious", color: "#8b5cf6" },
+  angry: { emoji: "😠", label: "Angry", color: "#ef4444" },
+  sad: { emoji: "😢", label: "Sad", color: "#3b82f6" },
+  exhausted: { emoji: "😴", label: "Exhausted", color: "#6b7280" },
+  grateful: { emoji: "🙏", label: "Grateful", color: "#ec4899" },
+  excited: { emoji: "🤩", label: "Excited", color: "#f97316" },
+  stressed: { emoji: "😫", label: "Stressed", color: "#dc2626" },
+  hopeful: { emoji: "🌟", label: "Hopeful", color: "#eab308" },
+  lonely: { emoji: "🥺", label: "Lonely", color: "#64748b" }
+};
+
+export const EMOTION_TYPES: EmotionType[] = [
+  "happy",
+  "energetic",
+  "calm",
+  "anxious",
+  "angry",
+  "sad",
+  "exhausted",
+  "grateful",
+  "excited",
+  "stressed",
+  "hopeful",
+  "lonely"
+];
+
 export type DiaryEntryType =
   | "note"
   | "event"
@@ -13,6 +64,7 @@ export type DiaryEntryType =
 export interface MoodEntry {
   level: MoodLevel;
   emoji: MoodEmoji;
+  emotions: EmotionType[];
   note: string | null;
 }
 
@@ -34,6 +86,7 @@ export interface DiaryEntry {
   updatedAt: number;
   date: string;
   time: string | null;
+  image: string | null;
   mood: MoodEntry | null;
   linkedTaskId: string | null;
   tags: string[];

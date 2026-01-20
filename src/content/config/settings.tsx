@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Settings } from "lucide-react";
+import { Settings, RotateCcw } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -11,7 +11,9 @@ import { TimerConfig } from "./timer-config";
 import { PersonalizeConfig } from "./personalize-config";
 import { useConfig } from "@/hooks/use-config";
 import { usePersonalize } from "@/hooks/use-personalize";
+import { useFloatingWidgets } from "@/hooks/use-floating-widgets";
 import { Toaster } from "@/components/ui/toaster";
+import { Button } from "@/components/ui/button";
 
 interface SettingsModalProps {
   open: boolean;
@@ -28,6 +30,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
     settings: personalizeSettings,
     saveSettings: savePersonalizeSettings
   } = usePersonalize();
+  const { resetPositions } = useFloatingWidgets();
   const timerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const personalizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -86,7 +89,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
           </SheetTitle>
         </SheetHeader>
 
-        <div className="py-6 space-y-2">
+        <div className="py-6 space-y-4 overflow-y-auto max-h-[calc(100vh-120px)] scrollbar-none">
           <Accordion className="w-full">
             <TimerConfig
               isOpen={openSections.has("timer")}
@@ -101,6 +104,27 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
               onSettingsChange={handlePersonalizeSettingsChange}
             />
           </Accordion>
+
+          {/* Widget Reset Section */}
+          <div className="px-4 py-3 border border-white/10 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-white/90">Reset Widgets</h3>
+                <p className="text-xs text-white/50 mt-0.5">
+                  Restore all floating widgets to their default positions
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetPositions}
+                className="text-white/70 border-white/20 hover:bg-white/10"
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Reset
+              </Button>
+            </div>
+          </div>
         </div>
         <div className="absolute top-2 right-0 mb-4 mr-20">
           <Toaster />

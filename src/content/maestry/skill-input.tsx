@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { SkillColor, SKILL_COLORS } from "@/types/skill.types";
-import { ControlledListInput, ColorPickerAction } from "@/components/shared/list-input";
+import { ControlledListInput } from "@/components/shared/list-input";
+import { SkillColor } from "@/types/skill.types";
 
 interface SkillInputProps {
   onAddSkill: (
@@ -12,29 +12,16 @@ interface SkillInputProps {
   ) => void;
 }
 
-const colorOptions: SkillColor[] = [
-  "purple",
-  "blue",
-  "green",
-  "orange",
-  "red",
-  "pink",
-  "cyan",
-  "yellow"
-];
-
 export function SkillInput({ onAddSkill }: SkillInputProps) {
   const [newSkillName, setNewSkillName] = useState("");
-  const [selectedColor, setSelectedColor] = useState<SkillColor>("purple");
 
   const handleAddSkill = () => {
     if (newSkillName.trim()) {
       onAddSkill(newSkillName.trim(), {
-        color: selectedColor,
+        color: "purple",
         description: null
       });
       setNewSkillName("");
-      setSelectedColor("purple");
     }
   };
 
@@ -44,16 +31,6 @@ export function SkillInput({ onAddSkill }: SkillInputProps) {
       onChange={setNewSkillName}
       onSubmit={handleAddSkill}
       placeholder="Add new skill..."
-      actions={
-        <div className="flex items-center gap-1">
-          <ColorPickerAction
-            selectedColor={selectedColor}
-            onColorChange={setSelectedColor}
-            colors={colorOptions}
-            getColorStyle={(color) => SKILL_COLORS[color].solid}
-          />
-        </div>
-      }
     />
   );
 }

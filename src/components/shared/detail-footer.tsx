@@ -1,13 +1,11 @@
 import { format, formatDistanceToNow } from "date-fns";
-import { Trash2, Archive } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface DetailFooterProps {
   createdAt: number;
   updatedAt?: number;
   onDelete: () => void;
-  onArchive?: () => void;
-  archived?: boolean;
   dateFormat?: "absolute" | "relative";
   className?: string;
 }
@@ -16,8 +14,6 @@ export function DetailFooter({
   createdAt,
   updatedAt,
   onDelete,
-  onArchive,
-  archived,
   dateFormat = "absolute",
   className
 }: DetailFooterProps) {
@@ -47,16 +43,6 @@ export function DetailFooter({
       </div>
 
       <div className="flex items-center gap-2">
-        {onArchive && (
-          <button
-            onClick={onArchive}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-white/50 hover:text-white/70 hover:bg-white/5 rounded-lg text-sm transition-colors cursor-pointer"
-          >
-            <Archive className="w-4 h-4" />
-            {archived ? "Unarchive" : "Archive"}
-          </button>
-        )}
-
         <button
           onClick={onDelete}
           className="flex items-center gap-1.5 px-3 py-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg text-sm transition-colors cursor-pointer"

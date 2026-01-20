@@ -49,9 +49,7 @@ export function MaestryCalendarView({
 
   // Get skills with weekly practice data
   const skillsWithData = useMemo(() => {
-    const activeSkills = skills.filter(s => !s.archived);
-
-    return activeSkills.map(skill => {
+    return skills.map(skill => {
       // Get sessions for this skill
       const skillSessions = sessions.filter(s => 
         s.taskTitle?.toLowerCase().includes(skill.name.toLowerCase()) ||

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Pencil, Check, X } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Pencil } from "lucide-react";
 
 interface DiaryContentSectionProps {
   content: string;
@@ -12,60 +12,72 @@ export function DiaryContentSection({
 }: DiaryContentSectionProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(content);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const adjustTextareaHeight = useCallback(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 400)}px`;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isEditing) {
+      adjustTextareaHeight();
+    }
+  }, [isEditing, adjustTextareaHeight]);
+
+  // Sync with external content changes
+  useEffect(() => {
+    setEditedContent(content);
+  }, [content]);
 
   const handleSave = () => {
-    if (editedContent.trim()) {
-      onUpdateContent(editedContent.trim());
+    const trimmed = editedContent.trim();
+    if (trimmed && trimmed !== content) {
+      onUpdateContent(trimmed);
     }
     setIsEditing(false);
   };
 
-  const handleCancel = () => {
-    setEditedContent(content);
-    setIsEditing(false);
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Escape") {
+      setEditedContent(content);
+      setIsEditing(false);
+    }
   };
 
   return (
-    <div className="px-6 py-4 border-b border-white/10">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-medium text-white/70">Content</h3>
-        {!isEditing && (
+    <div className="px-6 py-5 border-b border-white/10">
+      {isEditing ? (
+        <textarea
+          ref={textareaRef}
+          value={editedContent}
+          onChange={(e) => {
+            setEditedContent(e.target.value);
+            adjustTextareaHeight();
+          }}
+          onBlur={handleSave}
+          onKeyDown={handleKeyDown}
+          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-base text-white/90 focus:outline-none focus:border-primary/50 resize-none min-h-[120px] leading-relaxed scrollbar-none"
+          style={{ maxHeight: "400px" }}
+          autoFocus
+          placeholder="Write your thoughts..."
+        />
+      ) : (
+        <div 
+          className="group relative cursor-pointer"
+          onClick={() => setIsEditing(true)}
+        >
+          <p className="text-base text-white/90 whitespace-pre-wrap leading-relaxed pr-8">
+            {content}
+          </p>
           <button
-            onClick={() => setIsEditing(true)}
-            className="p-1.5 rounded-lg text-white/40 hover:text-white/70 hover:bg-white/5 transition-colors"
+            className="absolute top-0 right-0 p-1.5 rounded-lg text-white/40 opacity-0 group-hover:opacity-100 hover:text-white/70 hover:bg-white/5 transition-all cursor-pointer"
           >
             <Pencil className="w-4 h-4" />
           </button>
-        )}
-      </div>
-
-      {isEditing ? (
-        <div className="space-y-2">
-          <textarea
-            value={editedContent}
-            onChange={(e) => setEditedContent(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/90 focus:outline-none focus:border-primary/50 resize-none min-h-[100px]"
-            autoFocus
-          />
-          <div className="flex items-center gap-2 justify-end">
-            <button
-              onClick={handleCancel}
-              className="p-1.5 rounded-lg text-white/40 hover:text-white/70 hover:bg-white/5 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-            <button
-              onClick={handleSave}
-              className="p-1.5 rounded-lg text-primary hover:bg-primary/10 transition-colors"
-            >
-              <Check className="w-4 h-4" />
-            </button>
-          </div>
         </div>
-      ) : (
-        <p className="text-sm text-white/90 whitespace-pre-wrap leading-relaxed">
-          {content}
-        </p>
       )}
     </div>
   );

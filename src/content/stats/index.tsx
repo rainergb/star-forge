@@ -195,7 +195,7 @@ export function PomodoroStats() {
   const currentIndex = getViewIndex(currentView);
 
   const renderPomodoroView = () => (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <ProjectFilter
         projects={activeProjects}
         selectedProjectId={filterProjectId}
@@ -217,7 +217,7 @@ export function PomodoroStats() {
   );
 
   return (
-    <div className="flex flex-col gap-4 w-full max-w-2xl mx-auto h-full">
+    <div className="flex flex-col w-full max-w-2xl mx-auto h-full">
       <div className="flex items-center justify-between shrink-0">
         <h2 className="text-xl font-semibold text-white/90 flex items-center gap-2">
           <TrendingUp className="w-5 h-5" />
@@ -244,15 +244,15 @@ export function PomodoroStats() {
         onViewChange={setCurrentView}
       />
 
-      <div className="flex-1 overflow-hidden" ref={containerRef}>
+      <div className="flex-1 overflow-hidden flex items-center" ref={containerRef}>
         <div
-          className="flex h-full transition-transform duration-300 ease-in-out"
+          className="flex w-full transition-transform duration-300 ease-in-out"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
           {VIEW_ORDER.map((view) => (
             <div
               key={view}
-              className="w-full shrink-0 h-full overflow-y-auto scrollbar-none px-0.5"
+              className="w-full shrink-0 max-h-full overflow-y-auto scrollbar-none px-0.5"
             >
               {view === "general" && (
                 <GeneralStatsView
@@ -273,7 +273,7 @@ export function PomodoroStats() {
                 />
               )}
               {view === "projects" && (
-                <div className="space-y-4">
+                <div className="space-y-2">
                   <ProjectFilter
                     projects={activeProjects}
                     selectedProjectId={filterProjectId}

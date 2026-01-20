@@ -94,7 +94,7 @@ export function TaskItem({
   onDoubleClick,
   expectedEndTime
 }: TaskItemProps) {
-  const { contextMenu, openContextMenu, closeContextMenu } = useContextMenu();
+  const { position: contextMenu, handleContextMenu, close: closeContextMenu } = useContextMenu();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     task.dueDate ? new Date(task.dueDate) : undefined
@@ -164,9 +164,10 @@ export function TaskItem({
       <ListItem
         onClick={onClick}
         onDoubleClick={onDoubleClick}
-        onContextMenu={openContextMenu}
+        onContextMenu={handleContextMenu}
         isActive={isActive}
         isDisabled={task.completed}
+        coverImage={task.image}
         leading={
           <>
             {project && (
@@ -245,23 +246,23 @@ export function TaskItem({
 
       <ContextMenu position={contextMenu} onClose={closeContextMenu}>
         <ContextMenuItem
-          icon={CalendarCheck}
+          icon={<CalendarCheck className="w-4 h-4" />}
           label="Due today"
           onClick={handleSetDueToday}
         />
         <ContextMenuItem
-          icon={CalendarDays}
+          icon={<CalendarDays className="w-4 h-4" />}
           label="Due tomorrow"
           onClick={handleSetDueTomorrow}
         />
         <ContextMenuItem
-          icon={Calendar}
+          icon={<Calendar className="w-4 h-4" />}
           label="Choose date"
           onClick={handleChooseDate}
         />
         <ContextMenuDivider />
         <ContextMenuItem
-          icon={Trash2}
+          icon={<Trash2 className="w-4 h-4" />}
           label="Delete task"
           onClick={handleDelete}
           variant="danger"

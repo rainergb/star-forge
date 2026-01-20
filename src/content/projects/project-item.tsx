@@ -3,7 +3,6 @@ import {
   ListTodo,
   Clock,
   Trash2,
-  Archive,
   Play,
   Pause,
   CheckCircle
@@ -35,8 +34,7 @@ function formatTime(seconds: number): string {
 const STATUS_LABELS = {
   active: "Active",
   paused: "Paused",
-  completed: "Completed",
-  archived: "Archived"
+  completed: "Completed"
 };
 
 interface ProjectItemProps {
@@ -44,6 +42,7 @@ interface ProjectItemProps {
   tasksCount: number;
   completedTasksCount: number;
   onClick: () => void;
+  onDoubleClick?: () => void;
   onToggleFavorite: () => void;
   onRemove: () => void;
 }
@@ -53,6 +52,7 @@ export function ProjectItem({
   tasksCount,
   completedTasksCount,
   onClick,
+  onDoubleClick,
   onToggleFavorite,
   onRemove
 }: ProjectItemProps) {
@@ -69,8 +69,9 @@ export function ProjectItem({
     <>
       <ListItem
         onClick={onClick}
+        onDoubleClick={onDoubleClick}
         onContextMenu={handleContextMenu}
-        isDisabled={project.status === "archived"}
+        coverImage={project.image}
         leading={
           <ListItemIcon
             icon={<Folder className="w-5 h-5" />}
@@ -139,11 +140,6 @@ export function ProjectItem({
         <ContextMenuItem
           icon={<CheckCircle className="w-4 h-4 text-blue-400" />}
           label="Complete project"
-          onClick={closeContextMenu}
-        />
-        <ContextMenuItem
-          icon={<Archive className="w-4 h-4 text-white/60" />}
-          label="Archive project"
           onClick={closeContextMenu}
         />
         <ContextMenuDivider />

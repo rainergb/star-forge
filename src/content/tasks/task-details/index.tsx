@@ -1,6 +1,6 @@
-import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Task, TaskReminder, TaskFile, RepeatType } from "@/types/task.types";
 import { PomodoroSession } from "@/types/pomodoro.types";
+import { DetailContainer, DetailContent } from "@/components/shared/detail-item";
 import { TaskHeader } from "./task-header";
 import { TaskStepsSection } from "./task-steps-section";
 import { TaskActionsSection } from "./task-actions-section";
@@ -68,58 +68,57 @@ export function TaskDetails({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-md bg-background border-l border-white/10 text-white flex flex-col">
-        {task && (
-          <>
-            <div className="flex-1 overflow-y-auto">
-              <TaskHeader
-                task={task}
-                onToggleCompleted={onToggleCompleted}
-                onToggleFavorite={onToggleFavorite}
-                onUpdateTitle={(title) => onUpdateTask(task.id, { title })}
-              />
+    <DetailContainer open={open} onOpenChange={onOpenChange}>
+      {task && (
+        <>
+          <DetailContent>
+            <TaskHeader
+              task={task}
+              onToggleCompleted={onToggleCompleted}
+              onToggleFavorite={onToggleFavorite}
+              onUpdateTitle={(title) => onUpdateTask(task.id, { title })}
+              onUpdateImage={(image) => onUpdateTask(task.id, { image })}
+            />
 
-              <TaskStepsSection
-                task={task}
-                onAddStep={onAddStep}
-                onToggleStep={onToggleStep}
-                onRemoveStep={onRemoveStep}
-              />
+            <TaskStepsSection
+              task={task}
+              onAddStep={onAddStep}
+              onToggleStep={onToggleStep}
+              onRemoveStep={onRemoveStep}
+            />
 
-              <TaskActionsSection
-                task={task}
-                onSetReminder={onSetReminder}
-                onSetDueDate={onSetDueDate}
-                onSetRepeat={onSetRepeat}
-                onAddFile={onAddFile}
-                onRemoveFile={onRemoveFile}
-                onSetProject={(_, projectId) =>
-                  onSetProject(task.id, projectId)
-                }
-                onSetSkills={(_, skillIds) => onSetSkills(task.id, skillIds)}
-              />
+            <TaskActionsSection
+              task={task}
+              onSetReminder={onSetReminder}
+              onSetDueDate={onSetDueDate}
+              onSetRepeat={onSetRepeat}
+              onAddFile={onAddFile}
+              onRemoveFile={onRemoveFile}
+              onSetProject={(_, projectId) =>
+                onSetProject(task.id, projectId)
+              }
+              onSetSkills={(_, skillIds) => onSetSkills(task.id, skillIds)}
+            />
 
-              <TaskPomodoroSection
-                task={task}
-                sessions={sessions.filter((s) => s.taskId === task.id)}
-                onSetEstimatedPomodoros={onSetEstimatedPomodoros}
-              />
+            <TaskPomodoroSection
+              task={task}
+              sessions={sessions.filter((s) => s.taskId === task.id)}
+              onSetEstimatedPomodoros={onSetEstimatedPomodoros}
+            />
 
-              <TaskNotesSection
-                notes={task.notes}
-                onAddNote={(content) => onAddNote(task.id, content)}
-                onUpdateNote={(noteId, content) =>
-                  onUpdateNote(task.id, noteId, content)
-                }
-                onRemoveNote={(noteId) => onRemoveNote(task.id, noteId)}
-              />
-            </div>
+            <TaskNotesSection
+              notes={task.notes}
+              onAddNote={(content) => onAddNote(task.id, content)}
+              onUpdateNote={(noteId, content) =>
+                onUpdateNote(task.id, noteId, content)
+              }
+              onRemoveNote={(noteId) => onRemoveNote(task.id, noteId)}
+            />
+          </DetailContent>
 
-            <TaskFooter createdAt={task.createdAt} onDelete={handleDelete} />
-          </>
-        )}
-      </SheetContent>
-    </Sheet>
+          <TaskFooter createdAt={task.createdAt} onDelete={handleDelete} />
+        </>
+      )}
+    </DetailContainer>
   );
 }

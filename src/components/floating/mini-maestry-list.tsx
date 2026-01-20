@@ -126,7 +126,7 @@ export function MiniMaestryList({
   onSelectSkill,
   stackIndex
 }: MiniMaestryListProps) {
-  const { activeSkills } = useSkills();
+  const { skills } = useSkills();
   const { tasks } = useTasks();
 
   const sensors = useSensors(
@@ -196,7 +196,7 @@ export function MiniMaestryList({
       onPositionChange={onPositionChange}
       stackIndex={stackIndex}
     >
-      {activeSkills.length === 0 ? (
+      {skills.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 text-white/40">
           <Sparkles className="h-8 w-8 mb-2 opacity-50" />
           <p className="text-xs">No skills tracked</p>
@@ -209,10 +209,10 @@ export function MiniMaestryList({
             onDragEnd={handleDragEnd}
           >
             <SortableContext
-              items={activeSkills.map((s) => s.id)}
+              items={skills.map((s) => s.id)}
               strategy={verticalListSortingStrategy}
             >
-              {activeSkills.map((skill) => (
+              {skills.map((skill) => (
                 <MiniSkillItem
                   key={skill.id}
                   skill={skill}

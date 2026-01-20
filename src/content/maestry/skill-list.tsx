@@ -9,12 +9,9 @@ import { Skill, SkillColor } from "@/types/skill.types";
 export function SkillList() {
   const {
     skills,
-    activeSkills,
-    archivedSkills,
     addSkill,
     updateSkill,
     removeSkill,
-    toggleArchive,
     getSkillStats
   } = useSkills();
 
@@ -22,7 +19,6 @@ export function SkillList() {
 
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [archivedCollapsed, setArchivedCollapsed] = useState(true);
 
   const handleAddSkill = (
     name: string,
@@ -70,15 +66,8 @@ export function SkillList() {
 
       <SkillListContent
         skills={skills}
-        activeSkills={activeSkills}
-        archivedSkills={archivedSkills}
         hasActiveFilter={false}
-        archivedCollapsed={archivedCollapsed}
-        onToggleArchivedCollapsed={() =>
-          setArchivedCollapsed(!archivedCollapsed)
-        }
         onRemoveSkill={removeSkill}
-        onToggleArchive={toggleArchive}
         onSkillClick={handleSkillClick}
         onSkillDoubleClick={handleSkillDoubleClick}
       />
@@ -90,7 +79,6 @@ export function SkillList() {
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
         onUpdateSkill={updateSkill}
-        onToggleArchive={toggleArchive}
         onRemoveSkill={removeSkill}
         onRemoveSkillFromTask={handleRemoveSkillFromTask}
       />

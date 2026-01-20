@@ -78,43 +78,47 @@ export function TopBar({
                 : "opacity-0 translate-x-4 pointer-events-none w-0"
             }`}
           >
-            {currentView === "pomodoro" && (
-              <>
-                <button
-                  onClick={onToggleMiniTaskList}
-                  className="cursor-pointer rounded-lg p-2.5 bg-background/50 border border-white/10 text-white/70 transition-colors hover:bg-primary/10 hover:text-white"
-                  title="Tasks"
-                >
-                  <ListTodo className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={onToggleMiniProjectList}
-                  className="cursor-pointer rounded-lg p-2.5 bg-background/50 border border-white/10 text-white/70 transition-colors hover:bg-primary/10 hover:text-white"
-                  title="Projects"
-                >
-                  <FolderKanban className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={onToggleMiniMaestryList}
-                  className="cursor-pointer rounded-lg p-2.5 bg-background/50 border border-white/10 text-white/70 transition-colors hover:bg-primary/10 hover:text-white"
-                  title="Maestry"
-                >
-                  <img
-                    src={maestryIcon}
-                    alt="Maestry"
-                    className="w-4 h-4 object-contain"
-                  />
-                </button>
-              </>
-            )}
-
-            {currentView === "tasks" && (
+            {currentView !== "pomodoro" && (
               <button
                 onClick={onToggleMiniPomodoro}
                 className="cursor-pointer rounded-lg p-2.5 bg-background/50 border border-white/10 text-white/70 transition-colors hover:bg-primary/10 hover:text-white"
                 title="Pomodoro"
               >
                 <Timer className="w-4 h-4" />
+              </button>
+            )}
+
+            {currentView !== "tasks" && (
+              <button
+                onClick={onToggleMiniTaskList}
+                className="cursor-pointer rounded-lg p-2.5 bg-background/50 border border-white/10 text-white/70 transition-colors hover:bg-primary/10 hover:text-white"
+                title="Tasks"
+              >
+                <ListTodo className="w-4 h-4" />
+              </button>
+            )}
+
+            {currentView !== "projects" && (
+              <button
+                onClick={onToggleMiniProjectList}
+                className="cursor-pointer rounded-lg p-2.5 bg-background/50 border border-white/10 text-white/70 transition-colors hover:bg-primary/10 hover:text-white"
+                title="Projects"
+              >
+                <FolderKanban className="w-4 h-4" />
+              </button>
+            )}
+
+            {currentView !== "maestry" && (
+              <button
+                onClick={onToggleMiniMaestryList}
+                className="cursor-pointer rounded-lg p-2.5 bg-background/50 border border-white/10 text-white/70 transition-colors hover:bg-primary/10 hover:text-white"
+                title="Maestry"
+              >
+                <img
+                  src={maestryIcon}
+                  alt="Maestry"
+                  className="w-4 h-4 object-contain"
+                />
               </button>
             )}
 

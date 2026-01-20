@@ -88,14 +88,24 @@ export function FloatingContainer({
   }, [isPinned]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isDragging) return;
+    if (!isDragging || !containerRef.current) return;
     
     const deltaX = e.clientX - dragStartPos.current.x;
     const deltaY = e.clientY - dragStartPos.current.y;
     
+    const rect = containerRef.current.getBoundingClientRect();
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    
+    // Constrain within screen bounds with some padding
+    const minX = -rect.width + 50; // Keep at least 50px visible
+    const maxX = windowWidth - 50;
+    const minY = 0;
+    const maxY = windowHeight - 50;
+    
     setDragOffset(prev => ({
-      x: prev.x + deltaX,
-      y: prev.y + deltaY
+      x: Math.min(maxX, Math.max(minX, prev.x + deltaX)),
+      y: Math.min(maxY, Math.max(minY, prev.y + deltaY))
     }));
     
     dragStartPos.current = { x: e.clientX, y: e.clientY };

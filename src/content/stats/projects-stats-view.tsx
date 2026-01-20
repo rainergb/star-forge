@@ -48,15 +48,15 @@ const getPeriodInterval = (period: StatsPeriod) => {
 
 function ProjectStatsCard({ project, stats }: { project: Project; stats: ProjectStats }) {
   return (
-    <div className="bg-background/50 border border-white/10 rounded-lg p-4">
-      <div className="flex items-center gap-2 mb-3">
+    <div className="bg-background/50 border border-white/10 rounded-lg p-3">
+      <div className="flex items-center gap-2 mb-2">
         <div
           className="w-3 h-3 rounded-full"
           style={{ backgroundColor: PROJECT_COLORS[project.color].solid }}
         />
         <span className="text-sm font-medium text-white truncate">{project.name}</span>
       </div>
-      <div className="grid grid-cols-2 gap-2 text-xs">
+      <div className="grid grid-cols-4 gap-1 text-xs">
         <div>
           <span className="text-white/50">Tasks</span>
           <div className="text-white font-medium">
@@ -82,7 +82,7 @@ function ProjectStatsCard({ project, stats }: { project: Project; stats: Project
           </div>
         </div>
       </div>
-      <div className="mt-3">
+      <div className="mt-2">
         <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-300"
@@ -133,72 +133,72 @@ export function ProjectsStatsView({
     const stats = getProjectStats(selectedProjectId);
 
     return (
-      <div className="space-y-4">
-        <div className="bg-background/50 border border-white/10 rounded-lg p-4">
-          <div className="flex items-center gap-3 mb-4">
+      <div className="space-y-2">
+        <div className="bg-background/50 border border-white/10 rounded-lg p-3">
+          <div className="flex items-center gap-2 mb-3">
             <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center"
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
               style={{ backgroundColor: `${PROJECT_COLORS[project.color].solid}20` }}
             >
               <FolderKanban
-                className="w-5 h-5"
+                className="w-4 h-4"
                 style={{ color: PROJECT_COLORS[project.color].solid }}
               />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">{project.name}</h3>
+              <h3 className="text-base font-semibold text-white">{project.name}</h3>
               <span className="text-xs text-white/50 capitalize">{project.status}</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white/5 rounded-lg p-3">
-              <div className="flex items-center gap-2 text-white/60 mb-1">
+          <div className="grid grid-cols-2 gap-1">
+            <div className="bg-white/5 rounded-lg p-2">
+              <div className="flex items-center gap-1 text-white/60 mb-0.5">
                 <CheckCircle className="w-4 h-4" />
                 <span className="text-xs">Tasks</span>
               </div>
-              <div className="text-xl font-bold text-white">
+              <div className="text-lg font-bold text-white">
                 {stats.completedTasks}/{stats.totalTasks}
               </div>
             </div>
 
-            <div className="bg-white/5 rounded-lg p-3">
-              <div className="flex items-center gap-2 text-white/60 mb-1">
+            <div className="bg-white/5 rounded-lg p-2">
+              <div className="flex items-center gap-1 text-white/60 mb-0.5">
                 <BarChart3 className="w-4 h-4" />
                 <span className="text-xs">Progress</span>
               </div>
-              <div className="text-xl font-bold text-white">
+              <div className="text-lg font-bold text-white">
                 {Math.round(stats.completionPercentage)}%
               </div>
             </div>
 
-            <div className="bg-white/5 rounded-lg p-3">
-              <div className="flex items-center gap-2 text-white/60 mb-1">
+            <div className="bg-white/5 rounded-lg p-2">
+              <div className="flex items-center gap-1 text-white/60 mb-0.5">
                 <Clock className="w-4 h-4" />
                 <span className="text-xs">Time</span>
               </div>
-              <div className="text-xl font-bold text-white">
+              <div className="text-lg font-bold text-white">
                 {formatDuration(stats.totalTimeSpent)}
               </div>
             </div>
 
-            <div className="bg-white/5 rounded-lg p-3">
-              <div className="flex items-center gap-2 text-white/60 mb-1">
+            <div className="bg-white/5 rounded-lg p-2">
+              <div className="flex items-center gap-1 text-white/60 mb-0.5">
                 <FolderKanban className="w-4 h-4" />
                 <span className="text-xs">Pomodoros</span>
               </div>
-              <div className="text-xl font-bold text-white">
+              <div className="text-lg font-bold text-white">
                 {stats.completedPomodoros}
               </div>
             </div>
           </div>
 
-          <div className="mt-4">
-            <div className="flex justify-between text-xs text-white/50 mb-2">
+          <div className="mt-2">
+            <div className="flex justify-between text-xs text-white/50 mb-1">
               <span>Overall Progress</span>
               <span>{Math.round(stats.completionPercentage)}%</span>
             </div>
-            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-300"
                 style={{
@@ -214,65 +214,65 @@ export function ProjectsStatsView({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-background/50 border border-white/10 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-white/60 mb-2">
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-1">
+        <div className="bg-background/50 border border-white/10 rounded-lg p-3">
+          <div className="flex items-center gap-1 text-white/60 mb-0.5">
             <FolderKanban className="w-4 h-4" />
             <span className="text-xs">Active</span>
           </div>
-          <div className="text-2xl font-bold text-white">
+          <div className="text-xl font-bold text-white">
             {activeProjects.length}
           </div>
-          <div className="text-xs text-white/40 mt-1">
+          <div className="text-xs text-white/40">
             {displayProjects.length} total projects
           </div>
         </div>
 
-        <div className="bg-background/50 border border-white/10 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-white/60 mb-2">
+        <div className="bg-background/50 border border-white/10 rounded-lg p-3">
+          <div className="flex items-center gap-1 text-white/60 mb-0.5">
             <CheckCircle className="w-4 h-4" />
             <span className="text-xs">Completed</span>
           </div>
-          <div className="text-2xl font-bold text-white">
+          <div className="text-xl font-bold text-white">
             {completedProjects.length}
           </div>
-          <div className="text-xs text-white/40 mt-1">
+          <div className="text-xs text-white/40">
             {overallCompletion}% overall
           </div>
         </div>
 
-        <div className="bg-background/50 border border-white/10 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-white/60 mb-2">
+        <div className="bg-background/50 border border-white/10 rounded-lg p-3">
+          <div className="flex items-center gap-1 text-white/60 mb-0.5">
             <Clock className="w-4 h-4" />
             <span className="text-xs">Total Time</span>
           </div>
-          <div className="text-2xl font-bold text-white">
+          <div className="text-xl font-bold text-white">
             {formatDuration(totalTimeSpent)}
           </div>
-          <div className="text-xs text-white/40 mt-1">
+          <div className="text-xs text-white/40">
             {totalPomodoros} pomodoros
           </div>
         </div>
 
-        <div className="bg-background/50 border border-white/10 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-white/60 mb-2">
+        <div className="bg-background/50 border border-white/10 rounded-lg p-3">
+          <div className="flex items-center gap-1 text-white/60 mb-0.5">
             <BarChart3 className="w-4 h-4" />
             <span className="text-xs">Tasks</span>
           </div>
-          <div className="text-2xl font-bold text-white">
+          <div className="text-xl font-bold text-white">
             {completedTasks}/{totalTasks}
           </div>
-          <div className="text-xs text-white/40 mt-1">
+          <div className="text-xs text-white/40">
             across all projects
           </div>
         </div>
       </div>
 
       {activeProjects.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-1">
           <h3 className="text-sm font-medium text-white/70">Active Projects</h3>
-          <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto scrollbar-none">
+          <div className="grid grid-cols-1 gap-1 max-h-[160px] overflow-y-auto scrollbar-none">
             {activeProjects.slice(0, 4).map((project) => (
               <ProjectStatsCard
                 key={project.id}

@@ -1,4 +1,4 @@
-export type ProjectStatus = "active" | "paused" | "completed" | "archived";
+export type ProjectStatus = "active" | "paused" | "completed";
 
 export type ProjectColor =
   | "purple"

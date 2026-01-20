@@ -8,6 +8,8 @@ interface ListItemProps {
   leading?: ReactNode;
   children: ReactNode;
   trailing?: ReactNode;
+  /** Optional cover image to display at the top of the item */
+  coverImage?: string | null;
   className?: string;
   borderColor?: string;
   isActive?: boolean;
@@ -21,6 +23,7 @@ export function ListItem({
   leading,
   children,
   trailing,
+  coverImage,
   className,
   borderColor,
   isActive = false,
@@ -32,18 +35,29 @@ export function ListItem({
       onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}
       className={cn(
-        "flex items-center justify-between px-4 py-3 bg-background/50 border rounded-lg hover:bg-white/5 transition-colors cursor-pointer",
+        "bg-background/50 border rounded-lg hover:bg-white/5 transition-colors cursor-pointer overflow-hidden",
         isActive ? "border-primary/50 bg-primary/5" : "border-white/10",
         isDisabled && "opacity-50",
         className
       )}
       style={borderColor ? { borderColor } : undefined}
     >
-      <div className="flex items-center gap-3 flex-1 min-w-0">
-        {leading}
-        <div className="flex flex-col flex-1 min-w-0">{children}</div>
+      {coverImage && (
+        <div className="w-full h-16 overflow-hidden">
+          <img
+            src={coverImage}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+      <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          {leading}
+          <div className="flex flex-col flex-1 min-w-0">{children}</div>
+        </div>
+        {trailing && <div className="flex items-center gap-3 shrink-0">{trailing}</div>}
       </div>
-      {trailing && <div className="flex items-center gap-3 shrink-0">{trailing}</div>}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Trash2, Clock, Archive } from "lucide-react";
+import { Trash2, Clock } from "lucide-react";
 import {
   Skill,
   SKILL_COLORS,
@@ -9,7 +9,6 @@ import {
 import {
   ContextMenu,
   ContextMenuItem,
-  ContextMenuDivider,
   useContextMenu
 } from "@/components/shared/context-menu";
 import {
@@ -52,25 +51,18 @@ interface SkillItemProps {
   onClick: () => void;
   onDoubleClick?: () => void;
   onRemoveSkill: (id: string) => void;
-  onToggleArchive: (id: string) => void;
 }
 
 export function SkillItem({
   skill,
   onClick,
   onDoubleClick,
-  onRemoveSkill,
-  onToggleArchive
+  onRemoveSkill
 }: SkillItemProps) {
   const { position: contextMenu, handleContextMenu, close: closeContextMenu } = useContextMenu();
 
   const levelInfo = MASTERY_LEVELS[skill.currentLevel - 1];
   const progress = getProgressToNextLevel(skill.totalTimeSpent);
-
-  const handleArchive = () => {
-    onToggleArchive(skill.id);
-    closeContextMenu();
-  };
 
   const handleDelete = () => {
     onRemoveSkill(skill.id);
@@ -83,7 +75,7 @@ export function SkillItem({
         onClick={onClick}
         onDoubleClick={onDoubleClick}
         onContextMenu={handleContextMenu}
-        isDisabled={skill.archived}
+        coverImage={skill.image}
         leading={
           <img
             src={MASTERY_IMAGES[skill.currentLevel]}
@@ -119,12 +111,6 @@ export function SkillItem({
       </ListItem>
 
       <ContextMenu position={contextMenu} onClose={closeContextMenu}>
-        <ContextMenuItem
-          icon={<Archive className="w-4 h-4" />}
-          label={skill.archived ? "Unarchive" : "Archive"}
-          onClick={handleArchive}
-        />
-        <ContextMenuDivider />
         <ContextMenuItem
           icon={<Trash2 className="w-4 h-4" />}
           label="Delete"

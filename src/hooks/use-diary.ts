@@ -57,6 +57,7 @@ export function useDiary() {
         updatedAt: now,
         date: options?.date ?? formatDate(),
         time: options?.time ?? formatTime(),
+        image: null,
         mood: options?.mood ?? null,
         linkedTaskId: options?.linkedTaskId ?? null,
         tags: options?.tags ?? [],

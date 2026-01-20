@@ -37,17 +37,16 @@ export function ProjectHeader({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="border-b border-white/10">
       {/* Image Banner */}
       <CoverImageBanner
         image={project.image}
         alt={project.name}
         onUpdateImage={onUpdateImage}
         height="md"
-        className="-mx-6 -mt-6 mb-4"
       />
 
-      <div className="flex items-center gap-3 pr-8">
+      <div className="flex items-center gap-3 p-4">
         <div className={cn("p-2 rounded-lg shrink-0", colors.bg)}>
           <Folder className={cn("w-6 h-6", colors.text)} />
         </div>

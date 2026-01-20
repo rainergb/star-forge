@@ -4,6 +4,7 @@ import { Task } from "@/types/task.types";
 import { usePersonalize } from "@/hooks/use-personalize";
 import { FavoriteButton } from "@/components/shared/favorite-button";
 import { EditableTitle } from "@/components/shared/editable-title";
+import { CoverImageBanner } from "@/components/shared/cover-image-banner";
 import successSound from "@/assets/sucess.mp3";
 
 interface TaskHeaderProps {
@@ -11,13 +12,15 @@ interface TaskHeaderProps {
   onToggleCompleted: (id: string) => void;
   onToggleFavorite: (id: string) => void;
   onUpdateTitle: (title: string) => void;
+  onUpdateImage: (image: string | null) => void;
 }
 
 export function TaskHeader({
   task,
   onToggleCompleted,
   onToggleFavorite,
-  onUpdateTitle
+  onUpdateTitle,
+  onUpdateImage
 }: TaskHeaderProps) {
   const { settings: personalizeSettings } = usePersonalize();
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -43,30 +46,39 @@ export function TaskHeader({
   };
 
   return (
-    <div className="flex items-center gap-3 pr-8">
-      <button
-        onClick={handleToggleCompleted}
-        className="cursor-pointer text-white/70 hover:text-white transition-colors shrink-0"
-      >
-        {task.completed ? (
-          <CheckCircle2 className="w-6 h-6 text-primary" />
-        ) : (
-          <Circle className="w-6 h-6" />
-        )}
-      </button>
-
-      <EditableTitle
-        value={task.title}
-        onChange={onUpdateTitle}
-        mode="always-editable"
-        inputClassName={`text-lg ${task.completed ? "line-through text-white/50" : ""}`}
+    <div className="border-b border-white/10">
+      <CoverImageBanner
+        image={task.image}
+        alt={task.title}
+        onUpdateImage={onUpdateImage}
+        height="md"
       />
 
-      <FavoriteButton
-        isFavorite={task.favorite}
-        onToggle={() => onToggleFavorite(task.id)}
-        color="purple"
-      />
+      <div className="flex items-center gap-3 p-4">
+        <button
+          onClick={handleToggleCompleted}
+          className="cursor-pointer text-white/70 hover:text-white transition-colors shrink-0"
+        >
+          {task.completed ? (
+            <CheckCircle2 className="w-6 h-6 text-primary" />
+          ) : (
+            <Circle className="w-6 h-6" />
+          )}
+        </button>
+
+        <EditableTitle
+          value={task.title}
+          onChange={onUpdateTitle}
+          mode="always-editable"
+          inputClassName={`text-lg ${task.completed ? "line-through text-white/50" : ""}`}
+        />
+
+        <FavoriteButton
+          isFavorite={task.favorite}
+          onToggle={() => onToggleFavorite(task.id)}
+          color="purple"
+        />
+      </div>
     </div>
   );
 }
