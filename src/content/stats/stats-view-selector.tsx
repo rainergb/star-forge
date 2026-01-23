@@ -18,21 +18,27 @@ const VIEW_CONFIG: Record<
   StatsView,
   { label: string; icon: React.ElementType }
 > = {
-  general: { label: "General", icon: LayoutGrid },
+  general: { label: "All", icon: LayoutGrid },
   pomodoro: { label: "Pomodoro", icon: BarChart3 },
   tasks: { label: "Tasks", icon: CheckSquare },
   projects: { label: "Projects", icon: FolderKanban },
   maestry: { label: "Maestry", icon: Sparkles }
 };
 
-const VIEW_ORDER: StatsView[] = ["general", "pomodoro", "tasks", "projects", "maestry"];
+const VIEW_ORDER: StatsView[] = [
+  "general",
+  "pomodoro",
+  "tasks",
+  "projects",
+  "maestry"
+];
 
 export function StatsViewSelector({
   currentView,
   onViewChange
 }: StatsViewSelectorProps) {
   return (
-    <div className="flex gap-1 p-1 bg-white/5 rounded-lg">
+    <div className="flex justify-center gap-1 p-1 bg-white/5 rounded-lg">
       {VIEW_ORDER.map((view) => {
         const config = VIEW_CONFIG[view];
         const Icon = config.icon;

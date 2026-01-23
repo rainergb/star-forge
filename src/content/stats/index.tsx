@@ -218,7 +218,7 @@ export function PomodoroStats() {
 
   return (
     <div className="flex flex-col w-full max-w-2xl mx-auto h-full">
-      <div className="flex items-center justify-between shrink-0">
+      <div className="flex items-center justify-between shrink-0 mb-3">
         <h2 className="text-xl font-semibold text-white/90 flex items-center gap-2">
           <TrendingUp className="w-5 h-5" />
           Statistics
@@ -244,7 +244,7 @@ export function PomodoroStats() {
         onViewChange={setCurrentView}
       />
 
-      <div className="flex-1 overflow-hidden flex items-center" ref={containerRef}>
+      <div className="flex-1 overflow-hidden flex items-center mt-3" ref={containerRef}>
         <div
           className="flex w-full transition-transform duration-300 ease-in-out"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}

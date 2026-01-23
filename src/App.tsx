@@ -3,11 +3,13 @@ import { TopBar } from "@/components/top-bar";
 import { AppDock } from "@/content/dock/app-dock";
 import { MainContent } from "@/components/main-content";
 import { FloatingWidgetsLayer } from "@/components/floating/floating-widgets-layer";
+import { LoginScreen } from "@/content/auth";
 import { useToast } from "@/hooks/use-toast";
 import { usePersonalize } from "@/hooks/use-personalize";
 import { useFloatingWidgets } from "@/hooks/use-floating-widgets";
 import { useActiveTask } from "@/hooks/use-active-task";
 import { useAppNavigation } from "@/hooks/use-app-navigation";
+import { useAuth } from "@/hooks/use-auth";
 import {
   PomodoroProvider,
   usePomodoroContext
@@ -111,6 +113,12 @@ function AppContent() {
 }
 
 function App() {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return <LoginScreen />;
+  }
+
   return (
     <PomodoroProvider>
       <ActiveModuleProvider>
