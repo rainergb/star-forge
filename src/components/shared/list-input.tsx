@@ -74,86 +74,91 @@ interface ControlledListInputProps {
   maxHeight?: number;
 }
 
-export const ControlledListInput = forwardRef<HTMLDivElement, ControlledListInputProps>(
-  function ControlledListInput(
-    {
-      value,
-      onChange,
-      onSubmit,
-      placeholder,
-      actions,
-      popoverContent,
-      className,
-      alwaysShowActions = false,
-      expandable = false,
-      maxHeight = 120
-    },
-    ref
-  ) {
-    const inputRef = useRef<HTMLInputElement>(null);
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
+export const ControlledListInput = forwardRef<
+  HTMLDivElement,
+  ControlledListInputProps
+>(function ControlledListInput(
+  {
+    value,
+    onChange,
+    onSubmit,
+    placeholder,
+    actions,
+    popoverContent,
+    className,
+    alwaysShowActions = false,
+    expandable = false,
+    maxHeight = 120
+  },
+  ref
+) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    const adjustTextareaHeight = useCallback(() => {
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "auto";
-        textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, maxHeight)}px`;
-      }
-    }, [maxHeight]);
+  const adjustTextareaHeight = useCallback(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, maxHeight)}px`;
+    }
+  }, [maxHeight]);
 
-    const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") {
-        onSubmit();
-      }
-    };
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      onSubmit();
+    }
+  };
 
-    const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        onSubmit();
-      }
-      // Shift+Enter allows new line (default behavior)
-    };
+  const handleTextareaKeyDown = (
+    e: React.KeyboardEvent<HTMLTextAreaElement>
+  ) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      onSubmit();
+    }
+    // Shift+Enter allows new line (default behavior)
+  };
 
-    const showActions = alwaysShowActions || value.trim();
+  const showActions = alwaysShowActions || value.trim();
 
-    return (
-      <div ref={ref} className={cn("w-full relative", className)}>
-        <div className={cn(
+  return (
+    <div ref={ref} className={cn("w-full relative", className)}>
+      <div
+        className={cn(
           "w-full flex gap-2 px-4 py-3 bg-background/50 border border-white/10 rounded-lg focus-within:border-primary/50 transition-colors",
           expandable ? "items-start" : "items-center"
-        )}>
-          {expandable ? (
-            <textarea
-              ref={textareaRef}
-              value={value}
-              onChange={(e) => {
-                onChange(e.target.value);
-                adjustTextareaHeight();
-              }}
-              onKeyDown={handleTextareaKeyDown}
-              placeholder={placeholder}
-              rows={1}
-              className="flex-1 bg-transparent text-white placeholder-white/30 focus:outline-none resize-none min-h-[24px] leading-6 overflow-y-auto scrollbar-none"
-              style={{ maxHeight: `${maxHeight}px` }}
-            />
-          ) : (
-            <input
-              ref={inputRef}
-              type="text"
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              onKeyDown={handleInputKeyDown}
-              placeholder={placeholder}
-              className="flex-1 bg-transparent text-white placeholder-white/30 focus:outline-none"
-            />
-          )}
-          {showActions && actions}
-        </div>
-        {popoverContent}
+        )}
+      >
+        {expandable ? (
+          <textarea
+            ref={textareaRef}
+            value={value}
+            onChange={(e) => {
+              onChange(e.target.value);
+              adjustTextareaHeight();
+            }}
+            onKeyDown={handleTextareaKeyDown}
+            placeholder={placeholder}
+            rows={1}
+            className="flex-1 bg-transparent text-white placeholder-white/30 focus:outline-none resize-none min-h-6 leading-6 overflow-y-auto scrollbar-none"
+            style={{ maxHeight: `${maxHeight}px` }}
+          />
+        ) : (
+          <input
+            ref={inputRef}
+            type="text"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={handleInputKeyDown}
+            placeholder={placeholder}
+            className="flex-1 bg-transparent text-white placeholder-white/30 focus:outline-none"
+          />
+        )}
+        {showActions && actions}
       </div>
-    );
-  }
-);
+      {popoverContent}
+    </div>
+  );
+});
 
 // Color picker action button for inputs
 interface ColorPickerActionProps<T extends string> {
@@ -200,7 +205,8 @@ export function ColorPickerAction<T extends string>({
                 }}
                 className={cn(
                   "w-6 h-6 rounded-full transition-transform hover:scale-110",
-                  selectedColor === color && "ring-2 ring-white ring-offset-2 ring-offset-[#1a1d3a]"
+                  selectedColor === color &&
+                    "ring-2 ring-white ring-offset-2 ring-offset-[#1a1d3a]"
                 )}
                 style={{ backgroundColor: getColorStyle(color) }}
               />
@@ -230,69 +236,66 @@ interface TextareaListInputProps {
   maxHeight?: number;
 }
 
-export const TextareaListInput = forwardRef<HTMLDivElement, TextareaListInputProps>(
-  function TextareaListInput(
-    {
-      value,
-      onChange,
-      onSubmit,
-      placeholder,
-      inputRight,
-      footer,
-      expandableContent,
-      submitDisabled = false,
-      className,
-      maxHeight = 120
-    },
-    ref
-  ) {
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
+export const TextareaListInput = forwardRef<
+  HTMLDivElement,
+  TextareaListInputProps
+>(function TextareaListInput(
+  {
+    value,
+    onChange,
+    onSubmit,
+    placeholder,
+    inputRight,
+    footer,
+    expandableContent,
+    submitDisabled = false,
+    className,
+    maxHeight = 120
+  },
+  ref
+) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    const adjustTextareaHeight = useCallback(() => {
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "auto";
-        textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, maxHeight)}px`;
+  const adjustTextareaHeight = useCallback(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, maxHeight)}px`;
+    }
+  }, [maxHeight]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (!submitDisabled) {
+        onSubmit();
       }
-    }, [maxHeight]);
+    }
+  };
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        if (!submitDisabled) {
-          onSubmit();
-        }
-      }
-    };
-
-    return (
-      <div ref={ref} className={cn("w-full relative", className)}>
-        <div className="w-full flex flex-col gap-2 px-4 py-3 bg-background/50 border border-white/10 rounded-lg focus-within:border-primary/50 transition-colors">
-          <div className="flex items-start gap-2">
-            <textarea
-              ref={textareaRef}
-              value={value}
-              onChange={(e) => {
-                onChange(e.target.value);
-                adjustTextareaHeight();
-              }}
-              onKeyDown={handleKeyDown}
-              placeholder={placeholder}
-              rows={1}
-              className="flex-1 bg-transparent text-white placeholder-white/30 focus:outline-none resize-none min-h-[24px]"
-              style={{ maxHeight: `${maxHeight}px` }}
-            />
-            {inputRight}
-          </div>
-
-          {footer && (
-            <div className="pt-1 border-t border-white/5">
-              {footer}
-            </div>
-          )}
-
-          {expandableContent}
+  return (
+    <div ref={ref} className={cn("w-full relative", className)}>
+      <div className="w-full flex flex-col gap-2 px-4 py-3 bg-background/50 border border-white/10 rounded-lg focus-within:border-primary/50 transition-colors">
+        <div className="flex items-start gap-2">
+          <textarea
+            ref={textareaRef}
+            value={value}
+            onChange={(e) => {
+              onChange(e.target.value);
+              adjustTextareaHeight();
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            rows={1}
+            className="flex-1 bg-transparent text-white placeholder-white/30 focus:outline-none resize-none min-h-6"
+            style={{ maxHeight: `${maxHeight}px` }}
+          />
+          {inputRight}
         </div>
+
+        {footer && <div className="pt-1 border-t border-white/5">{footer}</div>}
+
+        {expandableContent}
       </div>
-    );
-  }
-);
+    </div>
+  );
+});
