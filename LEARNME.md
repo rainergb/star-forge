@@ -17,31 +17,31 @@ Este documento vai te guiar pelo projeto Star Habit de forma **progressiva**, co
 
 ### Fase 1: Setup e Fundamentos (Dias 1-3)
 
-- [ ] **1.1 Configurar ambiente**
-  - [ ] Instalar Node.js 18+
-  - [ ] Instalar VS Code com extensões (ESLint, Prettier, Tailwind IntelliSense)
-  - [ ] Clonar o repositório
-  - [ ] Rodar `yarn install`
-  - [ ] Executar `yarn dev` e verificar se a aplicação abre
+- [ x ] **1.1 Configurar ambiente**
+  - [ x ] Instalar Node.js 18+
+  - [ x ] Instalar VS Code com extensões (ESLint, Prettier, Tailwind IntelliSense)
+  - [ x ] Clonar o repositório
+  - [ x ] Rodar `yarn install`
+  - [ x ] Executar `yarn dev` e verificar se a aplicação abre
 
-- [ ] **1.2 Entender a estrutura de pastas**
-  - [ ] Ler a seção "Estrutura do Projeto" no README.md
-  - [ ] Navegar pelas pastas e abrir alguns arquivos
-  - [ ] Entender a diferença entre `src/components`, `src/content` e `src/hooks`
+- [ x ] **1.2 Entender a estrutura de pastas**
+  - [ x ] Ler a seção "Estrutura do Projeto" no README.md
+  - [ x ] Navegar pelas pastas e abrir alguns arquivos
+  - [ x ] Entender a diferença entre `src/components`, `src/content` e `src/hooks`
 
 - [ ] **1.3 Estudar TypeScript básico**
-  - [ ] Entender tipos primitivos (`string`, `number`, `boolean`)
-  - [ ] Entender `interface` vs `type`
-  - [ ] Abrir `src/types/task.types.ts` e analisar as interfaces
-  - [ ] **Exercício:** Adicionar um novo campo opcional à interface `Task`
+  - [ x ] Entender tipos primitivos (`string`, `number`, `boolean`)
+  - [ x ] Entender `interface` vs `type`
+  - [ x ] Abrir `src/types/task.types.ts` e analisar as interfaces
+  - [ x ] **Exercício:** Adicionar um novo campo opcional à interface `Task`
 
 ### Fase 2: React e Hooks (Dias 4-7)
 
 - [ ] **2.1 Revisar React Hooks**
   - [ ] `useState` - Gerenciamento de estado local
   - [ ] `useEffect` - Efeitos colaterais
-  - [ ] `useCallback` - Memoização de funções
-  - [ ] `useMemo` - Memoização de valores
+  - [ ] `useCallback` - Memorização de funções
+  - [ ] `useMemo` - Memorização de valores
 
 - [ ] **2.2 Estudar o hook `useLocalStorage`**
   - [ ] Abrir `src/hooks/use-local-storage.ts`
