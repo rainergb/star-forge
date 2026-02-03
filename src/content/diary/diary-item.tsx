@@ -51,7 +51,9 @@ export function DiaryItem({
         leading={
           <div className="flex flex-col items-center gap-1">
             {entry.time && (
-              <span className="text-xs text-white/40 font-mono">{entry.time}</span>
+              <span className="text-xs text-white/40 font-mono">
+                {entry.time}
+              </span>
             )}
             <span className="text-lg" title={typeConfig.label}>
               {typeConfig.icon}
@@ -76,7 +78,11 @@ export function DiaryItem({
           )}
 
           {entry.mood?.emotions && entry.mood.emotions.length > 0 && (
-            <EmotionDisplay emotions={entry.mood.emotions} size="sm" maxDisplay={3} />
+            <EmotionDisplay
+              emotions={entry.mood.emotions}
+              size="sm"
+              maxDisplay={3}
+            />
           )}
 
           {entry.tags.length > 0 && (
@@ -88,14 +94,23 @@ export function DiaryItem({
 
           {hasFiles && (
             <ListItemStat
-              icon={hasImages ? <Image className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
+              icon={
+                hasImages ? (
+                  <Image className="w-3 h-3" />
+                ) : (
+                  <FileText className="w-3 h-3" />
+                )
+              }
             >
               {entry.files.length}
             </ListItemStat>
           )}
 
           {entry.linkedTaskId && (
-            <ListItemStat icon={<Clock className="w-3 h-3" />} color="text-primary/70">
+            <ListItemStat
+              icon={<Clock className="w-3 h-3" />}
+              color="text-primary/70"
+            >
               Linked task
             </ListItemStat>
           )}
@@ -105,8 +120,17 @@ export function DiaryItem({
       {contextMenu && (
         <ContextMenu position={contextMenu} onClose={closeContextMenu}>
           <ContextMenuItem
-            icon={<FavoriteButton isFavorite={entry.favorite} onToggle={() => {}} size="sm" color="yellow" />}
-            label={entry.favorite ? "Remove from favorites" : "Add to favorites"}
+            icon={
+              <FavoriteButton
+                isFavorite={entry.favorite}
+                onToggle={() => {}}
+                size="sm"
+                color="yellow"
+              />
+            }
+            label={
+              entry.favorite ? "Remove from favorites" : "Add to favorites"
+            }
             onClick={() => {
               onToggleFavorite(entry.id);
               closeContextMenu();
@@ -117,7 +141,7 @@ export function DiaryItem({
             icon={<Trash2 className="w-4 h-4" />}
             label="Delete entry"
             onClick={handleDelete}
-            danger
+            variant="danger"
           />
         </ContextMenu>
       )}

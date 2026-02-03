@@ -30,7 +30,8 @@ export function useMood() {
       return {
         level,
         emoji: MOOD_CONFIG[level].emoji,
-        note: note ?? null
+        note: note ?? null,
+        emotions: []
       };
     },
     []

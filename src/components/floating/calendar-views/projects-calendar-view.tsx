@@ -49,7 +49,7 @@ export function ProjectsCalendarView({
 
   // Projects with tasks summary
   const projectsWithStats = useMemo(() => {
-    const activeProjects = projects.filter(p => p.status !== "archived");
+    const activeProjects = projects.filter((p) => p.status !== "completed");
 
     return activeProjects.map(project => {
       const projectTasks = tasks.filter(t => t.projectId === project.id);

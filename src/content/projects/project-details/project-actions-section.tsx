@@ -40,7 +40,7 @@ export function ProjectActionsSection({
 }: ProjectActionsSectionProps) {
   const [showStatusMenu, setShowStatusMenu] = useState(false);
 
-  const currentStatus = status === "archived" ? "active" : status;
+  const currentStatus = status;
   const statusConfig = STATUS_CONFIG[currentStatus];
   const StatusIcon = statusConfig.icon;
 

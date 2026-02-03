@@ -43,9 +43,9 @@ export function DiaryListContent({
     return (
       <>
         <ListSummary
-          label={formatDateDisplay(selectedDate)}
-          count={0}
-          countLabel="entries"
+          label={`entries on ${formatDateDisplay(selectedDate)}`}
+          completed={0}
+          total={0}
         />
         <EmptyState
           icon={BookOpen}
@@ -66,9 +66,9 @@ export function DiaryListContent({
   return (
     <>
       <ListSummary
-        label={formatDateDisplay(selectedDate)}
-        count={entries.length}
-        countLabel={entries.length === 1 ? "entry" : "entries"}
+        label={`entries on ${formatDateDisplay(selectedDate)}`}
+        completed={entries.length}
+        total={entries.length}
       />
       <ListContainer>
         {sortedEntries.map((entry) => (
@@ -77,6 +77,7 @@ export function DiaryListContent({
             entry={entry}
             onToggleFavorite={onToggleFavorite}
             onRemove={onRemove}
+            onClick={() => onEntryClick(entry)}
             onDoubleClick={() => onEntryClick(entry)}
           />
         ))}

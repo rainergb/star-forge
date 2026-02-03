@@ -156,7 +156,12 @@ export function MiniProjectList({
     if (over && active.id !== over.id) {
       const oldIndex = activeProjects.findIndex((p) => p.id === active.id);
       const newIndex = activeProjects.findIndex((p) => p.id === over.id);
-      reorderProjects(oldIndex, newIndex);
+      
+      const newOrder = [...activeProjects];
+      const [removed] = newOrder.splice(oldIndex, 1);
+      newOrder.splice(newIndex, 0, removed);
+
+      reorderProjects(newOrder.map((p) => p.id));
     }
   };
 

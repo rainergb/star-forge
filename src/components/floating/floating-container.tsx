@@ -24,7 +24,6 @@ interface FloatingContainerProps {
 
 // Base heights for stacking calculation
 const COLLAPSED_HEIGHT = 340; // max-h-[340px]
-const EXPANDED_HEIGHT = 500; // max-h-[500px]
 const STACK_GAP = 12; // Gap between stacked widgets
 
 const positionClasses: Record<WidgetPosition, string> = {

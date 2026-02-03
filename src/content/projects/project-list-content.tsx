@@ -61,6 +61,7 @@ function SortableProjectItem({
         project={project}
         tasksCount={tasksCount}
         completedTasksCount={completedTasksCount}
+        onClick={onClick}
         onDoubleClick={onClick}
         onToggleFavorite={onToggleFavorite}
         onRemove={onRemove}

@@ -308,7 +308,8 @@ export function useDiary() {
       const mood: MoodEntry = {
         level,
         emoji: MOOD_CONFIG[level].emoji,
-        note: note ?? null
+        note: note ?? null,
+        emotions: []
       };
 
       return addEntry(note || MOOD_CONFIG[level].label, "mood", { mood });

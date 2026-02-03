@@ -164,7 +164,9 @@ export function MaestryCalendarView({
                     className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
                     style={{ backgroundColor: `${colors.solid}20` }}
                   >
-                    {skill.icon.type === "emoji" ? skill.icon.value : (
+                    {skill.icon.type === "emoji" ? (
+                      skill.icon.value
+                    ) : (
                       <Zap style={{ color: colors.solid }} />
                     )}
                   </div>
@@ -179,11 +181,13 @@ export function MaestryCalendarView({
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-medium" style={{ color: colors.solid }}>
-                      {skill.weekMinutes > 0 
+                    <div
+                      className="text-sm font-medium"
+                      style={{ color: colors.solid }}
+                    >
+                      {skill.weekMinutes > 0
                         ? `${Math.floor(skill.weekMinutes / 60)}h ${skill.weekMinutes % 60}m`
-                        : "—"
-                      }
+                        : "—"}
                     </div>
                     <div className="text-xs text-white/40">this week</div>
                   </div>
@@ -192,21 +196,23 @@ export function MaestryCalendarView({
                 {/* Progress to next level */}
                 <div className="px-4 pb-2">
                   <div className="flex items-center justify-between text-xs text-white/40 mb-1">
-                    <span>Progress to {skill.nextLevelInfo?.name || "Max"}</span>
+                    <span>
+                      Progress to {skill.nextLevelInfo?.name || "Max"}
+                    </span>
                     <span>{Math.round(skill.progressToNext)}%</span>
                   </div>
-                  <Progress 
-                    value={skill.progressToNext} 
-                    className="h-1.5"
-                  />
+                  <Progress value={skill.progressToNext} className="h-1.5" />
                 </div>
 
                 {/* Week activity */}
                 <div className="grid grid-cols-7 border-t border-white/5">
-                  {weekDays.map((day, index) => {
+                  {weekDays.map((day) => {
                     const dateStr = formatDateStr(day);
                     const daySessions = skill.sessionsByDay[dateStr] || [];
-                    const dayMinutes = daySessions.reduce((sum, s) => sum + s.duration, 0);
+                    const dayMinutes = daySessions.reduce(
+                      (sum, s) => sum + s.duration,
+                      0
+                    );
                     const isSelected = dateStr === selectedDate;
                     const isToday = isSameDay(day, new Date());
                     const hasActivity = dayMinutes > 0;
@@ -220,10 +226,12 @@ export function MaestryCalendarView({
                           isSelected && "bg-primary/10"
                         )}
                       >
-                        <div className={cn(
-                          "text-[10px] mb-1",
-                          isToday ? "text-primary" : "text-white/40"
-                        )}>
+                        <div
+                          className={cn(
+                            "text-[10px] mb-1",
+                            isToday ? "text-primary" : "text-white/40"
+                          )}
+                        >
                           {format(day, "EEE")}
                         </div>
                         <div
@@ -232,8 +240,12 @@ export function MaestryCalendarView({
                             hasActivity && "font-medium"
                           )}
                           style={{
-                            backgroundColor: hasActivity ? `${colors.solid}30` : "transparent",
-                            color: hasActivity ? colors.solid : "rgba(255,255,255,0.3)"
+                            backgroundColor: hasActivity
+                              ? `${colors.solid}30`
+                              : "transparent",
+                            color: hasActivity
+                              ? colors.solid
+                              : "rgba(255,255,255,0.3)"
                           }}
                         >
                           {hasActivity ? dayMinutes : "—"}

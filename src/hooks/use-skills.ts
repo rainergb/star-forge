@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import {
   Skill,
@@ -91,7 +91,10 @@ export function useSkills() {
   );
 
   const addTime = useCallback(
-    (id: string, durationSeconds: number): { leveledUp: boolean; newLevel: MasteryLevel } => {
+    (
+      id: string,
+      durationSeconds: number
+    ): { leveledUp: boolean; newLevel: MasteryLevel } => {
       let leveledUp = false;
       let newLevel: MasteryLevel = 1;
 
@@ -125,7 +128,11 @@ export function useSkills() {
       skillIds: string[],
       durationSeconds: number
     ): { skillId: string; leveledUp: boolean; newLevel: MasteryLevel }[] => {
-      const results: { skillId: string; leveledUp: boolean; newLevel: MasteryLevel }[] = [];
+      const results: {
+        skillId: string;
+        leveledUp: boolean;
+        newLevel: MasteryLevel;
+      }[] = [];
 
       setState((prev) => ({
         ...prev,
