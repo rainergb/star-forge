@@ -5,6 +5,7 @@ import { useActiveTask } from "@/hooks/use-active-task";
 import { usePomodoroSessions } from "@/hooks/use-pomodoro-sessions";
 import { useTasks } from "@/hooks/use-tasks";
 import { useProjects } from "@/hooks/use-projects";
+import { useSkills } from "@/hooks/use-skills";
 import notificationSound from "@/assets/notification.mp3";
 import successSound from "@/assets/sucess.mp3";
 
@@ -20,6 +21,7 @@ export function usePomodoroTimer() {
     incrementPomodoro: incrementProjectPomodoro,
     addTimeSpent: addProjectTimeSpent
   } = useProjects();
+  const { addTimeToMultiple: addTimeToSkills } = useSkills();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const startAudioRef = useRef<HTMLAudioElement | null>(null);
   const sessionStartRef = useRef<number | null>(null);
@@ -32,6 +34,7 @@ export function usePomodoroTimer() {
   const incrementProjectPomodoroRef = useRef(incrementProjectPomodoro);
   const addProjectTimeSpentRef = useRef(addProjectTimeSpent);
   const getTaskRef = useRef(getTask);
+  const addTimeToSkillsRef = useRef(addTimeToSkills);
 
   useEffect(() => {
     activeTaskRef.current = activeTask;
@@ -60,6 +63,10 @@ export function usePomodoroTimer() {
   useEffect(() => {
     getTaskRef.current = getTask;
   }, [getTask]);
+
+  useEffect(() => {
+    addTimeToSkillsRef.current = addTimeToSkills;
+  }, [addTimeToSkills]);
 
   useEffect(() => {
     audioRef.current = new Audio(notificationSound);
@@ -191,10 +198,10 @@ export function usePomodoroTimer() {
       const sessionDuration = sessionStartRef.current
         ? Math.round((Date.now() - sessionStartRef.current) / 1000)
         : mode === "work"
-        ? settings.pomodoro * 60
-        : mode === "shortBreak"
-        ? settings.shortBreak * 60
-        : settings.longBreak * 60;
+          ? settings.pomodoro * 60
+          : mode === "shortBreak"
+            ? settings.shortBreak * 60
+            : settings.longBreak * 60;
 
       // Usar refs para evitar stale closures
       const currentActiveTask = activeTaskRef.current;
@@ -219,6 +226,11 @@ export function usePomodoroTimer() {
           if (task?.projectId) {
             incrementProjectPomodoroRef.current(task.projectId);
             addProjectTimeSpentRef.current(task.projectId, sessionDuration);
+          }
+
+          // Add time to linked skills
+          if (task?.skillIds && task.skillIds.length > 0) {
+            addTimeToSkillsRef.current(task.skillIds, sessionDuration);
           }
         }
 

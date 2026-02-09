@@ -114,16 +114,21 @@ const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(
 
     return createPortal(
       <>
-        <div className="fixed inset-0 z-50" onClick={() => setOpen(false)} />
+        <div
+          className="fixed inset-0 z-[10001]"
+          onClick={() => setOpen(false)}
+        />
         <div
           ref={(node) => {
-            (contentRef as React.MutableRefObject<HTMLDivElement | null>).current = node
-            if (typeof ref === 'function') ref(node)
-            else if (ref) ref.current = node
+            (
+              contentRef as React.MutableRefObject<HTMLDivElement | null>
+            ).current = node;
+            if (typeof ref === "function") ref(node);
+            else if (ref) ref.current = node;
           }}
           style={{ top: position.top, left: position.left }}
           className={cn(
-            "fixed z-50 w-auto rounded-lg border border-white/10 bg-[#1a1d3a] p-4 shadow-xl outline-none animate-in fade-in-0 zoom-in-95",
+            "fixed z-[10001] w-auto rounded-lg border border-white/10 bg-[#1a1d3a] p-4 shadow-xl outline-none animate-in fade-in-0 zoom-in-95",
             className
           )}
           {...props}
@@ -132,7 +137,7 @@ const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(
         </div>
       </>,
       document.body
-    )
+    );
   }
 )
 PopoverContent.displayName = "PopoverContent"

@@ -32,8 +32,8 @@ export function TaskStepsSection({
   };
 
   return (
-    <div className="mt-6 space-y-1">
-      <div className="flex items-center gap-2 px-2 py-2 hover:bg-white/5 rounded-lg cursor-pointer">
+    <div className="mt-4 border-t border-white/10 pt-4 px-4 space-y-1">
+      <div className="flex items-center gap-2 py-2 hover:bg-white/5 rounded-lg cursor-pointer">
         <Plus className="w-4 h-4 text-white/50" />
         <input
           type="text"

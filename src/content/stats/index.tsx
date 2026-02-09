@@ -4,8 +4,16 @@ import { usePomodoroSessions } from "@/hooks/use-pomodoro-sessions";
 import { useTasks } from "@/hooks/use-tasks";
 import { useProjects } from "@/hooks/use-projects";
 import { useSkills } from "@/hooks/use-skills";
+import { useToast } from "@/hooks/use-toast";
 import { StatsPeriod, PomodoroSession } from "@/types/pomodoro.types";
 import { Button } from "@/components/ui/button";
+import { ExportButton } from "@/components/shared/export-button";
+import { ImportButton } from "@/components/shared/import-button";
+import {
+  exportPomodoro,
+  importFromFile,
+  validatePomodoroImport
+} from "@/services/export-service";
 import {
   format,
   subDays,
@@ -47,10 +55,11 @@ const periodLabels: Record<StatsPeriod, string> = {
 };
 
 export function PomodoroStats() {
-  const { sessions, getStats } = usePomodoroSessions();
+  const { sessions, getStats, importSessions } = usePomodoroSessions();
   const { tasks, getTask } = useTasks();
   const { projects, getProjectStats } = useProjects();
   const { skills, getSkillStats } = useSkills();
+  const { toast } = useToast();
 
   const [currentView, setCurrentView] = useState<StatsView>("general");
   const [period, setPeriod] = useState<StatsPeriod>("week");
@@ -219,10 +228,43 @@ export function PomodoroStats() {
   return (
     <div className="flex flex-col w-full max-w-2xl mx-auto h-full">
       <div className="flex items-center justify-between shrink-0 mb-3">
-        <h2 className="text-xl font-semibold text-white/90 flex items-center gap-2">
-          <TrendingUp className="w-5 h-5" />
-          Statistics
-        </h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-semibold text-white/90 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5" />
+            Statistics
+          </h2>
+          <ExportButton
+            onExport={() => exportPomodoro(sessions)}
+            tooltip="Export pomodoro sessions"
+          />
+          <ImportButton
+            onImport={async (file) => {
+              const result = await importFromFile(file);
+              if (result.success && result.data?.pomodoro) {
+                if (validatePomodoroImport(result.data.pomodoro)) {
+                  importSessions(result.data.pomodoro);
+                  toast({
+                    title: "Import successful",
+                    description: `${result.data.pomodoro.length} sessions imported`
+                  });
+                } else {
+                  toast({
+                    title: "Import failed",
+                    description: "Invalid pomodoro format",
+                    variant: "destructive"
+                  });
+                }
+              } else {
+                toast({
+                  title: "Import failed",
+                  description: result.message,
+                  variant: "destructive"
+                });
+              }
+            }}
+            tooltip="Import pomodoro sessions"
+          />
+        </div>
 
         <div className="flex gap-1">
           {(["day", "week", "month", "all"] as StatsPeriod[]).map((p) => (
@@ -244,7 +286,10 @@ export function PomodoroStats() {
         onViewChange={setCurrentView}
       />
 
-      <div className="flex-1 overflow-hidden flex items-center mt-3" ref={containerRef}>
+      <div
+        className="flex-1 overflow-hidden flex items-center mt-3"
+        ref={containerRef}
+      >
         <div
           className="flex w-full transition-transform duration-300 ease-in-out"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}

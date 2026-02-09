@@ -89,7 +89,7 @@ export function ProjectFilter({
             {projects.length > 0 && (
               <>
                 <div className="border-t border-white/10" />
-                <div className="p-2 max-h-48 overflow-y-auto">
+                <div className="p-2 max-h-48 overflow-y-auto scrollbar-none">
                   {projects.map((project) => (
                     <button
                       key={project.id}

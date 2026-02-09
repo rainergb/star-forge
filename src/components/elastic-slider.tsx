@@ -13,6 +13,7 @@ interface ElasticSliderProps {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   onChange?: (value: number) => void;
+  showValue?: boolean;
 }
 
 const ElasticSlider: React.FC<ElasticSliderProps> = ({
@@ -24,7 +25,8 @@ const ElasticSlider: React.FC<ElasticSliderProps> = ({
   stepSize = 1,
   leftIcon = <>-</>,
   rightIcon = <>+</>,
-  onChange
+  onChange,
+  showValue = true
 }) => {
   return (
     <div
@@ -39,6 +41,7 @@ const ElasticSlider: React.FC<ElasticSliderProps> = ({
         leftIcon={leftIcon}
         rightIcon={rightIcon}
         onChange={onChange}
+        showValue={showValue}
       />
     </div>
   );
@@ -53,6 +56,7 @@ interface SliderProps {
   leftIcon: React.ReactNode;
   rightIcon: React.ReactNode;
   onChange?: (value: number) => void;
+  showValue: boolean;
 }
 
 const Slider: React.FC<SliderProps> = ({
@@ -63,7 +67,8 @@ const Slider: React.FC<SliderProps> = ({
   stepSize,
   leftIcon,
   rightIcon,
-  onChange
+  onChange,
+  showValue
 }) => {
   const [value, setValue] = useState<number>(defaultValue);
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -206,9 +211,11 @@ const Slider: React.FC<SliderProps> = ({
           {rightIcon}
         </motion.div>
       </motion.div>
-      <p className="absolute text-gray-400 transform -translate-y-4 text-xs font-medium tracking-wide">
-        {Math.round(value)}
-      </p>
+      {showValue && (
+        <p className="absolute text-gray-400 transform -translate-y-4 text-xs font-medium tracking-wide">
+          {Math.round(value)}
+        </p>
+      )}
     </>
   );
 };

@@ -23,6 +23,7 @@ import {
   ListItemStat,
   ListItemIcon
 } from "@/components/shared/list-item";
+import { ICON_MAP } from "./project-icon-color-selector";
 
 function formatTime(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
@@ -56,13 +57,29 @@ export function ProjectItem({
   onToggleFavorite,
   onRemove
 }: ProjectItemProps) {
-  const { position: contextMenu, handleContextMenu, close: closeContextMenu } = useContextMenu();
+  const {
+    position: contextMenu,
+    handleContextMenu,
+    close: closeContextMenu
+  } = useContextMenu();
   const colors = PROJECT_COLORS[project.color];
-  const progress = tasksCount > 0 ? (completedTasksCount / tasksCount) * 100 : 0;
+  const progress =
+    tasksCount > 0 ? (completedTasksCount / tasksCount) * 100 : 0;
 
   const handleDelete = () => {
     onRemove();
     closeContextMenu();
+  };
+
+  const renderProjectIcon = () => {
+    if (project.icon?.type === "emoji") {
+      return <span className="text-lg">{project.icon.value}</span>;
+    }
+    const IconComponent =
+      project.icon?.type === "lucide" && project.icon.value
+        ? ICON_MAP[project.icon.value] || Folder
+        : Folder;
+    return <IconComponent className="w-5 h-5" />;
   };
 
   return (
@@ -74,7 +91,7 @@ export function ProjectItem({
         coverImage={project.image}
         leading={
           <ListItemIcon
-            icon={<Folder className="w-5 h-5" />}
+            icon={renderProjectIcon()}
             bgColor={colors.bg.replace("bg-", "")}
             color={colors.solid}
           />
@@ -107,7 +124,10 @@ export function ProjectItem({
           )}
 
           {project.totalTimeSpent > 0 && (
-            <ListItemStat icon={<Clock className="w-3 h-3" />} color="text-[#1A7FFF]">
+            <ListItemStat
+              icon={<Clock className="w-3 h-3" />}
+              color="text-[#1A7FFF]"
+            >
               {formatTime(project.totalTimeSpent)}
             </ListItemStat>
           )}

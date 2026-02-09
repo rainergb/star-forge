@@ -133,7 +133,7 @@ export function ProjectFilter({
           {activeProjects.length > 0 && (
             <>
               <div className="border-t border-white/10" />
-              <div className="p-2 max-h-64 overflow-y-auto">
+              <div className="p-2 max-h-64 overflow-y-auto scrollbar-none">
                 {activeProjects.map((project) => {
                   const isSelected = selectedProjectIds.includes(project.id);
                   const taskCount = getTaskCountForProject(project.id);

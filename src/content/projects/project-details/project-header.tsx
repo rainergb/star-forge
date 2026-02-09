@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { Folder } from "lucide-react";
-import { Project, PROJECT_COLORS } from "@/types/project.types";
-import { cn } from "@/lib/utils";
+import { Project, ProjectIcon, ProjectColor } from "@/types/project.types";
 import { CoverImageBanner } from "@/components/shared/cover-image-banner";
 import { FavoriteButton } from "@/components/shared/favorite-button";
 import { EditableTitle } from "@/components/shared/editable-title";
+import { ProjectIconColorSelector } from "../project-icon-color-selector";
 
 interface ProjectHeaderProps {
   project: Project;
@@ -12,6 +11,8 @@ interface ProjectHeaderProps {
   onUpdateName: (name: string) => void;
   onUpdateDescription: (description: string | null) => void;
   onUpdateImage: (image: string | null) => void;
+  onUpdateIcon: (icon: ProjectIcon) => void;
+  onUpdateColor: (color: ProjectColor) => void;
 }
 
 export function ProjectHeader({
@@ -19,14 +20,14 @@ export function ProjectHeader({
   onToggleFavorite,
   onUpdateName,
   onUpdateDescription,
-  onUpdateImage
+  onUpdateImage,
+  onUpdateIcon,
+  onUpdateColor
 }: ProjectHeaderProps) {
   const [editedDescription, setEditedDescription] = useState(
     project.description || ""
   );
   const [isEditingDescription, setIsEditingDescription] = useState(false);
-
-  const colors = PROJECT_COLORS[project.color];
 
   const handleSaveDescription = () => {
     const newDesc = editedDescription.trim() || null;
@@ -47,9 +48,13 @@ export function ProjectHeader({
       />
 
       <div className="flex items-center gap-3 p-4">
-        <div className={cn("p-2 rounded-lg shrink-0", colors.bg)}>
-          <Folder className={cn("w-6 h-6", colors.text)} />
-        </div>
+        <ProjectIconColorSelector
+          icon={project.icon}
+          color={project.color}
+          onChangeIcon={onUpdateIcon}
+          onChangeColor={onUpdateColor}
+          size="md"
+        />
 
         <div className="flex-1 min-w-0">
           <EditableTitle

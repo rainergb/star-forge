@@ -202,6 +202,21 @@ export function useSkills() {
     [state.skills]
   );
 
+  const importSkills = useCallback(
+    (importedSkills: Skill[], mode: "merge" | "replace" = "merge") => {
+      setState((prev) => {
+        if (mode === "replace") {
+          return { ...prev, skills: importedSkills };
+        }
+        // Merge: add new skills, skip existing ones by id
+        const existingIds = new Set(prev.skills.map((s) => s.id));
+        const newSkills = importedSkills.filter((s) => !existingIds.has(s.id));
+        return { ...prev, skills: [...newSkills, ...prev.skills] };
+      });
+    },
+    [setState]
+  );
+
   return {
     skills: state.skills,
     addSkill,
@@ -211,6 +226,7 @@ export function useSkills() {
     addTimeToMultiple,
     getSkill,
     getSkillStats,
-    getSkillsByIds
+    getSkillsByIds,
+    importSkills
   };
 }

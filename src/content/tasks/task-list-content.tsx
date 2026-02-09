@@ -149,9 +149,13 @@ export function TaskListContent({
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = sortedTasks.findIndex((t) => t.id === active.id);
-      const newIndex = sortedTasks.findIndex((t) => t.id === over.id);
-      onReorderTasks(oldIndex, newIndex);
+      // Find indices in the original tasks array (not filtered)
+      const oldIndex = tasks.findIndex((t) => t.id === active.id);
+      const newIndex = tasks.findIndex((t) => t.id === over.id);
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        onReorderTasks(oldIndex, newIndex);
+      }
     }
   };
 

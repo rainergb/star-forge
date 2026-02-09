@@ -8,10 +8,10 @@ import {
   FolderKanban,
   Calendar,
   MoreHorizontal,
-  MoreVertical
+  MoreVertical,
+  Star
 } from "lucide-react";
 import logo from "@/assets/logo.png";
-import maestryIcon from "@/assets/maestry/maestry-emoji.png";
 import { SettingsModal } from "@/content/config/settings";
 import { AppView } from "@/types/app.types";
 
@@ -50,8 +50,10 @@ export function TopBar({
 
   const toggleExpanded = () => setIsExpanded(!isExpanded);
 
+  const isDev = import.meta.env.DEV;
+
   return (
-    <div className="fixed top-0 left-0 w-full z-50 px-8 py-6  flex items-center justify-between bg-linear-to-b from-background/80 to-transparent backdrop-blur-[2px] ">
+    <div className="fixed top-0 left-0 w-full z-50 px-8 py-6  flex items-center justify-between bg-linear-to-b from-background/80 to-transparent">
       {/* Logo */}
 
       <div className="flex items-center gap-3 group cursor-pointer">
@@ -65,6 +67,11 @@ export function TopBar({
         <span className="text-xl font-bold text-white tracking-wider font-sans">
           STAR HABIT
         </span>
+        {isDev && (
+          <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded">
+            Dev
+          </span>
+        )}
       </div>
 
       {/* Right Actions */}
@@ -114,11 +121,7 @@ export function TopBar({
                 className="cursor-pointer rounded-lg p-2.5 bg-background/50 border border-white/10 text-white/70 transition-colors hover:bg-primary/10 hover:text-white"
                 title="Maestry"
               >
-                <img
-                  src={maestryIcon}
-                  alt="Maestry"
-                  className="w-4 h-4 object-contain"
-                />
+                <Star className="w-4 h-4" />
               </button>
             )}
 

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, Menu } from "electron";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
@@ -9,9 +9,19 @@ const __dirname = path.dirname(__filename);
 const isDev = process.env.NODE_ENV === "development";
 
 function createWindow() {
+  // Remove menu bar
+  Menu.setApplicationMenu(null);
+
+  // Get icon path
+  const iconPath = isDev
+    ? path.join(__dirname, "../src/assets/icon.ico")
+    : path.join(__dirname, "../dist/assets/icon.ico");
+
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    autoHideMenuBar: true,
+    icon: iconPath,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,

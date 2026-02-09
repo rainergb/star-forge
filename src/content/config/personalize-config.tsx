@@ -108,6 +108,7 @@ export function PersonalizeConfig({
               rightIcon={<Volume2 className="w-4 h-4 text-white/50" />}
               onChange={(value) => updateSetting("notificationVolume", value)}
               className="w-40"
+              showValue={false}
             />
           </div>
         )}

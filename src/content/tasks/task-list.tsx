@@ -3,11 +3,29 @@ import { useTasks } from "@/hooks/use-tasks";
 import { usePomodoroSessions } from "@/hooks/use-pomodoro-sessions";
 import { useActiveTask } from "@/hooks/use-active-task";
 import { useConfig } from "@/hooks/use-config";
+import { useToast } from "@/hooks/use-toast";
+import { useTaskFilters } from "@/hooks/use-task-filters";
 import { TaskInput } from "./task-input";
 import { TaskListContent } from "./task-list-content";
 import { TaskDetails } from "./task-details";
 import { ProjectFilter } from "./project-filter";
+import { PriorityFilter } from "./priority-filter";
+import { DateFilter } from "./date-filter";
+import { ExportButton } from "@/components/shared/export-button";
+import { ImportButton } from "@/components/shared/import-button";
+import {
+  exportTasks,
+  importFromFile,
+  validateTasksImport
+} from "@/services/export-service";
 import { Task, TaskReminder } from "@/types/task.types";
+import {
+  isToday,
+  isTomorrow,
+  isPast,
+  isThisWeek,
+  isWithinInterval
+} from "date-fns";
 
 interface TaskListProps {
   onNavigateToPomodoro?: () => void;
@@ -44,40 +62,107 @@ export function TaskList({
     setEstimatedPomodoros,
     reorderTasks,
     setProject,
-    setSkills
+    setSkills,
+    setPriority,
+    importTasks
   } = useTasks();
   const { sessions } = usePomodoroSessions();
   const { activeTask, setActiveTask, clearActiveTask } = useActiveTask();
   const { settings: timerSettings } = useConfig();
+  const { toast } = useToast();
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [completedCollapsed, setCompletedCollapsed] = useState(false);
-  const [filterProjectIds, setFilterProjectIds] = useState<string[]>([]);
-  const [filterNoProject, setFilterNoProject] = useState(false);
+
+  const {
+    projectIds: filterProjectIds,
+    noProject: filterNoProject,
+    priorities: filterPriorities,
+    dateFilter: filterDate,
+    customDateRange,
+    hasActiveFilter,
+    setProjectFilter,
+    setPriorities: setFilterPriorities,
+    setDateFilter: setFilterDate,
+    setCustomDateRange
+  } = useTaskFilters();
 
   useEffect(() => {
     if (initialFilterProjectId) {
-      setFilterProjectIds([initialFilterProjectId]);
-      setFilterNoProject(false);
+      setProjectFilter([initialFilterProjectId], false);
     }
-  }, [initialFilterProjectId]);
+  }, [initialFilterProjectId, setProjectFilter]);
 
-  const hasActiveFilter = filterProjectIds.length > 0 || filterNoProject;
+  const hasActiveProjectFilter = filterProjectIds.length > 0 || filterNoProject;
+  const hasActivePriorityFilter = filterPriorities.length > 0;
+  const hasActiveDateFilter = filterDate !== "all";
+
+  const matchesDateFilter = (task: Task): boolean => {
+    if (filterDate === "all") return true;
+
+    const dueDate = task.dueDate ? new Date(task.dueDate) : null;
+
+    switch (filterDate) {
+      case "today":
+        return dueDate !== null && isToday(dueDate);
+      case "tomorrow":
+        return dueDate !== null && isTomorrow(dueDate);
+      case "week":
+        return dueDate !== null && isThisWeek(dueDate, { weekStartsOn: 0 });
+      case "overdue":
+        return dueDate !== null && isPast(dueDate) && !isToday(dueDate);
+      case "no-date":
+        return dueDate === null;
+      case "custom":
+        if (!customDateRange.start || dueDate === null) return false;
+        const endDate = customDateRange.end || customDateRange.start;
+        return isWithinInterval(dueDate, {
+          start: customDateRange.start,
+          end: endDate
+        });
+      default:
+        return true;
+    }
+  };
 
   const filterTasks = (taskList: Task[]): Task[] => {
-    if (!hasActiveFilter) return taskList;
-    return taskList.filter((task) => {
-      if (filterNoProject && !task.projectId) return true;
-      if (filterProjectIds.includes(task.projectId || "")) return true;
-      return false;
-    });
+    let filtered = taskList;
+
+    // Filter by project
+    if (hasActiveProjectFilter) {
+      filtered = filtered.filter((task) => {
+        if (filterNoProject && !task.projectId) return true;
+        if (filterProjectIds.includes(task.projectId || "")) return true;
+        return false;
+      });
+    }
+
+    // Filter by priority
+    if (hasActivePriorityFilter) {
+      filtered = filtered.filter((task) =>
+        filterPriorities.includes(task.priority)
+      );
+    }
+
+    // Filter by date
+    if (hasActiveDateFilter) {
+      filtered = filtered.filter(matchesDateFilter);
+    }
+
+    return filtered;
   };
 
   const allIncompleteTasks = tasks.filter((t) => !t.completed);
   const allCompletedTasks = tasks.filter((t) => t.completed);
   const incompleteTasks = filterTasks(allIncompleteTasks);
   const completedTasks = filterTasks(allCompletedTasks);
+
+  // Get project to inherit when creating new task
+  const inheritProjectId =
+    filterProjectIds.length === 1 && !filterNoProject
+      ? filterProjectIds[0]
+      : null;
 
   const handleAddTask = (
     title: string,
@@ -87,7 +172,10 @@ export function TaskList({
       estimatedPomodoros: number | null;
     }
   ) => {
-    addTask(title, "Tasks", options);
+    addTask(title, "Tasks", {
+      ...options,
+      projectId: inheritProjectId
+    });
   };
 
   const handleTaskClick = (task: Task) => {
@@ -197,18 +285,60 @@ export function TaskList({
   const estimatedEndTime = calculateEstimatedEndTime();
 
   return (
-    <div className="flex flex-col items-center gap-2 w-full max-w-2xl mx-auto">
+    <div className="flex flex-col items-center gap-2 w-full max-w-2xl mx-auto overflow-hidden">
       <TaskInput onAddTask={handleAddTask} />
 
-      <ProjectFilter
-        selectedProjectIds={filterProjectIds}
-        includeNoProject={filterNoProject}
-        onSelectionChange={(projectIds, includeNoProject) => {
-          setFilterProjectIds(projectIds);
-          setFilterNoProject(includeNoProject);
-        }}
-        className="mt-2"
-      />
+      <div className="flex gap-2 w-full mt-2 flex-wrap">
+        <ProjectFilter
+          selectedProjectIds={filterProjectIds}
+          includeNoProject={filterNoProject}
+          onSelectionChange={setProjectFilter}
+          className="flex-1 min-w-[120px]"
+        />
+        <PriorityFilter
+          selectedPriorities={filterPriorities}
+          onSelectionChange={setFilterPriorities}
+        />
+        <DateFilter
+          selectedFilter={filterDate}
+          onFilterChange={setFilterDate}
+          customRange={customDateRange}
+          onCustomRangeChange={setCustomDateRange}
+        />
+        <div className="flex gap-1">
+          <ExportButton
+            onExport={() => exportTasks(tasks)}
+            tooltip="Export tasks"
+          />
+          <ImportButton
+            onImport={async (file) => {
+              const result = await importFromFile(file);
+              if (result.success && result.data?.tasks) {
+                if (validateTasksImport(result.data.tasks)) {
+                  importTasks(result.data.tasks);
+                  toast({
+                    title: "Import successful",
+                    description: `${result.data.tasks.length} tasks imported`
+                  });
+                } else {
+                  toast({
+                    title: "Import failed",
+                    description: "Invalid tasks format",
+                    variant: "destructive"
+                  });
+                }
+              } else {
+                toast({
+                  title: "Import failed",
+                  description: result.message,
+                  variant: "destructive"
+                });
+              }
+            }}
+            tooltip="Import tasks"
+          />
+        </div>
+      </div>
 
       <TaskListContent
         tasks={tasks}
@@ -255,6 +385,7 @@ export function TaskList({
         onSetEstimatedPomodoros={setEstimatedPomodoros}
         onSetProject={setProject}
         onSetSkills={setSkills}
+        onSetPriority={setPriority}
         onStartPomodoro={handleStartPomodoro}
       />
     </div>

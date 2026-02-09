@@ -212,7 +212,7 @@ export function DropdownSelector<T extends BaseItem>(
             className="fixed inset-0 z-10"
             onClick={() => setShowMenu(false)}
           />
-          <div className="absolute left-0 top-full mt-1 bg-[#1a1d3a] border border-white/10 rounded-lg shadow-xl z-20 overflow-hidden min-w-[200px] max-h-[300px] overflow-y-auto">
+          <div className="absolute left-0 top-full mt-1 bg-[#1a1d3a] border border-white/10 rounded-lg shadow-xl z-20 overflow-hidden min-w-[200px] max-h-[300px] overflow-y-auto scrollbar-none">
             <div className="py-1">
               {/* None option (single select only) */}
               {!isMultiple && (props as SingleSelectProps<T>).noneLabel && (

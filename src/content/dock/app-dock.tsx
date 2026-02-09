@@ -1,7 +1,6 @@
-import { ListTodo, Clock, FolderKanban, BookOpen } from "lucide-react";
+import { ListTodo, Clock, FolderKanban, BookOpen, Star } from "lucide-react";
 import Dock, { DockItemData } from "./dock";
 import { AppView } from "@/types/app.types";
-import maestryIcon from "@/assets/maestry/maestry-emoji.png";
 
 interface AppDockProps {
   currentView: AppView;
@@ -39,13 +38,7 @@ export function AppDock({ currentView, onViewChange }: AppDockProps) {
         currentView === "diary" ? "bg-primary/20 border-primary/50" : ""
     },
     {
-      icon: (
-        <img
-          src={maestryIcon}
-          alt="Maestry"
-          className="w-6 h-6 object-contain"
-        />
-      ),
+      icon: <Star className="w-6 h-6 text-white" />,
       label: "Maestry",
       onClick: () => onViewChange("maestry"),
       className:

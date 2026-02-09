@@ -139,6 +139,26 @@ export function usePomodoroSessions() {
       .slice(0, 10);
   }, [state.sessions]);
 
+  const importSessions = useCallback(
+    (
+      importedSessions: PomodoroSession[],
+      mode: "merge" | "replace" = "merge"
+    ) => {
+      setState((prev) => {
+        if (mode === "replace") {
+          return { ...prev, sessions: importedSessions };
+        }
+        // Merge: add new sessions, skip existing ones by id
+        const existingIds = new Set(prev.sessions.map((s) => s.id));
+        const newSessions = importedSessions.filter(
+          (s) => !existingIds.has(s.id)
+        );
+        return { ...prev, sessions: [...newSessions, ...prev.sessions] };
+      });
+    },
+    [setState]
+  );
+
   return {
     sessions: state.sessions,
     recentSessions,
@@ -146,6 +166,7 @@ export function usePomodoroSessions() {
     getSessionsByTask,
     getStats,
     getTaskStats,
-    clearSessions
+    clearSessions,
+    importSessions
   };
 }

@@ -11,9 +11,10 @@ import {
   Bell,
   Repeat,
   Timer,
-  Clock
+  Clock,
+  Flag
 } from "lucide-react";
-import { Task } from "@/types/task.types";
+import { Task, TaskPriority } from "@/types/task.types";
 import { PROJECT_COLORS } from "@/types/project.types";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -70,6 +71,15 @@ const formatTimeSpent = (seconds: number): string => {
   return "";
 };
 
+const PRIORITY_CONFIG: Record<
+  NonNullable<TaskPriority>,
+  { color: string; label: string }
+> = {
+  high: { color: "text-red-400", label: "High" },
+  medium: { color: "text-yellow-400", label: "Medium" },
+  low: { color: "text-green-400", label: "Low" }
+};
+
 interface TaskItemProps {
   task: Task;
   isActive?: boolean;
@@ -94,7 +104,11 @@ export function TaskItem({
   onDoubleClick,
   expectedEndTime
 }: TaskItemProps) {
-  const { position: contextMenu, handleContextMenu, close: closeContextMenu } = useContextMenu();
+  const {
+    position: contextMenu,
+    handleContextMenu,
+    close: closeContextMenu
+  } = useContextMenu();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     task.dueDate ? new Date(task.dueDate) : undefined
@@ -171,9 +185,7 @@ export function TaskItem({
         leading={
           <>
             {project && (
-              <ListItemColorBar
-                color={PROJECT_COLORS[project.color].solid}
-              />
+              <ListItemColorBar color={PROJECT_COLORS[project.color].solid} />
             )}
             <button
               onClick={handleToggleCompleted}
@@ -202,8 +214,18 @@ export function TaskItem({
           </>
         }
       >
-        <ListItemTitle strikethrough={task.completed}>{task.title}</ListItemTitle>
+        <ListItemTitle strikethrough={task.completed}>
+          {task.title}
+        </ListItemTitle>
         <ListItemMeta>
+          {task.priority && (
+            <ListItemStat
+              icon={<Flag className="w-3 h-3" />}
+              color={PRIORITY_CONFIG[task.priority].color}
+            >
+              {PRIORITY_CONFIG[task.priority].label}
+            </ListItemStat>
+          )}
           {project && (
             <ListItemBadge
               color={PROJECT_COLORS[project.color].solid}
@@ -216,28 +238,44 @@ export function TaskItem({
           {task.dueDate && (
             <ListItemStat
               icon={<Calendar className="w-3 h-3" />}
-              color={isPast(new Date(task.dueDate)) && !task.completed ? "text-red-400" : "text-white/50"}
+              color={
+                isPast(new Date(task.dueDate)) && !task.completed
+                  ? "text-red-400"
+                  : "text-white/50"
+              }
             >
               {formatDueDate(task.dueDate)}
             </ListItemStat>
           )}
           {task.reminder && (
-            <ListItemStat icon={<Bell className="w-3 h-3" />} color="text-[#1A7FFF]">
+            <ListItemStat
+              icon={<Bell className="w-3 h-3" />}
+              color="text-[#1A7FFF]"
+            >
               {formatReminderDate(task.reminder.date)}
             </ListItemStat>
           )}
           {task.repeat && (
-            <ListItemStat icon={<Repeat className="w-3 h-3" />} color="text-[#B57CFF]">
+            <ListItemStat
+              icon={<Repeat className="w-3 h-3" />}
+              color="text-[#B57CFF]"
+            >
               {getRepeatLabel(task.repeat)}
             </ListItemStat>
           )}
           {task.estimatedPomodoros && task.estimatedPomodoros > 0 && (
-            <ListItemStat icon={<Timer className="w-3 h-3" />} color="text-[#B57CFF]">
+            <ListItemStat
+              icon={<Timer className="w-3 h-3" />}
+              color="text-[#B57CFF]"
+            >
               {task.completedPomodoros ?? 0}/{task.estimatedPomodoros}
             </ListItemStat>
           )}
           {task.totalTimeSpent > 0 && (
-            <ListItemStat icon={<Clock className="w-3 h-3" />} color="text-[#1A7FFF]">
+            <ListItemStat
+              icon={<Clock className="w-3 h-3" />}
+              color="text-[#1A7FFF]"
+            >
               {formatTimeSpent(task.totalTimeSpent)}
             </ListItemStat>
           )}

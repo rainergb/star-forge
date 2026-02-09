@@ -1,8 +1,14 @@
 import { useState, useRef } from "react";
 import { format } from "date-fns";
 import { enUS } from "date-fns/locale";
-import { Bell, Calendar, Paperclip, X, Repeat } from "lucide-react";
-import { Task, TaskReminder, TaskFile, RepeatType } from "@/types/task.types";
+import { Bell, Calendar, Paperclip, X, Repeat, Flag } from "lucide-react";
+import {
+  Task,
+  TaskReminder,
+  TaskFile,
+  RepeatType,
+  TaskPriority
+} from "@/types/task.types";
 import { ReminderMenu } from "../reminder-menu";
 import { DateTimePickerPopover } from "@/components/ui/date-time-picker-popover";
 import { TaskFilesList } from "./task-files-preview";
@@ -15,6 +21,25 @@ const repeatOptions: { label: string; value: RepeatType }[] = [
   { label: "Monthly", value: "monthly" },
   { label: "Yearly", value: "yearly" }
 ];
+
+const priorityOptions: { label: string; value: TaskPriority; color: string }[] =
+  [
+    { label: "High", value: "high", color: "text-red-400" },
+    { label: "Medium", value: "medium", color: "text-yellow-400" },
+    { label: "Low", value: "low", color: "text-green-400" }
+  ];
+
+const getPriorityLabel = (priority: TaskPriority): string => {
+  if (!priority) return "Set priority";
+  const option = priorityOptions.find((o) => o.value === priority);
+  return option?.label || "Set priority";
+};
+
+const getPriorityColor = (priority: TaskPriority): string => {
+  if (!priority) return "text-white/50";
+  const option = priorityOptions.find((o) => o.value === priority);
+  return option?.color || "text-white/50";
+};
 
 const getRepeatLabel = (repeat: RepeatType): string => {
   if (!repeat) return "Repeat";
@@ -34,6 +59,7 @@ interface TaskActionsSectionProps {
   onRemoveFile: (taskId: string, fileId: string) => void;
   onSetProject: (taskId: string, projectId: string | null) => void;
   onSetSkills: (taskId: string, skillIds: string[]) => void;
+  onSetPriority: (taskId: string, priority: TaskPriority) => void;
 }
 
 export function TaskActionsSection({
@@ -44,11 +70,13 @@ export function TaskActionsSection({
   onAddFile,
   onRemoveFile,
   onSetProject,
-  onSetSkills
+  onSetSkills,
+  onSetPriority
 }: TaskActionsSectionProps) {
   const [showReminderMenu, setShowReminderMenu] = useState(false);
   const [showDueDatePicker, setShowDueDatePicker] = useState(false);
   const [showRepeatMenu, setShowRepeatMenu] = useState(false);
+  const [showPriorityMenu, setShowPriorityMenu] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formatDueDate = (timestamp: number): string => {
@@ -76,12 +104,12 @@ export function TaskActionsSection({
   };
 
   return (
-    <div className="mt-4 border-t border-white/10 pt-4 space-y-1">
+    <div className="mt-4 border-t border-white/10 pt-4 px-4 space-y-1">
       {/* Reminder */}
       <div className="relative">
         <button
           onClick={() => setShowReminderMenu(!showReminderMenu)}
-          className="w-full flex items-center gap-3 px-2 py-3 hover:bg-white/5 rounded-lg cursor-pointer text-left"
+          className="w-full flex items-center gap-3 py-3 hover:bg-white/5 rounded-lg cursor-pointer text-left"
         >
           <Bell className="w-4 h-4 text-white/50" />
           <span className="text-white/70 text-sm">
@@ -115,7 +143,7 @@ export function TaskActionsSection({
       <div className="relative">
         <button
           onClick={() => setShowDueDatePicker(!showDueDatePicker)}
-          className="w-full flex items-center gap-3 px-2 py-3 hover:bg-white/5 rounded-lg cursor-pointer text-left"
+          className="w-full flex items-center gap-3 py-3 hover:bg-white/5 rounded-lg cursor-pointer text-left"
         >
           <Calendar className="w-4 h-4 text-white/50" />
           <span className="text-white/70 text-sm">
@@ -151,7 +179,7 @@ export function TaskActionsSection({
       <div className="relative">
         <button
           onClick={() => setShowRepeatMenu(!showRepeatMenu)}
-          className="w-full flex items-center gap-3 px-2 py-3 hover:bg-white/5 rounded-lg cursor-pointer text-left"
+          className="w-full flex items-center gap-3 py-3 hover:bg-white/5 rounded-lg cursor-pointer text-left"
         >
           <Repeat className="w-4 h-4 text-white/50" />
           <span className="text-white/70 text-sm">
@@ -200,6 +228,62 @@ export function TaskActionsSection({
         )}
       </div>
 
+      {/* Priority */}
+      <div className="relative">
+        <button
+          onClick={() => setShowPriorityMenu(!showPriorityMenu)}
+          className="w-full flex items-center gap-3 py-3 hover:bg-white/5 rounded-lg cursor-pointer text-left"
+        >
+          <Flag className={`w-4 h-4 ${getPriorityColor(task.priority)}`} />
+          <span
+            className={`text-sm ${task.priority ? getPriorityColor(task.priority) : "text-white/70"}`}
+          >
+            {getPriorityLabel(task.priority)}
+          </span>
+          {task.priority && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSetPriority(task.id, null);
+              }}
+              className="ml-auto text-white/30 hover:text-white/70"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </button>
+
+        {showPriorityMenu && (
+          <>
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setShowPriorityMenu(false)}
+            />
+            <div className="absolute left-0 top-full mt-1 bg-[#1a1d3a] border border-white/10 rounded-lg shadow-xl z-20 overflow-hidden min-w-[180px]">
+              <div className="py-1">
+                {priorityOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      onSetPriority(task.id, option.value);
+                      setShowPriorityMenu(false);
+                    }}
+                    className={`w-full px-4 py-2 text-left text-sm transition-colors cursor-pointer flex items-center gap-2 ${
+                      task.priority === option.value
+                        ? `${option.color} bg-white/10`
+                        : "text-white/70 hover:bg-white/5"
+                    }`}
+                  >
+                    <Flag className={`w-4 h-4 ${option.color}`} />
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
       {/* Attachment */}
       <div>
         <input
@@ -211,7 +295,7 @@ export function TaskActionsSection({
         />
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="w-full flex items-center gap-3 px-2 py-3 hover:bg-white/5 rounded-lg cursor-pointer text-left"
+          className="w-full flex items-center gap-3 py-3 hover:bg-white/5 rounded-lg cursor-pointer text-left"
         >
           <Paperclip className="w-4 h-4 text-white/50" />
           <span className="text-white/70 text-sm">Add file</span>

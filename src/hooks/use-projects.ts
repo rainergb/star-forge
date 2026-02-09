@@ -249,6 +249,23 @@ export function useProjects() {
     return sortedProjects.filter((p) => p.status === "active");
   }, [sortedProjects]);
 
+  const importProjects = useCallback(
+    (importedProjects: Project[], mode: "merge" | "replace" = "merge") => {
+      setState((prev) => {
+        if (mode === "replace") {
+          return { ...prev, projects: importedProjects };
+        }
+        // Merge: add new projects, skip existing ones by id
+        const existingIds = new Set(prev.projects.map((p) => p.id));
+        const newProjects = importedProjects.filter(
+          (p) => !existingIds.has(p.id)
+        );
+        return { ...prev, projects: [...newProjects, ...prev.projects] };
+      });
+    },
+    [setState]
+  );
+
   return {
     projects: sortedProjects,
     activeProjects,
@@ -263,6 +280,7 @@ export function useProjects() {
     getFavoriteProjects,
     getProjectStats,
     incrementPomodoro,
-    addTimeSpent
+    addTimeSpent,
+    importProjects
   };
 }

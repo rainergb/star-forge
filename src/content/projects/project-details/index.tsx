@@ -1,6 +1,14 @@
-import { Project, ProjectStatus } from "@/types/project.types";
+import {
+  Project,
+  ProjectStatus,
+  ProjectIcon,
+  ProjectColor
+} from "@/types/project.types";
 import { useTasks } from "@/hooks/use-tasks";
-import { DetailContainer, DetailContent } from "@/components/shared/detail-item";
+import {
+  DetailContainer,
+  DetailContent
+} from "@/components/shared/detail-item";
 import { ProjectHeader } from "./project-header";
 import { ProjectActionsSection } from "./project-actions-section";
 import { ProjectStatsSection } from "./project-stats-section";
@@ -16,6 +24,8 @@ interface ProjectDetailsProps {
   onSetStatus: (id: string, status: ProjectStatus) => void;
   onRemoveProject: (id: string) => void;
   onNavigateToTasks?: (projectId: string) => void;
+  onUpdateIcon?: (id: string, icon: ProjectIcon) => void;
+  onUpdateColor?: (id: string, color: ProjectColor) => void;
 }
 
 export function ProjectDetails({
@@ -26,9 +36,12 @@ export function ProjectDetails({
   onUpdateProject,
   onSetStatus,
   onRemoveProject,
-  onNavigateToTasks
+  onNavigateToTasks,
+  onUpdateIcon,
+  onUpdateColor
 }: ProjectDetailsProps) {
-  const { tasks, setProject, addTask } = useTasks();
+  const { tasks, setProject, addTask, updateTask, toggleCompleted } =
+    useTasks();
 
   const handleDelete = () => {
     if (!project) return;
@@ -49,11 +62,15 @@ export function ProjectDetails({
     setProject(taskId, null);
   };
 
+  const handleUpdateTaskTitle = (taskId: string, title: string) => {
+    updateTask(taskId, { title });
+  };
+
   return (
     <DetailContainer open={open} onOpenChange={onOpenChange}>
       {project && (
         <>
-          <DetailContent>
+          <DetailContent className="flex flex-col">
             <ProjectHeader
               project={project}
               onToggleFavorite={() => onToggleFavorite(project.id)}
@@ -61,8 +78,16 @@ export function ProjectDetails({
               onUpdateDescription={(description) =>
                 onUpdateProject(project.id, { description })
               }
-              onUpdateImage={(image) =>
-                onUpdateProject(project.id, { image })
+              onUpdateImage={(image) => onUpdateProject(project.id, { image })}
+              onUpdateIcon={(icon) =>
+                onUpdateIcon
+                  ? onUpdateIcon(project.id, icon)
+                  : onUpdateProject(project.id, { icon })
+              }
+              onUpdateColor={(color) =>
+                onUpdateColor
+                  ? onUpdateColor(project.id, color)
+                  : onUpdateProject(project.id, { color })
               }
             />
 
@@ -79,6 +104,8 @@ export function ProjectDetails({
               tasks={projectTasks}
               onAddTask={handleAddTask}
               onRemoveFromProject={handleRemoveTaskFromProject}
+              onUpdateTaskTitle={handleUpdateTaskTitle}
+              onToggleComplete={toggleCompleted}
               onNavigateToTasks={
                 onNavigateToTasks
                   ? () => {

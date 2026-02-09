@@ -317,6 +317,23 @@ export function useDiary() {
     [addEntry]
   );
 
+  const importEntries = useCallback(
+    (importedEntries: DiaryEntry[], mode: "merge" | "replace" = "merge") => {
+      setState((prev) => {
+        if (mode === "replace") {
+          return { ...prev, entries: importedEntries };
+        }
+        // Merge: add new entries, skip existing ones by id
+        const existingIds = new Set(prev.entries.map((e) => e.id));
+        const newEntries = importedEntries.filter(
+          (e) => !existingIds.has(e.id)
+        );
+        return { ...prev, entries: [...newEntries, ...prev.entries] };
+      });
+    },
+    [setState]
+  );
+
   return {
     entries: state.entries,
     tags: state.tags,
@@ -336,6 +353,7 @@ export function useDiary() {
     getFavorites,
     getDailyMoodSummary,
     getMonthMoodData,
-    addQuickMood
+    addQuickMood,
+    importEntries
   };
 }

@@ -25,6 +25,8 @@ export interface TaskNote {
 
 export type RepeatType = "daily" | "weekly" | "monthly" | "yearly" | null;
 
+export type TaskPriority = "high" | "medium" | "low" | null;
+
 export interface Task {
   id: string;
   title: string;
@@ -44,6 +46,7 @@ export interface Task {
   totalTimeSpent: number;
   projectId: string | null;
   skillIds: string[];
+  priority: TaskPriority;
 }
 
 export interface TasksState {

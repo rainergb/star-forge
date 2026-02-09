@@ -50,11 +50,11 @@ export function ProjectActionsSection({
   };
 
   return (
-    <div className="mt-4 border-t border-white/10 pt-4 space-y-1">
+    <div className="mt-4 border-t border-white/10 pt-4 px-4 space-y-1">
       <div className="relative">
         <button
           onClick={() => setShowStatusMenu(!showStatusMenu)}
-          className="w-full flex items-center gap-3 px-2 py-3 hover:bg-white/5 rounded-lg cursor-pointer text-left"
+          className="w-full flex items-center gap-3 py-3 hover:bg-white/5 rounded-lg cursor-pointer text-left"
         >
           <StatusIcon className={cn("w-4 h-4", statusConfig.className)} />
           <span className="text-white/70 text-sm">{statusConfig.label}</span>
@@ -68,30 +68,33 @@ export function ProjectActionsSection({
             />
             <div className="absolute left-0 top-full mt-1 bg-[#1a1d3a] border border-white/10 rounded-lg shadow-xl z-20 overflow-hidden min-w-[180px]">
               <div className="py-1">
-                {(Object.keys(STATUS_CONFIG) as Exclude<ProjectStatus, "archived">[]).map(
-                  (statusKey) => {
-                    const config = STATUS_CONFIG[statusKey];
-                    const Icon = config.icon;
-                    return (
-                      <button
-                        key={statusKey}
-                        onClick={() => handleSelectStatus(statusKey)}
-                        className={cn(
-                          "w-full flex items-center gap-2 px-4 py-2 text-left text-sm transition-colors cursor-pointer",
-                          currentStatus === statusKey
-                            ? "text-primary bg-primary/10"
-                            : "text-white/70 hover:bg-white/5"
-                        )}
-                      >
-                        <Icon className={cn("w-4 h-4", config.className)} />
-                        <span>{config.label}</span>
-                        {currentStatus === statusKey && (
-                          <Check className="w-4 h-4 ml-auto" />
-                        )}
-                      </button>
-                    );
-                  }
-                )}
+                {(
+                  Object.keys(STATUS_CONFIG) as Exclude<
+                    ProjectStatus,
+                    "archived"
+                  >[]
+                ).map((statusKey) => {
+                  const config = STATUS_CONFIG[statusKey];
+                  const Icon = config.icon;
+                  return (
+                    <button
+                      key={statusKey}
+                      onClick={() => handleSelectStatus(statusKey)}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-4 py-2 text-left text-sm transition-colors cursor-pointer",
+                        currentStatus === statusKey
+                          ? "text-primary bg-primary/10"
+                          : "text-white/70 hover:bg-white/5"
+                      )}
+                    >
+                      <Icon className={cn("w-4 h-4", config.className)} />
+                      <span>{config.label}</span>
+                      {currentStatus === statusKey && (
+                        <Check className="w-4 h-4 ml-auto" />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </>

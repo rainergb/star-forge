@@ -1,8 +1,16 @@
 import { useState, useEffect, useMemo } from "react";
 import { useDiary } from "@/hooks/use-diary";
+import { useToast } from "@/hooks/use-toast";
 import { DiaryInput } from "./diary-input";
 import { DiaryListContent } from "./diary-list-content";
 import { DiaryDetails } from "./diary-details";
+import { ExportButton } from "@/components/shared/export-button";
+import { ImportButton } from "@/components/shared/import-button";
+import {
+  exportDiary,
+  importFromFile,
+  validateDiaryImport
+} from "@/services/export-service";
 import { DiaryEntry, DiaryEntryType, MoodEntry } from "@/types/diary.types";
 
 interface DiaryListProps {
@@ -10,7 +18,10 @@ interface DiaryListProps {
   selectedDate?: string;
 }
 
-export function DiaryList({ initialDate, selectedDate: externalSelectedDate }: DiaryListProps) {
+export function DiaryList({
+  initialDate,
+  selectedDate: externalSelectedDate
+}: DiaryListProps) {
   const {
     entries,
     addEntry,
@@ -21,15 +32,19 @@ export function DiaryList({ initialDate, selectedDate: externalSelectedDate }: D
     addFile,
     removeFile,
     linkTask,
-    getEntriesByDate
+    getEntriesByDate,
+    importEntries
   } = useDiary();
+  const { toast } = useToast();
 
   const getTodayDate = () => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   };
 
-  const [internalSelectedDate, setInternalSelectedDate] = useState(initialDate || getTodayDate());
+  const [internalSelectedDate, setInternalSelectedDate] = useState(
+    initialDate || getTodayDate()
+  );
   const [selectedEntry, setSelectedEntry] = useState<DiaryEntry | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
@@ -91,7 +106,40 @@ export function DiaryList({ initialDate, selectedDate: externalSelectedDate }: D
 
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-2xl mx-auto">
-      <DiaryInput onAddEntry={handleAddEntry} selectedDate={selectedDate} />
+      <div className="flex gap-2 w-full items-center">
+        <DiaryInput onAddEntry={handleAddEntry} selectedDate={selectedDate} />
+        <ExportButton
+          onExport={() => exportDiary(entries)}
+          tooltip="Export diary"
+        />
+        <ImportButton
+          onImport={async (file) => {
+            const result = await importFromFile(file);
+            if (result.success && result.data?.diary) {
+              if (validateDiaryImport(result.data.diary)) {
+                importEntries(result.data.diary);
+                toast({
+                  title: "Import successful",
+                  description: `${result.data.diary.length} entries imported`
+                });
+              } else {
+                toast({
+                  title: "Import failed",
+                  description: "Invalid diary format",
+                  variant: "destructive"
+                });
+              }
+            } else {
+              toast({
+                title: "Import failed",
+                description: result.message,
+                variant: "destructive"
+              });
+            }
+          }}
+          tooltip="Import diary"
+        />
+      </div>
 
       <DiaryListContent
         entries={dayEntries}

@@ -120,7 +120,7 @@ export function TaskNotesSection({
   );
 
   return (
-    <div className="mt-4 border-t border-white/10 pt-4">
+    <div className="mt-4 border-t border-white/10 pt-4 px-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2 text-white/50">
           <MessageSquare className="w-4 h-4" />
@@ -166,7 +166,7 @@ export function TaskNotesSection({
         </div>
       )}
 
-      <div className="space-y-2 max-h-[200px] overflow-y-auto">
+      <div className="space-y-2 max-h-[200px] overflow-y-auto scrollbar-none">
         {sortedNotes.length === 0 && !isAdding ? (
           <button
             onClick={() => setIsAdding(true)}

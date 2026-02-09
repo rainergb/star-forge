@@ -33,7 +33,7 @@ export function DetailFooter({
   return (
     <div
       className={cn(
-        "mt-auto pt-4 border-t border-white/10 flex items-center justify-between",
+        "mt-auto px-4 py-4 border-t border-white/10 flex items-center justify-between",
         className
       )}
     >

@@ -47,13 +47,13 @@ export function TaskPomodoroSection({
     : 0;
 
   return (
-    <div className="mt-4 border-t border-white/10 pt-4 space-y-4">
-      <div className="flex items-center gap-2 text-white/70 px-2">
+    <div className="mt-4 border-t border-white/10 pt-4 px-4 space-y-4">
+      <div className="flex items-center gap-2 text-white/70">
         <Timer className="w-4 h-4" />
         <span className="text-sm font-medium">Pomodoro</span>
       </div>
 
-      <div className="space-y-3 px-2">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-white/60">
             <Target className="w-4 h-4" />
@@ -126,7 +126,7 @@ export function TaskPomodoroSection({
               <History className="w-4 h-4" />
               <span className="text-sm">Recent Sessions</span>
             </div>
-            <div className="space-y-1 max-h-32 overflow-y-auto">
+            <div className="space-y-1 max-h-32 overflow-y-auto scrollbar-none">
               {sessions.slice(0, 5).map((session) => (
                 <div
                   key={session.id}

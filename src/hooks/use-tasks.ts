@@ -7,7 +7,8 @@ import {
   TaskReminder,
   TaskFile,
   TaskNote,
-  RepeatType
+  RepeatType,
+  TaskPriority
 } from "@/types/task.types";
 
 const STORAGE_KEY = "star-habit-tasks";
@@ -36,6 +37,7 @@ export function useTasks() {
         estimatedPomodoros?: number | null;
         projectId?: string | null;
         skillIds?: string[];
+        priority?: TaskPriority;
       }
     ): string => {
       const id = generateId();
@@ -57,7 +59,8 @@ export function useTasks() {
         completedPomodoros: 0,
         totalTimeSpent: 0,
         projectId: options?.projectId ?? null,
-        skillIds: options?.skillIds ?? []
+        skillIds: options?.skillIds ?? [],
+        priority: options?.priority ?? null
       };
       setState((prev) => ({ ...prev, tasks: [newTask, ...prev.tasks] }));
       return id;
@@ -417,6 +420,33 @@ export function useTasks() {
     [state.tasks]
   );
 
+  const setPriority = useCallback(
+    (taskId: string, priority: TaskPriority) => {
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
+          task.id === taskId ? { ...task, priority } : task
+        )
+      }));
+    },
+    [setState]
+  );
+
+  const importTasks = useCallback(
+    (importedTasks: Task[], mode: "merge" | "replace" = "merge") => {
+      setState((prev) => {
+        if (mode === "replace") {
+          return { ...prev, tasks: importedTasks };
+        }
+        // Merge: add new tasks, skip existing ones by id
+        const existingIds = new Set(prev.tasks.map((t) => t.id));
+        const newTasks = importedTasks.filter((t) => !existingIds.has(t.id));
+        return { ...prev, tasks: [...newTasks, ...prev.tasks] };
+      });
+    },
+    [setState]
+  );
+
   return {
     tasks: state.tasks,
     addTask,
@@ -444,6 +474,8 @@ export function useTasks() {
     reorderTasks,
     setProject,
     setSkills,
+    setPriority,
+    importTasks,
     getTasksByProject,
     getTasksWithoutProject,
     getTasksBySkill

@@ -17,9 +17,17 @@ import { MiniTaskItem } from "./mini-task-item";
 import { TaskList } from "@/content/tasks/task-list";
 import { useTasks } from "@/hooks/use-tasks";
 import { useActiveTask } from "@/hooks/use-active-task";
+import { useTaskFilters } from "@/hooks/use-task-filters";
 import { Task } from "@/types/task.types";
 import { WidgetPosition } from "@/types/widget.types";
 import { ListTodo, Focus } from "lucide-react";
+import {
+  isToday,
+  isTomorrow,
+  isPast,
+  isThisWeek,
+  isWithinInterval
+} from "date-fns";
 
 interface MiniTaskListProps {
   isVisible: boolean;
@@ -50,6 +58,14 @@ export function MiniTaskList({
 }: MiniTaskListProps) {
   const { tasks, toggleComplete, reorderTasks } = useTasks();
   const { activeTask } = useActiveTask();
+  const {
+    projectIds: filterProjectIds,
+    noProject: filterNoProject,
+    priorities: filterPriorities,
+    dateFilter: filterDate,
+    customDateRange,
+    hasActiveFilter
+  } = useTaskFilters();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -62,8 +78,60 @@ export function MiniTaskList({
     })
   );
 
-  const incompleteTasks = tasks.filter((t) => !t.completed);
-  const completedTasks = tasks.filter((t) => t.completed);
+  const matchesDateFilter = (task: Task): boolean => {
+    if (filterDate === "all") return true;
+    const dueDate = task.dueDate ? new Date(task.dueDate) : null;
+
+    switch (filterDate) {
+      case "today":
+        return dueDate !== null && isToday(dueDate);
+      case "tomorrow":
+        return dueDate !== null && isTomorrow(dueDate);
+      case "week":
+        return dueDate !== null && isThisWeek(dueDate, { weekStartsOn: 0 });
+      case "overdue":
+        return dueDate !== null && isPast(dueDate) && !isToday(dueDate);
+      case "no-date":
+        return dueDate === null;
+      case "custom":
+        if (!customDateRange.start || dueDate === null) return false;
+        const endDate = customDateRange.end || customDateRange.start;
+        return isWithinInterval(dueDate, {
+          start: customDateRange.start,
+          end: endDate
+        });
+      default:
+        return true;
+    }
+  };
+
+  const filterTasks = (taskList: Task[]): Task[] => {
+    let filtered = taskList;
+
+    if (filterProjectIds.length > 0 || filterNoProject) {
+      filtered = filtered.filter((task) => {
+        if (filterNoProject && !task.projectId) return true;
+        if (filterProjectIds.includes(task.projectId || "")) return true;
+        return false;
+      });
+    }
+
+    if (filterPriorities.length > 0) {
+      filtered = filtered.filter((task) =>
+        filterPriorities.includes(task.priority)
+      );
+    }
+
+    if (filterDate !== "all") {
+      filtered = filtered.filter(matchesDateFilter);
+    }
+
+    return filtered;
+  };
+
+  const allTasks = tasks;
+  const incompleteTasks = filterTasks(allTasks.filter((t) => !t.completed));
+  const completedTasks = filterTasks(allTasks.filter((t) => t.completed));
   const sortedTasks = [...incompleteTasks, ...completedTasks];
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -87,11 +155,13 @@ export function MiniTaskList({
 
   if (!isVisible) return null;
 
+  const title = hasActiveFilter ? "Tasks (filtered)" : "Tasks";
+
   // Render full TaskList when expanded
   if (isExpanded) {
     return (
       <FloatingContainer
-        title="Tasks"
+        title={title}
         isVisible={isVisible}
         isPinned={isPinned}
         isExpanded={isExpanded}
@@ -117,7 +187,7 @@ export function MiniTaskList({
   // Mini version when not expanded
   return (
     <FloatingContainer
-      title="Tasks"
+      title={title}
       isVisible={isVisible}
       isPinned={isPinned}
       isExpanded={isExpanded}

@@ -1,6 +1,15 @@
-import { Task, TaskReminder, TaskFile, RepeatType } from "@/types/task.types";
+import {
+  Task,
+  TaskReminder,
+  TaskFile,
+  RepeatType,
+  TaskPriority
+} from "@/types/task.types";
 import { PomodoroSession } from "@/types/pomodoro.types";
-import { DetailContainer, DetailContent } from "@/components/shared/detail-item";
+import {
+  DetailContainer,
+  DetailContent
+} from "@/components/shared/detail-item";
 import { TaskHeader } from "./task-header";
 import { TaskStepsSection } from "./task-steps-section";
 import { TaskActionsSection } from "./task-actions-section";
@@ -34,6 +43,7 @@ interface TaskDetailsProps {
   onSetEstimatedPomodoros: (id: string, count: number | null) => void;
   onSetProject: (taskId: string, projectId: string | null) => void;
   onSetSkills: (taskId: string, skillIds: string[]) => void;
+  onSetPriority: (taskId: string, priority: TaskPriority) => void;
   onStartPomodoro?: (taskId: string) => void;
 }
 
@@ -59,7 +69,8 @@ export function TaskDetails({
   onRemoveTask,
   onSetEstimatedPomodoros,
   onSetProject,
-  onSetSkills
+  onSetSkills,
+  onSetPriority
 }: TaskDetailsProps) {
   const handleDelete = () => {
     if (!task) return;
@@ -94,10 +105,9 @@ export function TaskDetails({
               onSetRepeat={onSetRepeat}
               onAddFile={onAddFile}
               onRemoveFile={onRemoveFile}
-              onSetProject={(_, projectId) =>
-                onSetProject(task.id, projectId)
-              }
+              onSetProject={(_, projectId) => onSetProject(task.id, projectId)}
               onSetSkills={(_, skillIds) => onSetSkills(task.id, skillIds)}
+              onSetPriority={(_, priority) => onSetPriority(task.id, priority)}
             />
 
             <TaskPomodoroSection
