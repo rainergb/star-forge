@@ -8,13 +8,15 @@ interface TaskStepsSectionProps {
   onAddStep: (taskId: string, stepTitle: string) => void;
   onToggleStep: (taskId: string, stepId: string) => void;
   onRemoveStep: (taskId: string, stepId: string) => void;
+  onUpdateStep: (taskId: string, stepId: string, newTitle: string) => void;
 }
 
 export function TaskStepsSection({
   task,
   onAddStep,
   onToggleStep,
-  onRemoveStep
+  onRemoveStep,
+  onUpdateStep
 }: TaskStepsSectionProps) {
   const [newStepTitle, setNewStepTitle] = useState("");
 
@@ -51,6 +53,7 @@ export function TaskStepsSection({
           step={step}
           onToggle={() => onToggleStep(task.id, step.id)}
           onRemove={() => onRemoveStep(task.id, step.id)}
+          onUpdate={(stepId, newTitle) => onUpdateStep(task.id, stepId, newTitle)}
         />
       ))}
     </div>

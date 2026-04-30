@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTasks } from "@/hooks/use-tasks";
 import { usePomodoroSessions } from "@/hooks/use-pomodoro-sessions";
 import { useActiveTask } from "@/hooks/use-active-task";
@@ -50,6 +50,7 @@ export function TaskList({
     addStep,
     toggleStep,
     removeStep,
+    updateStep,
     setDueDate,
     setReminder,
     setRepeat,
@@ -194,6 +195,17 @@ export function TaskList({
       }
     }
   };
+
+  const handleToggleCompleted = useCallback(
+    (id: string) => {
+      const task = tasks.find((t) => t.id === id);
+      if (task && !task.completed) {
+        setDetailsOpen(false);
+      }
+      toggleCompleted(id);
+    },
+    [tasks, toggleCompleted]
+  );
 
   const handleTaskDoubleClick = (task: Task) => {
     setSelectedTask(task);
@@ -351,7 +363,7 @@ export function TaskList({
         onToggleCompletedCollapsed={() =>
           setCompletedCollapsed(!completedCollapsed)
         }
-        onToggleCompleted={toggleCompleted}
+        onToggleCompleted={handleToggleCompleted}
         onToggleFavorite={toggleFavorite}
         onSetDueDate={setDueDate}
         onRemoveTask={removeTask}
@@ -367,12 +379,13 @@ export function TaskList({
         open={detailsOpen}
         sessions={sessions}
         onOpenChange={setDetailsOpen}
-        onToggleCompleted={toggleCompleted}
+        onToggleCompleted={handleToggleCompleted}
         onToggleFavorite={toggleFavorite}
         onUpdateTask={updateTask}
         onAddStep={addStep}
         onToggleStep={toggleStep}
         onRemoveStep={removeStep}
+        onUpdateStep={updateStep}
         onSetDueDate={setDueDate}
         onSetReminder={setReminder}
         onSetRepeat={setRepeat}

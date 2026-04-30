@@ -31,6 +31,7 @@ interface TaskDetailsProps {
   onAddStep: (taskId: string, stepTitle: string) => void;
   onToggleStep: (taskId: string, stepId: string) => void;
   onRemoveStep: (taskId: string, stepId: string) => void;
+  onUpdateStep: (taskId: string, stepId: string, newTitle: string) => void;
   onSetDueDate: (taskId: string, dueDate: number | null) => void;
   onSetReminder: (taskId: string, reminder: TaskReminder | null) => void;
   onSetRepeat: (taskId: string, repeat: RepeatType) => void;
@@ -58,6 +59,7 @@ export function TaskDetails({
   onAddStep,
   onToggleStep,
   onRemoveStep,
+  onUpdateStep,
   onSetDueDate,
   onSetReminder,
   onSetRepeat,
@@ -96,6 +98,7 @@ export function TaskDetails({
               onAddStep={onAddStep}
               onToggleStep={onToggleStep}
               onRemoveStep={onRemoveStep}
+              onUpdateStep={onUpdateStep}
             />
 
             <TaskActionsSection

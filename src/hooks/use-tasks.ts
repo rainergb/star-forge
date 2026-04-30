@@ -82,9 +82,21 @@ export function useTasks() {
     (id: string) => {
       setState((prev) => ({
         ...prev,
-        tasks: prev.tasks.map((task) =>
-          task.id === id ? { ...task, completed: !task.completed } : task
-        )
+        tasks: prev.tasks.map((task) => {
+          if (task.id !== id) return task;
+
+          const newCompleted = !task.completed;
+          const updatedSteps = task.steps.map((step) => ({
+            ...step,
+            completed: newCompleted
+          }));
+
+          return {
+            ...task,
+            completed: newCompleted,
+            steps: updatedSteps
+          };
+        })
       }));
     },
     [setState]
@@ -163,6 +175,25 @@ export function useTasks() {
             ? {
                 ...task,
                 steps: (task.steps || []).filter((step) => step.id !== stepId)
+              }
+            : task
+        )
+      }));
+    },
+    [setState]
+  );
+
+  const updateStep = useCallback(
+    (taskId: string, stepId: string, newTitle: string) => {
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
+          task.id === taskId
+            ? {
+                ...task,
+                steps: (task.steps || []).map((step) =>
+                  step.id === stepId ? { ...step, title: newTitle } : step
+                )
               }
             : task
         )
@@ -458,6 +489,7 @@ export function useTasks() {
     addStep,
     toggleStep,
     removeStep,
+    updateStep,
     setDueDate,
     setReminder,
     setRepeat,

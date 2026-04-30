@@ -65,42 +65,42 @@ export const MASTERY_LEVELS: MasteryLevelInfo[] = [
     level: 2,
     name: "Apprentice",
     minHours: 100,
-    maxHours: 500,
+    maxHours: 490,
     description: "Building basic competence"
   },
   {
     level: 3,
     name: "Practitioner",
-    minHours: 500,
-    maxHours: 2000,
+    minHours: 490,
+    maxHours: 1960,
     description: "Developing consistency"
   },
   {
     level: 4,
     name: "Competent",
-    minHours: 2000,
-    maxHours: 4000,
+    minHours: 1960,
+    maxHours: 3920,
     description: "Solid understanding"
   },
   {
     level: 5,
     name: "Advanced",
-    minHours: 4000,
-    maxHours: 6500,
+    minHours: 3920,
+    maxHours: 6350,
     description: "Deep knowledge"
   },
   {
     level: 6,
     name: "Expert",
-    minHours: 6500,
-    maxHours: 9000,
+    minHours: 6350,
+    maxHours: 8800,
     description: "Complex mastery"
   },
   {
     level: 7,
     name: "Master",
-    minHours: 9000,
-    maxHours: 10000,
+    minHours: 8800,
+    maxHours: 9800,
     description: "Complete mastery"
   }
 ];
