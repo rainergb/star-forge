@@ -106,26 +106,27 @@ export function useSkills() {
 
   // Carrega do Supabase ao montar (usa cache entre navegações)
   useEffect(() => {
-    if (isGuest) {
-      setIsLoading(false);
-      return;
-    }
+    let cancelled = false;
+
+    if (isGuest) { setIsLoading(false); return; }
     if (!userId) return;
+
     const cached = skillCache.get(userId);
-    if (cached) {
-      setDbSkills(cached);
-      setIsLoading(false);
-      return;
-    }
+    if (cached) { setDbSkills(cached); setIsLoading(false); return; }
+
+    setIsLoading(true);
     skillsService
       .getSkills(userId)
       .then((rows) => {
+        if (cancelled) return;
         const mapped = rows.map(rowToSkill);
         skillCache.set(userId, mapped);
         setDbSkills(mapped);
       })
-      .catch((err) => console.error("[useSkills] load:", err))
-      .finally(() => setIsLoading(false));
+      .catch((err) => { if (!cancelled) console.error("[useSkills] load:", err); })
+      .finally(() => { if (!cancelled) setIsLoading(false); });
+
+    return () => { cancelled = true; };
   }, [userId, isGuest]);
 
   const applyState = (updater: (prev: Skill[]) => Skill[]) => {

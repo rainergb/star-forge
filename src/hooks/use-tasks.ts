@@ -154,26 +154,27 @@ export function useTasks() {
 
   // Carrega do Supabase ao montar (usa cache entre navegações)
   useEffect(() => {
-    if (isGuest) {
-      setIsLoading(false);
-      return;
-    }
+    let cancelled = false;
+
+    if (isGuest) { setIsLoading(false); return; }
     if (!userId) return;
+
     const cached = taskCache.get(userId);
-    if (cached) {
-      setDbTasks(cached);
-      setIsLoading(false);
-      return;
-    }
+    if (cached) { setDbTasks(cached); setIsLoading(false); return; }
+
+    setIsLoading(true);
     tasksService
       .getTasks(userId)
       .then((rows) => {
+        if (cancelled) return;
         const mapped = rows.map(rowToTask);
         taskCache.set(userId, mapped);
         setDbTasks(mapped);
       })
-      .catch((err) => console.error("[useTasks] load:", err))
-      .finally(() => setIsLoading(false));
+      .catch((err) => { if (!cancelled) console.error("[useTasks] load:", err); })
+      .finally(() => { if (!cancelled) setIsLoading(false); });
+
+    return () => { cancelled = true; };
   }, [userId, isGuest]);
 
   // Helpers de atualização de estado

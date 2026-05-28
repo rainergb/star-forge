@@ -133,26 +133,27 @@ export function useDiary() {
 
   // Carrega do Supabase ao montar (usa cache entre navegações)
   useEffect(() => {
-    if (isGuest) {
-      setIsLoading(false);
-      return;
-    }
+    let cancelled = false;
+
+    if (isGuest) { setIsLoading(false); return; }
     if (!userId) return;
+
     const cached = diaryCache.get(userId);
-    if (cached) {
-      setDbEntries(cached);
-      setIsLoading(false);
-      return;
-    }
+    if (cached) { setDbEntries(cached); setIsLoading(false); return; }
+
+    setIsLoading(true);
     diaryService
       .getEntries(userId)
       .then((rows) => {
+        if (cancelled) return;
         const mapped = rows.map(rowToEntry);
         diaryCache.set(userId, mapped);
         setDbEntries(mapped);
       })
-      .catch((err) => console.error("[useDiary] load:", err))
-      .finally(() => setIsLoading(false));
+      .catch((err) => { if (!cancelled) console.error("[useDiary] load:", err); })
+      .finally(() => { if (!cancelled) setIsLoading(false); });
+
+    return () => { cancelled = true; };
   }, [userId, isGuest]);
 
   const applyState = (updater: (prev: DiaryEntry[]) => DiaryEntry[]) => {

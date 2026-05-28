@@ -119,26 +119,38 @@ export function useProjects() {
 
   // Carrega do Supabase ao montar (usa cache entre navegações)
   useEffect(() => {
+    let cancelled = false;
+
     if (isGuest) {
       setIsLoading(false);
       return;
     }
     if (!userId) return;
+
     const cached = projectCache.get(userId);
     if (cached) {
       setDbProjects(cached);
       setIsLoading(false);
       return;
     }
+
+    setIsLoading(true);
     projectsService
       .getProjects(userId)
       .then((rows) => {
+        if (cancelled) return;
         const mapped = rows.map(rowToProject);
         projectCache.set(userId, mapped);
         setDbProjects(mapped);
       })
-      .catch((err) => console.error("[useProjects] load:", err))
-      .finally(() => setIsLoading(false));
+      .catch((err) => {
+        if (!cancelled) console.error("[useProjects] load:", err);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => { cancelled = true; };
   }, [userId, isGuest]);
 
   const applyState = (updater: (prev: Project[]) => Project[]) => {

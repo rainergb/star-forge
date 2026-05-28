@@ -100,26 +100,27 @@ export function usePomodoroSessions() {
 
   // Carrega do Supabase ao montar (usa cache entre navegações)
   useEffect(() => {
-    if (isGuest) {
-      setIsLoading(false);
-      return;
-    }
+    let cancelled = false;
+
+    if (isGuest) { setIsLoading(false); return; }
     if (!userId) return;
+
     const cached = sessionCache.get(userId);
-    if (cached) {
-      setDbSessions(cached);
-      setIsLoading(false);
-      return;
-    }
+    if (cached) { setDbSessions(cached); setIsLoading(false); return; }
+
+    setIsLoading(true);
     pomodoroService
       .getSessions(userId)
       .then((rows) => {
+        if (cancelled) return;
         const mapped = rows.map(rowToSession);
         sessionCache.set(userId, mapped);
         setDbSessions(mapped);
       })
-      .catch((err) => console.error("[usePomodoroSessions] load:", err))
-      .finally(() => setIsLoading(false));
+      .catch((err) => { if (!cancelled) console.error("[usePomodoroSessions] load:", err); })
+      .finally(() => { if (!cancelled) setIsLoading(false); });
+
+    return () => { cancelled = true; };
   }, [userId, isGuest]);
 
   // ─── CRUD ─────────────────────────────────────────────────────────────────
