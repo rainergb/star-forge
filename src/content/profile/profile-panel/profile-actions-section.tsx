@@ -7,6 +7,7 @@ import { useDiary } from "@/hooks/use-diary";
 import { usePomodoroSessions } from "@/hooks/use-pomodoro-sessions";
 import { exportAll } from "@/services/export-service";
 import { DetailSection } from "@/components/shared/detail-item";
+import { DataImportButton } from "@/content/auth/data-import-button";
 
 interface ProfileActionsSectionProps {
   onLogout: () => void;
@@ -34,6 +35,10 @@ export function ProfileActionsSection({ onLogout }: ProfileActionsSectionProps) 
   return (
     <>
       {/* Data */}
+      <DetailSection>
+        <DataImportButton onImportSuccess={() => {}} />
+      </DetailSection>
+
       <DetailSection>
         <button
           onClick={handleExportAll}
