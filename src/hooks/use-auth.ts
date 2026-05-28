@@ -24,14 +24,13 @@ export function useAuth() {
     // Busca sessão ativa imediatamente (resolve stale localStorage sem id)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
+        const meta = session.user.user_metadata ?? {};
         const user: User = {
           id: session.user.id,
           email: session.user.email || "",
-          name:
-            session.user.user_metadata?.name ||
-            session.user.email?.split("@")[0],
-          provider: session.user.user_metadata?.provider || "email",
-          avatar: session.user.user_metadata?.avatar_url,
+          name: meta.full_name || meta.name || session.user.email?.split("@")[0],
+          provider: session.user.app_metadata?.provider || meta.provider || "email",
+          avatar: meta.avatar_url || meta.picture || undefined,
           createdAt: new Date(session.user.created_at).getTime()
         };
         setAuthState({ user, isAuthenticated: true, rememberMe: true });
@@ -43,14 +42,13 @@ export function useAuth() {
       data: { subscription }
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
+        const meta = session.user.user_metadata ?? {};
         const user: User = {
           id: session.user.id,
           email: session.user.email || "",
-          name:
-            session.user.user_metadata?.name ||
-            session.user.email?.split("@")[0],
-          provider: session.user.user_metadata?.provider || "email",
-          avatar: session.user.user_metadata?.avatar_url,
+          name: meta.full_name || meta.name || session.user.email?.split("@")[0],
+          provider: session.user.app_metadata?.provider || meta.provider || "email",
+          avatar: meta.avatar_url || meta.picture || undefined,
           createdAt: new Date(session.user.created_at).getTime()
         };
         setAuthState({ user, isAuthenticated: true, rememberMe: true });
