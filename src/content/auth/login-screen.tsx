@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { LoginForm } from "./login-form";
 import { SignupForm } from "./signup-form";
+import { DataImportButton } from "./data-import-button";
 import { LoginFormData, SignupFormData } from "@/schemas/auth.schema";
 import { useAuth } from "@/hooks/use-auth";
 import Particles from "@/components/particles";
 import logo from "@/assets/logo.png";
+import { Upload, ArrowLeft } from "lucide-react";
 
-type AuthView = "login" | "signup" | "confirm";
+type AuthView = "login" | "signup" | "confirm" | "import";
 
 export function LoginScreen() {
   const { login, signup, loginWithGoogle, loginAsGuest } = useAuth();
@@ -49,7 +51,8 @@ export function LoginScreen() {
   const subtitles: Record<AuthView, string> = {
     login: "Welcome back! Sign in to continue",
     signup: "Create your account to get started",
-    confirm: "Check your email"
+    confirm: "Check your email",
+    import: "Import your data from another device"
   };
 
   return (
@@ -123,14 +126,46 @@ export function LoginScreen() {
             </div>
           )}
 
+          {/* Import view */}
+          {view === "import" && (
+            <div className="space-y-4">
+              <p className="text-white/60 text-sm">
+                Select a JSON file exported from your Star Habit backup to restore your data locally. You'll authenticate after the import completes.
+              </p>
+              <DataImportButton
+                onImportSuccess={() => {
+                  setView("login");
+                }}
+              />
+              <button
+                onClick={() => setView("login")}
+                className="w-full flex items-center justify-center gap-2 text-white/40 hover:text-white/60 text-sm transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to sign in
+              </button>
+            </div>
+          )}
+
           {/* Login view */}
           {view === "login" && (
-            <LoginForm
-              onSubmit={handleLogin}
-              onGoogleLogin={loginWithGoogle}
-              onGuestLogin={loginAsGuest}
-              onGoToSignup={() => { setError(null); setView("signup"); }}
-            />
+            <>
+              <LoginForm
+                onSubmit={handleLogin}
+                onGoogleLogin={loginWithGoogle}
+                onGuestLogin={loginAsGuest}
+                onGoToSignup={() => { setError(null); setView("signup"); }}
+              />
+              <div className="mt-6 pt-6 border-t border-white/10 text-center">
+                <button
+                  onClick={() => { setError(null); setView("import"); }}
+                  className="flex items-center justify-center gap-2 text-primary hover:text-primary/80 text-sm transition-colors mx-auto"
+                >
+                  <Upload className="w-4 h-4" />
+                  Import data from backup
+                </button>
+              </div>
+            </>
           )}
 
           {/* Signup view */}
