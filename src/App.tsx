@@ -21,11 +21,14 @@ import {
 import { Task } from "@/types/task.types";
 import bgVideo from "@/assets/bg.mp4";
 import { ProfilePanel } from "@/content/profile/profile-panel";
+import { MigrationModal } from "@/components/shared/migration-modal";
+import { useMigration } from "@/hooks/use-migration";
 
 function AppContent() {
   const { toast } = useToast();
   const { settings } = usePersonalize();
   const [profileOpen, setProfileOpen] = useState(false);
+  const { showModal, status, summary, errorMsg, migrate, skip, dismiss } = useMigration();
   const { setActiveTask, clearActiveTask, activeTask } = useActiveTask();
   const { selectedDate } = useActiveModule();
   const { toggleVisibility } = useFloatingWidgets();
@@ -113,6 +116,16 @@ function AppContent() {
       <AppDock currentView={currentView} onViewChange={changeView} />
 
       <ProfilePanel open={profileOpen} onOpenChange={setProfileOpen} />
+
+      <MigrationModal
+        open={showModal}
+        status={status}
+        summary={summary}
+        errorMsg={errorMsg}
+        onMigrate={migrate}
+        onSkip={skip}
+        onDismiss={dismiss}
+      />
     </div>
   );
 }
