@@ -94,6 +94,10 @@ const toIso = (v: number | string | null | undefined): string | null => {
 
 const now = () => new Date().toISOString();
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isValidUUID = (id: string) => UUID_RE.test(id);
+const toUUID = (id: string) => (isValidUUID(id) ? id : crypto.randomUUID());
+
 // Espelho do LEVEL_TO_MOOD de use-diary.ts
 const LEVEL_TO_MOOD: Record<number, string> = {
   1: "very_bad",
@@ -108,12 +112,25 @@ const LEVEL_TO_MOOD: Record<number, string> = {
 export async function migrateToSupabase(userId: string, data: LocalData): Promise<void> {
   const errors: string[] = [];
 
+  // Pré-computar mapeamento oldId → UUID para preservar referências entre entidades
+  const projectIdMap = new Map<string, string>();
+  const taskIdMap = new Map<string, string>();
+  const skillIdMap = new Map<string, string>();
+  const diaryIdMap = new Map<string, string>();
+  const sessionIdMap = new Map<string, string>();
+
+  data.projects.forEach(p => projectIdMap.set(p.id, toUUID(p.id)));
+  data.tasks.forEach(t => taskIdMap.set(t.id, toUUID(t.id)));
+  data.skills.forEach(s => skillIdMap.set(s.id, toUUID(s.id)));
+  data.entries.forEach(e => diaryIdMap.set(e.id, toUUID(e.id)));
+  data.sessions.forEach(s => sessionIdMap.set(s.id, toUUID(s.id)));
+
   // ── Tasks ──────────────────────────────────────────────────────────────────
   if (data.tasks.length > 0) {
     const rows = data.tasks.map((t) => ({
-      id: t.id,
+      id: taskIdMap.get(t.id)!,
       user_id: userId,
-      project_id: t.projectId ?? null,
+      project_id: t.projectId ? (projectIdMap.get(t.projectId) ?? null) : null,
       title: t.title,
       completed: t.completed,
       priority: t.priority ?? null,
@@ -132,7 +149,7 @@ export async function migrateToSupabase(userId: string, data: LocalData): Promis
       estimated_pomodoros: t.estimatedPomodoros ?? null,
       completed_pomodoros: t.completedPomodoros ?? 0,
       total_time_spent: t.totalTimeSpent ?? 0,
-      skill_ids: t.skillIds as unknown ?? []
+      skill_ids: (t.skillIds ?? []).map((sid: string) => skillIdMap.get(sid) ?? sid) as unknown
     }));
 
     const { error } = await supabase
@@ -144,7 +161,7 @@ export async function migrateToSupabase(userId: string, data: LocalData): Promis
   // ── Projects ───────────────────────────────────────────────────────────────
   if (data.projects.length > 0) {
     const rows = data.projects.map((p) => ({
-      id: p.id,
+      id: projectIdMap.get(p.id)!,
       user_id: userId,
       name: p.name,
       description: p.description ?? null,
@@ -172,7 +189,7 @@ export async function migrateToSupabase(userId: string, data: LocalData): Promis
   // ── Skills ─────────────────────────────────────────────────────────────────
   if (data.skills.length > 0) {
     const rows = data.skills.map((s) => ({
-      id: s.id,
+      id: skillIdMap.get(s.id)!,
       user_id: userId,
       name: s.name,
       description: s.description ?? null,
@@ -195,7 +212,7 @@ export async function migrateToSupabase(userId: string, data: LocalData): Promis
   // ── Diary entries ──────────────────────────────────────────────────────────
   if (data.entries.length > 0) {
     const rows = data.entries.map((e) => ({
-      id: e.id,
+      id: diaryIdMap.get(e.id)!,
       user_id: userId,
       date: e.date,
       content: e.content,
@@ -205,7 +222,7 @@ export async function migrateToSupabase(userId: string, data: LocalData): Promis
       time: e.time ?? null,
       image: e.image ?? null,
       mood_entry: e.mood as unknown ?? null,
-      linked_task_id: e.linkedTaskId ?? null,
+      linked_task_id: e.linkedTaskId ? (taskIdMap.get(e.linkedTaskId) ?? null) : null,
       tags: e.tags as unknown ?? [],
       favorite: e.favorite ?? false,
       files: e.files as unknown ?? [],
@@ -221,9 +238,9 @@ export async function migrateToSupabase(userId: string, data: LocalData): Promis
   // ── Pomodoro sessions ──────────────────────────────────────────────────────
   if (data.sessions.length > 0) {
     const rows = data.sessions.map((s) => ({
-      id: s.id,
+      id: sessionIdMap.get(s.id)!,
       user_id: userId,
-      task_id: s.taskId ?? null,
+      task_id: s.taskId ? (taskIdMap.get(s.taskId) ?? null) : null,
       task_title: s.taskTitle ?? null,
       mode: s.mode,
       duration: s.duration,
