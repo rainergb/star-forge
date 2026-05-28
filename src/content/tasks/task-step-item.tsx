@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Circle, CheckCircle2, X, Pencil } from "lucide-react";
+import { Circle, CheckCircle2, X } from "lucide-react";
 import { TaskStep } from "@/types/task.types";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -83,21 +83,14 @@ export function TaskStepItem({ step, onToggle, onRemove, onUpdate }: TaskStepIte
         />
       ) : (
         <span
-          className={`flex-1 text-sm select-none ${
+          onDoubleClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+          className={`flex-1 text-sm select-none cursor-text ${
             step.completed ? "line-through text-white/40" : "text-white/70"
           }`}
+          title="Double-click to edit"
         >
           {step.title}
         </span>
-      )}
-
-      {!isEditing && (
-        <button
-          onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-          className="opacity-0 group-hover:opacity-100 cursor-pointer text-white/30 hover:text-white/60 transition-all flex-shrink-0"
-        >
-          <Pencil className="w-3.5 h-3.5" />
-        </button>
       )}
 
       <button

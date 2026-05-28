@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useProjects } from "@/hooks/use-projects";
 import { useTasks } from "@/hooks/use-tasks";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +16,15 @@ import {
 } from "@/services/export-service";
 import { Project, ProjectColor } from "@/types/project.types";
 import { ListSummary } from "@/components/shared/list-container";
+import { ArrowUpDown } from "lucide-react";
+
+type ProjectSortKey = "default" | "hours" | "open-tasks";
+
+const SORT_LABELS: Record<ProjectSortKey, string> = {
+  default: "Default",
+  hours: "Most hours",
+  "open-tasks": "Open tasks"
+};
 
 interface ProjectListProps {
   onNavigateToTasks?: (projectId: string) => void;
@@ -38,6 +47,20 @@ export function ProjectList({ onNavigateToTasks }: ProjectListProps) {
 
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [sortKey, setSortKey] = useState<ProjectSortKey>("default");
+
+  const sortedProjects = useMemo(() => {
+    if (sortKey === "default") return projects;
+    return [...projects].sort((a, b) => {
+      if (sortKey === "hours") return b.totalTimeSpent - a.totalTimeSpent;
+      if (sortKey === "open-tasks") {
+        const aC = getTaskCounts(a.id);
+        const bC = getTaskCounts(b.id);
+        return (bC.total - bC.completed) - (aC.total - aC.completed);
+      }
+      return 0;
+    });
+  }, [projects, sortKey, tasks]);
 
   const handleAddProject = (
     name: string,
@@ -122,8 +145,26 @@ export function ProjectList({ onNavigateToTasks }: ProjectListProps) {
         />
       </div>
 
+      {/* Sort chips */}
+      <div className="flex items-center gap-2 w-full">
+        <ArrowUpDown className="w-3.5 h-3.5 text-white/30 shrink-0" />
+        {(Object.keys(SORT_LABELS) as ProjectSortKey[]).map((key) => (
+          <button
+            key={key}
+            onClick={() => setSortKey(key)}
+            className={`px-2.5 py-1 rounded-lg text-xs transition-colors cursor-pointer ${
+              sortKey === key
+                ? "bg-primary/20 text-primary border border-primary/30"
+                : "bg-white/5 text-white/40 border border-white/10 hover:text-white/60 hover:bg-white/10"
+            }`}
+          >
+            {SORT_LABELS[key]}
+          </button>
+        ))}
+      </div>
+
       <ProjectListContent
-        projects={projects}
+        projects={sortedProjects}
         onProjectClick={handleProjectClick}
         onToggleFavorite={toggleFavorite}
         onRemoveProject={handleDeleteProject}

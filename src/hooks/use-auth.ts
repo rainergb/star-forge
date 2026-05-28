@@ -6,6 +6,7 @@ import { AuthState, User, LoginCredentials } from "@/types/auth.types";
 
 const AUTH_STORAGE_KEY = "star-habit-auth";
 const GUEST_MODE_KEY = "star-habit-guest-mode";
+const AVATAR_CACHE_KEY = "star-habit-avatar-cache";
 
 const initialAuthState: AuthState = {
   user: null,
@@ -22,18 +23,25 @@ export function useAuth() {
   // Sincronizar com Supabase auth na montagem
   useEffect(() => {
     // Busca sessão ativa imediatamente (resolve stale localStorage sem id)
+    const buildUser = (supabaseUser: NonNullable<Awaited<ReturnType<typeof supabase.auth.getSession>>["data"]["session"]>["user"]): User => {
+      const meta = supabaseUser.user_metadata ?? {};
+      const freshAvatar = meta.avatar_url || meta.picture || undefined;
+      // Persist avatar so re-renders never hit the CDN again (avoids 429)
+      if (freshAvatar) localStorage.setItem(AVATAR_CACHE_KEY, freshAvatar);
+      const cachedAvatar = localStorage.getItem(AVATAR_CACHE_KEY) || undefined;
+      return {
+        id: supabaseUser.id,
+        email: supabaseUser.email || "",
+        name: meta.full_name || meta.name || supabaseUser.email?.split("@")[0],
+        provider: supabaseUser.app_metadata?.provider || meta.provider || "email",
+        avatar: freshAvatar || cachedAvatar,
+        createdAt: new Date(supabaseUser.created_at).getTime()
+      };
+    };
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        const meta = session.user.user_metadata ?? {};
-        const user: User = {
-          id: session.user.id,
-          email: session.user.email || "",
-          name: meta.full_name || meta.name || session.user.email?.split("@")[0],
-          provider: session.user.app_metadata?.provider || meta.provider || "email",
-          avatar: meta.avatar_url || meta.picture || undefined,
-          createdAt: new Date(session.user.created_at).getTime()
-        };
-        setAuthState({ user, isAuthenticated: true, rememberMe: true });
+        setAuthState({ user: buildUser(session.user), isAuthenticated: true, rememberMe: true });
         setIsGuestMode(false);
       }
     });
@@ -42,15 +50,7 @@ export function useAuth() {
       data: { subscription }
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        const meta = session.user.user_metadata ?? {};
-        const user: User = {
-          id: session.user.id,
-          email: session.user.email || "",
-          name: meta.full_name || meta.name || session.user.email?.split("@")[0],
-          provider: session.user.app_metadata?.provider || meta.provider || "email",
-          avatar: meta.avatar_url || meta.picture || undefined,
-          createdAt: new Date(session.user.created_at).getTime()
-        };
+        const user = buildUser(session.user);
         setAuthState({ user, isAuthenticated: true, rememberMe: true });
         setIsGuestMode(false);
       } else if (!isGuestMode) {
@@ -172,12 +172,13 @@ export function useAuth() {
         await supabase.auth.signOut();
       }
       invalidateAllCaches();
+      localStorage.removeItem(AVATAR_CACHE_KEY);
       setAuthState(initialAuthState);
       setIsGuestMode(false);
     } catch (error) {
       console.error("Logout failed:", error);
-      // Invalida mesmo em caso de erro para não manter dados do usuário anterior
       invalidateAllCaches();
+      localStorage.removeItem(AVATAR_CACHE_KEY);
     }
   }, [setAuthState, setIsGuestMode, isGuestMode]);
 

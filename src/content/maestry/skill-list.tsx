@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useSkills } from "@/hooks/use-skills";
 import { useTasks } from "@/hooks/use-tasks";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +14,14 @@ import {
   validateSkillsImport
 } from "@/services/export-service";
 import { Skill, SkillColor } from "@/types/skill.types";
+import { ArrowUpDown } from "lucide-react";
+
+type SkillSortKey = "default" | "level" | "xp";
+const SKILL_SORT_LABELS: Record<SkillSortKey, string> = {
+  default: "Default",
+  level: "Highest level",
+  xp: "Most XP"
+};
 
 export function SkillList() {
   const {
@@ -31,6 +39,16 @@ export function SkillList() {
 
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [sortKey, setSortKey] = useState<SkillSortKey>("default");
+
+  const sortedSkills = useMemo(() => {
+    if (sortKey === "default") return skills;
+    return [...skills].sort((a, b) => {
+      if (sortKey === "level") return b.currentLevel - a.currentLevel;
+      if (sortKey === "xp") return b.totalTimeSpent - a.totalTimeSpent;
+      return 0;
+    });
+  }, [skills, sortKey]);
 
   const handleAddSkill = (
     name: string,
@@ -111,8 +129,26 @@ export function SkillList() {
         />
       </div>
 
+      {/* Sort chips */}
+      <div className="flex items-center gap-2 w-full">
+        <ArrowUpDown className="w-3.5 h-3.5 text-white/30 shrink-0" />
+        {(Object.keys(SKILL_SORT_LABELS) as SkillSortKey[]).map((key) => (
+          <button
+            key={key}
+            onClick={() => setSortKey(key)}
+            className={`px-2.5 py-1 rounded-lg text-xs transition-colors cursor-pointer ${
+              sortKey === key
+                ? "bg-primary/20 text-primary border border-primary/30"
+                : "bg-white/5 text-white/40 border border-white/10 hover:text-white/60 hover:bg-white/10"
+            }`}
+          >
+            {SKILL_SORT_LABELS[key]}
+          </button>
+        ))}
+      </div>
+
       <SkillListContent
-        skills={skills}
+        skills={sortedSkills}
         hasActiveFilter={false}
         onRemoveSkill={removeSkill}
         onSkillClick={handleSkillClick}

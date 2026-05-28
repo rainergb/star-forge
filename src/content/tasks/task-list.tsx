@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTasks } from "@/hooks/use-tasks";
 import { usePomodoroSessions } from "@/hooks/use-pomodoro-sessions";
 import { useActiveTask } from "@/hooks/use-active-task";
@@ -27,6 +27,16 @@ import {
   isThisWeek,
   isWithinInterval
 } from "date-fns";
+import { ArrowUpDown } from "lucide-react";
+
+type TaskSortKey = "default" | "priority" | "steps" | "due-date";
+const PRIORITY_ORDER: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3, none: 4 };
+const TASK_SORT_LABELS: Record<TaskSortKey, string> = {
+  default: "Default",
+  priority: "Priority",
+  steps: "Most steps",
+  "due-date": "Due date"
+};
 
 interface TaskListProps {
   onNavigateToPomodoro?: () => void;
@@ -80,6 +90,26 @@ export function TaskList({
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [completedCollapsed, setCompletedCollapsed] = useState(true);
+  const [sortKey, setSortKey] = useState<TaskSortKey>("default");
+
+  const applySort = useCallback((list: Task[]) => {
+    if (sortKey === "default") return list;
+    return [...list].sort((a, b) => {
+      if (sortKey === "priority") {
+        return (PRIORITY_ORDER[a.priority ?? "none"] ?? 4) - (PRIORITY_ORDER[b.priority ?? "none"] ?? 4);
+      }
+      if (sortKey === "steps") {
+        return (b.steps?.length ?? 0) - (a.steps?.length ?? 0);
+      }
+      if (sortKey === "due-date") {
+        if (!a.dueDate && !b.dueDate) return 0;
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return a.dueDate - b.dueDate;
+      }
+      return 0;
+    });
+  }, [sortKey]);
 
   const {
     projectIds: filterProjectIds,
@@ -161,7 +191,7 @@ export function TaskList({
 
   const allIncompleteTasks = tasks.filter((t) => !t.completed);
   const allCompletedTasks = tasks.filter((t) => t.completed);
-  const incompleteTasks = filterTasks(allIncompleteTasks);
+  const incompleteTasks = useMemo(() => applySort(filterTasks(allIncompleteTasks)), [allIncompleteTasks, sortKey, filterProjectIds, filterNoProject, filterPriorities, filterDate, customDateRange]);
   const completedTasks = filterTasks(allCompletedTasks);
 
   // Get project to inherit when creating new task
@@ -353,6 +383,24 @@ export function TaskList({
           customRange={customDateRange}
           onCustomRangeChange={setCustomDateRange}
         />
+      </div>
+
+      {/* Sort chips */}
+      <div className="flex items-center gap-2 w-full">
+        <ArrowUpDown className="w-3.5 h-3.5 text-white/30 shrink-0" />
+        {(Object.keys(TASK_SORT_LABELS) as TaskSortKey[]).map((key) => (
+          <button
+            key={key}
+            onClick={() => setSortKey(key)}
+            className={`px-2.5 py-1 rounded-lg text-xs transition-colors cursor-pointer ${
+              sortKey === key
+                ? "bg-primary/20 text-primary border border-primary/30"
+                : "bg-white/5 text-white/40 border border-white/10 hover:text-white/60 hover:bg-white/10"
+            }`}
+          >
+            {TASK_SORT_LABELS[key]}
+          </button>
+        ))}
       </div>
 
       <TaskListContent
