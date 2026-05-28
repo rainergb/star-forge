@@ -3,6 +3,7 @@ import { useProjects } from "@/hooks/use-projects";
 import { useTasks } from "@/hooks/use-tasks";
 import { useToast } from "@/hooks/use-toast";
 import { ProjectInput } from "./project-input";
+import { ProjectListSkeleton } from "./project-list-skeleton";
 import { ProjectListContent } from "./project-list-content";
 import { ProjectDetails } from "./project-details";
 import { ExportButton } from "@/components/shared/export-button";
@@ -23,6 +24,7 @@ interface ProjectListProps {
 export function ProjectList({ onNavigateToTasks }: ProjectListProps) {
   const {
     projects,
+    isLoading,
     addProject,
     updateProject,
     removeProject,
@@ -73,6 +75,8 @@ export function ProjectList({ onNavigateToTasks }: ProjectListProps) {
   const currentProject = selectedProject
     ? projects.find((p) => p.id === selectedProject.id) || null
     : null;
+
+  if (isLoading) return <ProjectListSkeleton />;
 
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-2xl mx-auto">

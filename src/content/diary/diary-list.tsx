@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useDiary } from "@/hooks/use-diary";
 import { useToast } from "@/hooks/use-toast";
 import { DiaryInput } from "./diary-input";
+import { DiaryListSkeleton } from "./diary-list-skeleton";
 import { DiaryListContent } from "./diary-list-content";
 import { DiaryDetails } from "./diary-details";
 import { DiaryDateFilter } from "./diary-date-filter";
@@ -34,6 +35,7 @@ export function DiaryList({
 }: DiaryListProps) {
   const {
     entries,
+    isLoading,
     addEntry,
     removeEntry,
     updateEntry,
@@ -149,6 +151,8 @@ export function DiaryList({
       if (updated) setSelectedEntry(updated);
     }
   }, [entries, selectedEntry?.id]);
+
+  if (isLoading) return <DiaryListSkeleton />;
 
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-2xl mx-auto overflow-hidden">

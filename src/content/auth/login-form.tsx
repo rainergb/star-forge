@@ -11,9 +11,10 @@ interface LoginFormProps {
   onSubmit: (data: LoginFormData) => void;
   onGoogleLogin: () => void;
   onGuestLogin: () => void;
+  onGoToSignup: () => void;
 }
 
-export function LoginForm({ onSubmit, onGoogleLogin, onGuestLogin }: LoginFormProps) {
+export function LoginForm({ onSubmit, onGoogleLogin, onGuestLogin, onGoToSignup }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -148,6 +149,7 @@ export function LoginForm({ onSubmit, onGoogleLogin, onGuestLogin }: LoginFormPr
         Don't have an account?{" "}
         <button
           type="button"
+          onClick={onGoToSignup}
           className="text-primary hover:text-primary/80 transition-colors"
         >
           Sign up

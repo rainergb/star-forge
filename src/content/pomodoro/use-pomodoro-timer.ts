@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useConfig } from "@/hooks/use-config";
 import { usePersonalize } from "@/hooks/use-personalize";
 import { useActiveTask } from "@/hooks/use-active-task";
+import { useAuth } from "@/hooks/use-auth";
 import { usePomodoroSessions } from "@/hooks/use-pomodoro-sessions";
 import { useTasks } from "@/hooks/use-tasks";
 import { useProjects } from "@/hooks/use-projects";
@@ -15,7 +16,8 @@ export function usePomodoroTimer() {
   const { settings } = useConfig();
   const { settings: personalizeSettings } = usePersonalize();
   const { activeTask, clearActiveTask } = useActiveTask();
-  const { addSession } = usePomodoroSessions();
+  const { user, isGuest } = useAuth();
+  const { addSession, sessions, isLoading: sessionsLoading } = usePomodoroSessions();
   const { incrementPomodoro, addTimeSpent, tasks, getTask } = useTasks();
   const {
     incrementPomodoro: incrementProjectPomodoro,
@@ -120,6 +122,25 @@ export function usePomodoroTimer() {
   const [completedCycles, setCompletedCycles] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
   const [isTestMode, setIsTestMode] = useState(false);
+
+  // Inicializa cycle stars com sessões de hoje ao carregar (suporte multi-device)
+  const initializedForRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (sessionsLoading) return;
+    const key = isGuest ? "guest" : (user?.id ?? "none");
+    if (initializedForRef.current === key) return;
+    initializedForRef.current = key;
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const todayCompleted = sessions.filter(
+      (s) => s.mode === "work" && s.completed && s.startedAt >= startOfToday.getTime()
+    ).length;
+
+    if (todayCompleted > 0) {
+      setCompletedCycles(todayCompleted);
+    }
+  }, [sessionsLoading, sessions, user?.id, isGuest]);
 
   const endTimeRef = useRef<number | null>(null);
   const prevPomodoroRef = useRef(settings.pomodoro);

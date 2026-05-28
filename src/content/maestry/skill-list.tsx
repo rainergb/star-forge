@@ -3,6 +3,7 @@ import { useSkills } from "@/hooks/use-skills";
 import { useTasks } from "@/hooks/use-tasks";
 import { useToast } from "@/hooks/use-toast";
 import { SkillInput } from "./skill-input";
+import { SkillListSkeleton } from "./skill-list-skeleton";
 import { SkillListContent } from "./skill-list-content";
 import { SkillDetails } from "./skill-details";
 import { ExportButton } from "@/components/shared/export-button";
@@ -17,6 +18,7 @@ import { Skill, SkillColor } from "@/types/skill.types";
 export function SkillList() {
   const {
     skills,
+    isLoading,
     addSkill,
     updateSkill,
     removeSkill,
@@ -69,6 +71,8 @@ export function SkillList() {
       setSkills(taskId, newSkillIds);
     }
   };
+
+  if (isLoading) return <SkillListSkeleton />;
 
   return (
     <div className="flex flex-col items-center gap-2 w-full max-w-2xl mx-auto">

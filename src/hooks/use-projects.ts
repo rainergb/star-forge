@@ -1,5 +1,8 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useAuth } from "@/hooks/use-auth";
+import { projectsService } from "@/services/supabase";
+import { projectCache } from "@/lib/cache-registry";
 import {
   Project,
   ProjectNote,
@@ -10,23 +13,143 @@ import {
   ProjectStats
 } from "@/types/project.types";
 import { useTasks } from "@/hooks/use-tasks";
+import { Database } from "@/types/database.types";
+
+type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
+type ProjectInsert = Database["public"]["Tables"]["projects"]["Insert"];
+type ProjectUpdate = Database["public"]["Tables"]["projects"]["Update"];
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
 const STORAGE_KEY = "star-habit-projects";
+const defaultState: ProjectsState = { projects: [] };
 
-const defaultState: ProjectsState = {
-  projects: []
-};
+const generateId = (): string => crypto.randomUUID();
+
+
+// ─── Mapeamento DB ↔ Local ───────────────────────────────────────────────────
+
+function rowToProject(row: ProjectRow): Project {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description ?? null,
+    color: (row.color as ProjectColor) ?? "purple",
+    icon: (row.icon as unknown as ProjectIcon) ?? { type: "lucide", value: "Folder" },
+    image: row.image ?? null,
+    status: row.status as ProjectStatus,
+    favorite: row.favorite ?? false,
+    createdAt: new Date(row.created_at).getTime(),
+    updatedAt: new Date(row.updated_at ?? row.created_at).getTime(),
+    dueDate: row.due_date ? new Date(row.due_date).getTime() : null,
+    estimatedPomodoros: row.estimated_pomodoros ?? null,
+    completedPomodoros: row.completed_pomodoros ?? 0,
+    totalTimeSpent: row.total_time_spent ?? 0,
+    sortOrder: row.sort_order ?? 0,
+    notes: (row.project_notes as unknown as ProjectNote[]) ?? []
+  };
+}
+
+function projectToInsert(project: Project, userId: string): ProjectInsert {
+  return {
+    id: project.id,
+    user_id: userId,
+    name: project.name,
+    description: project.description,
+    color: project.color,
+    status: project.status,
+    total_time_spent: project.totalTimeSpent,
+    created_at: new Date(project.createdAt).toISOString(),
+    icon: project.icon as unknown as any,
+    image: project.image,
+    favorite: project.favorite,
+    due_date: project.dueDate ? new Date(project.dueDate).toISOString() : null,
+    estimated_pomodoros: project.estimatedPomodoros,
+    completed_pomodoros: project.completedPomodoros,
+    sort_order: project.sortOrder,
+    updated_at: new Date(project.updatedAt).toISOString(),
+    project_notes: project.notes as unknown as any
+  };
+}
+
+function projectToUpdate(updates: Partial<Omit<Project, "id" | "createdAt">>): ProjectUpdate {
+  const u: ProjectUpdate = {};
+  if (updates.name !== undefined) u.name = updates.name;
+  if (updates.description !== undefined) u.description = updates.description;
+  if (updates.color !== undefined) u.color = updates.color;
+  if (updates.status !== undefined) u.status = updates.status;
+  if (updates.favorite !== undefined) u.favorite = updates.favorite;
+  if (updates.image !== undefined) u.image = updates.image;
+  if (updates.dueDate !== undefined) u.due_date = updates.dueDate ? new Date(updates.dueDate as number).toISOString() : null;
+  if (updates.estimatedPomodoros !== undefined) u.estimated_pomodoros = updates.estimatedPomodoros;
+  if (updates.completedPomodoros !== undefined) u.completed_pomodoros = updates.completedPomodoros;
+  if (updates.totalTimeSpent !== undefined) u.total_time_spent = updates.totalTimeSpent;
+  if (updates.sortOrder !== undefined) u.sort_order = updates.sortOrder;
+  if (updates.icon !== undefined) u.icon = updates.icon as unknown as any;
+  if (updates.notes !== undefined) u.project_notes = updates.notes as unknown as any;
+  u.updated_at = new Date().toISOString();
+  return u;
+}
+
+// ─── Hook ────────────────────────────────────────────────────────────────────
 
 export function useProjects() {
-  const { value: storedState, setValue: setState } =
-    useLocalStorage<ProjectsState>(STORAGE_KEY, defaultState);
-
-  const state = { ...defaultState, ...storedState };
+  const { user, isGuest } = useAuth();
+  const userId = user?.id ?? null;
   const { tasks } = useTasks();
 
-  const generateId = (): string => {
-    return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  // --- Modo guest: localStorage ---
+  const { value: localState, setValue: setLocalState } =
+    useLocalStorage<ProjectsState>(STORAGE_KEY, defaultState);
+
+  // --- Modo autenticado: Supabase ---
+  const [dbProjects, setDbProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const projects = isGuest ? (localState?.projects ?? []) : dbProjects;
+
+  /** Atualiza React state + cache de forma atômica */
+  const setDbWithCache = (updater: (prev: Project[]) => Project[]) => {
+    setDbProjects((prev) => {
+      const next = updater(prev);
+      projectCache.update(next);
+      return next;
+    });
   };
+
+  // Carrega do Supabase ao montar (usa cache entre navegações)
+  useEffect(() => {
+    if (isGuest) {
+      setIsLoading(false);
+      return;
+    }
+    if (!userId) return;
+    const cached = projectCache.get(userId);
+    if (cached) {
+      setDbProjects(cached);
+      setIsLoading(false);
+      return;
+    }
+    projectsService
+      .getProjects(userId)
+      .then((rows) => {
+        const mapped = rows.map(rowToProject);
+        projectCache.set(userId, mapped);
+        setDbProjects(mapped);
+      })
+      .catch((err) => console.error("[useProjects] load:", err))
+      .finally(() => setIsLoading(false));
+  }, [userId, isGuest]);
+
+  const applyState = (updater: (prev: Project[]) => Project[]) => {
+    if (isGuest) {
+      setLocalState((prev) => ({ ...prev, projects: updater(prev?.projects ?? []) }));
+    } else {
+      setDbWithCache(updater);
+    }
+  };
+
+  // ─── CRUD ─────────────────────────────────────────────────────────────────
 
   const addProject = useCallback(
     (
@@ -41,11 +164,7 @@ export function useProjects() {
     ): string => {
       const id = generateId();
       const now = Date.now();
-      const maxSortOrder = Math.max(
-        0,
-        ...state.projects.map((p) => p.sortOrder)
-      );
-
+      const maxSortOrder = Math.max(0, ...projects.map((p) => p.sortOrder));
       const newProject: Project = {
         id,
         name,
@@ -65,128 +184,120 @@ export function useProjects() {
         notes: []
       };
 
-      setState((prev) => ({
-        ...prev,
-        projects: [newProject, ...prev.projects]
-      }));
-
+      if (isGuest) {
+        setLocalState((prev) => ({
+          ...prev,
+          projects: [newProject, ...(prev?.projects ?? [])]
+        }));
+      } else {
+        setDbWithCache((prev) => [newProject, ...prev]);
+        if (userId) {
+          projectsService
+            .createProject(projectToInsert(newProject, userId))
+            .catch((err) => console.error("[useProjects] create:", err));
+        }
+      }
       return id;
     },
-    [setState, state.projects]
+    [isGuest, userId, projects, setLocalState]
   );
 
   const updateProject = useCallback(
     (id: string, updates: Partial<Omit<Project, "id" | "createdAt">>) => {
-      setState((prev) => ({
-        ...prev,
-        projects: prev.projects.map((project) =>
-          project.id === id
-            ? { ...project, ...updates, updatedAt: Date.now() }
-            : project
+      applyState((prev) =>
+        prev.map((p) =>
+          p.id === id ? { ...p, ...updates, updatedAt: Date.now() } : p
         )
-      }));
+      );
+      if (!isGuest) {
+        projectsService
+          .updateProject(id, projectToUpdate(updates))
+          .catch((err) => console.error("[useProjects] update:", err));
+      }
     },
-    [setState]
+    [isGuest]
   );
 
   const removeProject = useCallback(
     (id: string) => {
-      setState((prev) => ({
-        ...prev,
-        projects: prev.projects.filter((project) => project.id !== id)
-      }));
+      applyState((prev) => prev.filter((p) => p.id !== id));
+      if (!isGuest) {
+        projectsService
+          .deleteProject(id)
+          .catch((err) => console.error("[useProjects] delete:", err));
+      }
     },
-    [setState]
+    [isGuest]
   );
 
   const setStatus = useCallback(
     (id: string, status: ProjectStatus) => {
-      setState((prev) => ({
-        ...prev,
-        projects: prev.projects.map((project) =>
-          project.id === id
-            ? { ...project, status, updatedAt: Date.now() }
-            : project
-        )
-      }));
+      updateProject(id, { status });
     },
-    [setState]
+    [updateProject]
   );
 
   const toggleFavorite = useCallback(
     (id: string) => {
-      setState((prev) => ({
-        ...prev,
-        projects: prev.projects.map((project) =>
-          project.id === id
-            ? { ...project, favorite: !project.favorite, updatedAt: Date.now() }
-            : project
-        )
-      }));
+      const current = projects.find((p) => p.id === id);
+      if (current) updateProject(id, { favorite: !current.favorite });
     },
-    [setState]
+    [projects, updateProject]
   );
 
   const reorderProjects = useCallback(
     (projectIds: string[]) => {
-      setState((prev) => ({
-        ...prev,
-        projects: prev.projects.map((project) => ({
-          ...project,
-          sortOrder: projectIds.indexOf(project.id)
-        }))
-      }));
+      applyState((prev) =>
+        prev.map((p) => ({ ...p, sortOrder: projectIds.indexOf(p.id) }))
+      );
+      if (!isGuest) {
+        const currentProjects = dbProjects;
+        currentProjects.forEach((p) => {
+          const newOrder = projectIds.indexOf(p.id);
+          if (newOrder !== p.sortOrder) {
+            projectsService
+              .updateProject(p.id, {
+                sort_order: newOrder,
+                updated_at: new Date().toISOString()
+              })
+              .catch((err) => console.error("[useProjects] reorder:", err));
+          }
+        });
+      }
     },
-    [setState]
+    [isGuest, dbProjects]
   );
 
   const getProject = useCallback(
-    (id: string): Project | undefined => {
-      return state.projects.find((project) => project.id === id);
-    },
-    [state.projects]
+    (id: string): Project | undefined => projects.find((p) => p.id === id),
+    [projects]
   );
 
   const getProjectsByStatus = useCallback(
-    (status: ProjectStatus): Project[] => {
-      return state.projects.filter((project) => project.status === status);
-    },
-    [state.projects]
+    (status: ProjectStatus): Project[] =>
+      projects.filter((p) => p.status === status),
+    [projects]
   );
 
-  const getFavoriteProjects = useCallback((): Project[] => {
-    return state.projects.filter((project) => project.favorite);
-  }, [state.projects]);
+  const getFavoriteProjects = useCallback(
+    (): Project[] => projects.filter((p) => p.favorite),
+    [projects]
+  );
 
   const getProjectStats = useCallback(
     (projectId: string): ProjectStats => {
-      const projectTasks = tasks.filter((task) => task.projectId === projectId);
-      const completedTasks = projectTasks.filter((task) => task.completed);
-      const pendingTasks = projectTasks.filter((task) => !task.completed);
-
-      const totalPomodoros = projectTasks.reduce(
-        (sum, task) => sum + (task.estimatedPomodoros || 0),
-        0
-      );
-      const completedPomodoros = projectTasks.reduce(
-        (sum, task) => sum + (task.completedPomodoros || 0),
-        0
-      );
-      const totalTimeSpent = projectTasks.reduce(
-        (sum, task) => sum + (task.totalTimeSpent || 0),
-        0
-      );
-
+      const projectTasks = tasks.filter((t) => t.projectId === projectId);
+      const completedTasks = projectTasks.filter((t) => t.completed);
+      const pendingTasks = projectTasks.filter((t) => !t.completed);
+      const totalPomodoros = projectTasks.reduce((s, t) => s + (t.estimatedPomodoros || 0), 0);
+      const completedPomodoros = projectTasks.reduce((s, t) => s + (t.completedPomodoros || 0), 0);
+      const totalTimeSpent = projectTasks.reduce((s, t) => s + (t.totalTimeSpent || 0), 0);
       const completionPercentage =
         projectTasks.length > 0
           ? (completedTasks.length / projectTasks.length) * 100
           : 0;
-
-      const avgTimePerPomodoro = completedPomodoros > 0
-        ? totalTimeSpent / completedPomodoros
-        : 1500;
-      const remainingPomodoros = totalPomodoros - completedPomodoros;
-      const estimatedTimeRemaining = Math.max(0, remainingPomodoros * avgTimePerPomodoro);
+      const avgTimePerPomodoro = completedPomodoros > 0 ? totalTimeSpent / completedPomodoros : 1500;
+      const estimatedTimeRemaining = Math.max(0, (totalPomodoros - completedPomodoros) * avgTimePerPomodoro);
 
       return {
         projectId,
@@ -205,51 +316,23 @@ export function useProjects() {
 
   const incrementPomodoro = useCallback(
     (projectId: string) => {
-      setState((prev) => ({
-        ...prev,
-        projects: prev.projects.map((project) =>
-          project.id === projectId
-            ? {
-                ...project,
-                completedPomodoros: project.completedPomodoros + 1,
-                updatedAt: Date.now()
-              }
-            : project
-        )
-      }));
+      const current = projects.find((p) => p.id === projectId);
+      if (current) {
+        updateProject(projectId, { completedPomodoros: current.completedPomodoros + 1 });
+      }
     },
-    [setState]
+    [projects, updateProject]
   );
 
   const addTimeSpent = useCallback(
     (projectId: string, seconds: number) => {
-      setState((prev) => ({
-        ...prev,
-        projects: prev.projects.map((project) =>
-          project.id === projectId
-            ? {
-                ...project,
-                totalTimeSpent: project.totalTimeSpent + seconds,
-                updatedAt: Date.now()
-              }
-            : project
-        )
-      }));
+      const current = projects.find((p) => p.id === projectId);
+      if (current) {
+        updateProject(projectId, { totalTimeSpent: current.totalTimeSpent + seconds });
+      }
     },
-    [setState]
+    [projects, updateProject]
   );
-
-  const sortedProjects = useMemo(() => {
-    return [...state.projects].sort((a, b) => {
-      if (a.favorite && !b.favorite) return -1;
-      if (!a.favorite && b.favorite) return 1;
-      return a.sortOrder - b.sortOrder;
-    });
-  }, [state.projects]);
-
-  const activeProjects = useMemo(() => {
-    return sortedProjects.filter((p) => p.status === "active");
-  }, [sortedProjects]);
 
   const addNote = useCallback(
     (projectId: string, content: string) => {
@@ -259,82 +342,117 @@ export function useProjects() {
         createdAt: Date.now(),
         updatedAt: Date.now()
       };
-      setState((prev) => ({
-        ...prev,
-        projects: prev.projects.map((project) =>
-          project.id === projectId
-            ? {
-                ...project,
-                notes: [...(project.notes || []), newNote],
-                updatedAt: Date.now()
-              }
-            : project
+      applyState((prev) =>
+        prev.map((p) =>
+          p.id === projectId
+            ? { ...p, notes: [...(p.notes || []), newNote], updatedAt: Date.now() }
+            : p
         )
-      }));
+      );
+      if (!isGuest) {
+        const project = dbProjects.find((p) => p.id === projectId);
+        if (project) {
+          projectsService
+            .updateProject(projectId, {
+              project_notes: [...project.notes, newNote] as any,
+              updated_at: new Date().toISOString()
+            })
+            .catch((err) => console.error("[useProjects] addNote:", err));
+        }
+      }
     },
-    [setState]
+    [isGuest, dbProjects]
   );
 
   const updateNote = useCallback(
     (projectId: string, noteId: string, content: string) => {
-      setState((prev) => ({
-        ...prev,
-        projects: prev.projects.map((project) =>
-          project.id === projectId
+      applyState((prev) =>
+        prev.map((p) =>
+          p.id === projectId
             ? {
-                ...project,
-                notes: (project.notes || []).map((note) =>
-                  note.id === noteId
-                    ? { ...note, content, updatedAt: Date.now() }
-                    : note
+                ...p,
+                notes: (p.notes || []).map((n) =>
+                  n.id === noteId ? { ...n, content, updatedAt: Date.now() } : n
                 ),
                 updatedAt: Date.now()
               }
-            : project
+            : p
         )
-      }));
+      );
+      if (!isGuest) {
+        const project = dbProjects.find((p) => p.id === projectId);
+        if (project) {
+          projectsService
+            .updateProject(projectId, {
+              project_notes: project.notes.map((n) =>
+                n.id === noteId ? { ...n, content, updatedAt: Date.now() } : n
+              ) as any,
+              updated_at: new Date().toISOString()
+            })
+            .catch((err) => console.error("[useProjects] updateNote:", err));
+        }
+      }
     },
-    [setState]
+    [isGuest, dbProjects]
   );
 
   const removeNote = useCallback(
     (projectId: string, noteId: string) => {
-      setState((prev) => ({
-        ...prev,
-        projects: prev.projects.map((project) =>
-          project.id === projectId
+      applyState((prev) =>
+        prev.map((p) =>
+          p.id === projectId
             ? {
-                ...project,
-                notes: (project.notes || []).filter((note) => note.id !== noteId),
+                ...p,
+                notes: (p.notes || []).filter((n) => n.id !== noteId),
                 updatedAt: Date.now()
               }
-            : project
+            : p
         )
-      }));
+      );
+      if (!isGuest) {
+        const project = dbProjects.find((p) => p.id === projectId);
+        if (project) {
+          projectsService
+            .updateProject(projectId, {
+              project_notes: project.notes.filter((n) => n.id !== noteId) as any,
+              updated_at: new Date().toISOString()
+            })
+            .catch((err) => console.error("[useProjects] removeNote:", err));
+        }
+      }
     },
-    [setState]
+    [isGuest, dbProjects]
   );
 
   const importProjects = useCallback(
     (importedProjects: Project[], mode: "merge" | "replace" = "merge") => {
-      setState((prev) => {
-        if (mode === "replace") {
-          return { ...prev, projects: importedProjects };
-        }
-        // Merge: add new projects, skip existing ones by id
-        const existingIds = new Set(prev.projects.map((p) => p.id));
-        const newProjects = importedProjects.filter(
-          (p) => !existingIds.has(p.id)
-        );
-        return { ...prev, projects: [...newProjects, ...prev.projects] };
+      applyState((prev) => {
+        if (mode === "replace") return importedProjects;
+        const existingIds = new Set(prev.map((p) => p.id));
+        const newProjects = importedProjects.filter((p) => !existingIds.has(p.id));
+        return [...newProjects, ...prev];
       });
     },
-    [setState]
+    []
+  );
+
+  const sortedProjects = useMemo(() => {
+    return [...projects].sort((a, b) => {
+      if (a.favorite && !b.favorite) return -1;
+      if (!a.favorite && b.favorite) return 1;
+      return a.sortOrder - b.sortOrder;
+    });
+  }, [projects]);
+
+  const activeProjects = useMemo(
+    () => sortedProjects.filter((p) => p.status === "active"),
+    [sortedProjects]
   );
 
   return {
     projects: sortedProjects,
     activeProjects,
+    isLoading,
     addProject,
     updateProject,
     removeProject,

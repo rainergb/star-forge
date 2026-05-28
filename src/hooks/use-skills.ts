@@ -1,5 +1,8 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useAuth } from "@/hooks/use-auth";
+import { skillsService } from "@/services/supabase";
+import { skillCache } from "@/lib/cache-registry";
 import {
   Skill,
   SkillsState,
@@ -12,23 +15,128 @@ import {
   getProgressToNextLevel
 } from "@/types/skill.types";
 import { useTasks } from "@/hooks/use-tasks";
+import { Database } from "@/types/database.types";
+
+type SkillRow = Database["public"]["Tables"]["skills"]["Row"];
+type SkillInsert = Database["public"]["Tables"]["skills"]["Insert"];
+type SkillUpdate = Database["public"]["Tables"]["skills"]["Update"];
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
 const STORAGE_KEY = "star-habit-skills";
+const defaultState: SkillsState = { skills: [] };
 
-const defaultState: SkillsState = {
-  skills: []
-};
+const generateId = (): string => crypto.randomUUID();
+
+
+// ─── Mapeamento DB ↔ Local ───────────────────────────────────────────────────
+
+function rowToSkill(row: SkillRow): Skill {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description ?? null,
+    color: (row.color as SkillColor) ?? "purple",
+    icon: (row.icon as unknown as SkillIcon) ?? { type: "lucide", value: "Zap" },
+    image: row.image ?? null,
+    createdAt: new Date(row.created_at).getTime(),
+    updatedAt: new Date(row.updated_at ?? row.created_at).getTime(),
+    totalTimeSpent: row.total_time_spent ?? 0,
+    totalPomodoros: row.total_pomodoros ?? 0,
+    currentLevel: (row.current_level as MasteryLevel) ?? 1
+  };
+}
+
+function skillToInsert(skill: Skill, userId: string): SkillInsert {
+  return {
+    id: skill.id,
+    user_id: userId,
+    name: skill.name,
+    description: skill.description,
+    color: skill.color,
+    icon: skill.icon as unknown as any,
+    image: skill.image,
+    current_level: skill.currentLevel,
+    total_time_spent: skill.totalTimeSpent,
+    total_pomodoros: skill.totalPomodoros,
+    created_at: new Date(skill.createdAt).toISOString(),
+    updated_at: new Date(skill.updatedAt).toISOString()
+  };
+}
+
+function skillToUpdate(updates: Partial<Omit<Skill, "id" | "createdAt">>): SkillUpdate {
+  const u: SkillUpdate = {};
+  if (updates.name !== undefined) u.name = updates.name;
+  if (updates.description !== undefined) u.description = updates.description;
+  if (updates.color !== undefined) u.color = updates.color;
+  if (updates.icon !== undefined) u.icon = updates.icon as unknown as any;
+  if (updates.image !== undefined) u.image = updates.image;
+  if (updates.currentLevel !== undefined) u.current_level = updates.currentLevel;
+  if (updates.totalTimeSpent !== undefined) u.total_time_spent = updates.totalTimeSpent;
+  if (updates.totalPomodoros !== undefined) u.total_pomodoros = updates.totalPomodoros;
+  u.updated_at = new Date().toISOString();
+  return u;
+}
+
+// ─── Hook ────────────────────────────────────────────────────────────────────
 
 export function useSkills() {
-  const { value: storedState, setValue: setState } =
-    useLocalStorage<SkillsState>(STORAGE_KEY, defaultState);
-
-  const state = { ...defaultState, ...storedState };
+  const { user, isGuest } = useAuth();
+  const userId = user?.id ?? null;
   const { tasks } = useTasks();
 
-  const generateId = (): string => {
-    return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  // --- Modo guest: localStorage ---
+  const { value: localState, setValue: setLocalState } =
+    useLocalStorage<SkillsState>(STORAGE_KEY, defaultState);
+
+  // --- Modo autenticado: Supabase ---
+  const [dbSkills, setDbSkills] = useState<Skill[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const skills = isGuest ? (localState?.skills ?? []) : dbSkills;
+
+  /** Atualiza React state + cache de forma atômica */
+  const setDbWithCache = (updater: (prev: Skill[]) => Skill[]) => {
+    setDbSkills((prev) => {
+      const next = updater(prev);
+      skillCache.update(next);
+      return next;
+    });
   };
+
+  // Carrega do Supabase ao montar (usa cache entre navegações)
+  useEffect(() => {
+    if (isGuest) {
+      setIsLoading(false);
+      return;
+    }
+    if (!userId) return;
+    const cached = skillCache.get(userId);
+    if (cached) {
+      setDbSkills(cached);
+      setIsLoading(false);
+      return;
+    }
+    skillsService
+      .getSkills(userId)
+      .then((rows) => {
+        const mapped = rows.map(rowToSkill);
+        skillCache.set(userId, mapped);
+        setDbSkills(mapped);
+      })
+      .catch((err) => console.error("[useSkills] load:", err))
+      .finally(() => setIsLoading(false));
+  }, [userId, isGuest]);
+
+  const applyState = (updater: (prev: Skill[]) => Skill[]) => {
+    if (isGuest) {
+      setLocalState((prev) => ({ ...prev, skills: updater(prev?.skills ?? []) }));
+    } else {
+      setDbWithCache(updater);
+    }
+  };
+
+  // ─── CRUD ─────────────────────────────────────────────────────────────────
 
   const addSkill = useCallback(
     (
@@ -41,7 +149,6 @@ export function useSkills() {
     ): string => {
       const id = generateId();
       const now = Date.now();
-
       const newSkill: Skill = {
         id,
         name,
@@ -56,58 +163,64 @@ export function useSkills() {
         currentLevel: 1
       };
 
-      setState((prev) => ({
-        ...prev,
-        skills: [newSkill, ...prev.skills]
-      }));
-
+      if (isGuest) {
+        setLocalState((prev) => ({
+          ...prev,
+          skills: [newSkill, ...(prev?.skills ?? [])]
+        }));
+      } else {
+        setDbWithCache((prev) => [newSkill, ...prev]);
+        if (userId) {
+          skillsService
+            .createSkill(skillToInsert(newSkill, userId))
+            .catch((err) => console.error("[useSkills] create:", err));
+        }
+      }
       return id;
     },
-    [setState]
+    [isGuest, userId, setLocalState]
   );
 
   const updateSkill = useCallback(
     (id: string, updates: Partial<Omit<Skill, "id" | "createdAt">>) => {
-      setState((prev) => ({
-        ...prev,
-        skills: prev.skills.map((skill) =>
-          skill.id === id
-            ? { ...skill, ...updates, updatedAt: Date.now() }
-            : skill
+      applyState((prev) =>
+        prev.map((s) =>
+          s.id === id ? { ...s, ...updates, updatedAt: Date.now() } : s
         )
-      }));
+      );
+      if (!isGuest) {
+        skillsService
+          .updateSkill(id, skillToUpdate(updates))
+          .catch((err) => console.error("[useSkills] update:", err));
+      }
     },
-    [setState]
+    [isGuest]
   );
 
   const removeSkill = useCallback(
     (id: string) => {
-      setState((prev) => ({
-        ...prev,
-        skills: prev.skills.filter((skill) => skill.id !== id)
-      }));
+      applyState((prev) => prev.filter((s) => s.id !== id));
+      if (!isGuest) {
+        skillsService
+          .deleteSkill(id)
+          .catch((err) => console.error("[useSkills] delete:", err));
+      }
     },
-    [setState]
+    [isGuest]
   );
 
   const addTime = useCallback(
-    (
-      id: string,
-      durationSeconds: number
-    ): { leveledUp: boolean; newLevel: MasteryLevel } => {
+    (id: string, durationSeconds: number): { leveledUp: boolean; newLevel: MasteryLevel } => {
       let leveledUp = false;
       let newLevel: MasteryLevel = 1;
 
-      setState((prev) => ({
-        ...prev,
-        skills: prev.skills.map((skill) => {
+      applyState((prev) =>
+        prev.map((skill) => {
           if (skill.id !== id) return skill;
-
           const newTotalTime = skill.totalTimeSpent + durationSeconds;
           const calculatedLevel = calculateMasteryLevel(newTotalTime);
           leveledUp = calculatedLevel > skill.currentLevel;
           newLevel = calculatedLevel;
-
           return {
             ...skill,
             totalTimeSpent: newTotalTime,
@@ -116,11 +229,27 @@ export function useSkills() {
             updatedAt: Date.now()
           };
         })
-      }));
+      );
+
+      if (!isGuest) {
+        const skill = dbSkills.find((s) => s.id === id);
+        if (skill) {
+          const newTotalTime = skill.totalTimeSpent + durationSeconds;
+          const calculatedLevel = calculateMasteryLevel(newTotalTime);
+          skillsService
+            .updateSkill(id, {
+              total_time_spent: newTotalTime,
+              total_pomodoros: skill.totalPomodoros + 1,
+              current_level: calculatedLevel,
+              updated_at: new Date().toISOString()
+            })
+            .catch((err) => console.error("[useSkills] addTime:", err));
+        }
+      }
 
       return { leveledUp, newLevel };
     },
-    [setState]
+    [isGuest, dbSkills]
   );
 
   const addTimeToMultiple = useCallback(
@@ -128,27 +257,18 @@ export function useSkills() {
       skillIds: string[],
       durationSeconds: number
     ): { skillId: string; leveledUp: boolean; newLevel: MasteryLevel }[] => {
-      const results: {
-        skillId: string;
-        leveledUp: boolean;
-        newLevel: MasteryLevel;
-      }[] = [];
+      const results: { skillId: string; leveledUp: boolean; newLevel: MasteryLevel }[] = [];
 
-      setState((prev) => ({
-        ...prev,
-        skills: prev.skills.map((skill) => {
+      applyState((prev) =>
+        prev.map((skill) => {
           if (!skillIds.includes(skill.id)) return skill;
-
           const newTotalTime = skill.totalTimeSpent + durationSeconds;
           const calculatedLevel = calculateMasteryLevel(newTotalTime);
-          const leveledUp = calculatedLevel > skill.currentLevel;
-
           results.push({
             skillId: skill.id,
-            leveledUp,
+            leveledUp: calculatedLevel > skill.currentLevel,
             newLevel: calculatedLevel
           });
-
           return {
             ...skill,
             totalTimeSpent: newTotalTime,
@@ -157,29 +277,43 @@ export function useSkills() {
             updatedAt: Date.now()
           };
         })
-      }));
+      );
+
+      if (!isGuest) {
+        skillIds.forEach((sid) => {
+          const skill = dbSkills.find((s) => s.id === sid);
+          if (skill) {
+            const newTotalTime = skill.totalTimeSpent + durationSeconds;
+            const calculatedLevel = calculateMasteryLevel(newTotalTime);
+            skillsService
+              .updateSkill(sid, {
+                total_time_spent: newTotalTime,
+                total_pomodoros: skill.totalPomodoros + 1,
+                current_level: calculatedLevel,
+                updated_at: new Date().toISOString()
+              })
+              .catch((err) => console.error("[useSkills] addTimeToMultiple:", err));
+          }
+        });
+      }
 
       return results;
     },
-    [setState]
+    [isGuest, dbSkills]
   );
 
   const getSkill = useCallback(
-    (id: string): Skill | undefined => {
-      return state.skills.find((skill) => skill.id === id);
-    },
-    [state.skills]
+    (id: string): Skill | undefined => skills.find((s) => s.id === id),
+    [skills]
   );
 
   const getSkillStats = useCallback(
     (id: string): SkillStats | null => {
-      const skill = getSkill(id);
+      const skill = skills.find((s) => s.id === id);
       if (!skill) return null;
-
       const progress = getProgressToNextLevel(skill.totalTimeSpent);
       const levelInfo = getMasteryLevelInfo(skill.currentLevel);
       const skillTasks = tasks.filter((t) => t.skillIds?.includes(id));
-
       return {
         skillId: id,
         currentLevel: skill.currentLevel,
@@ -192,33 +326,29 @@ export function useSkills() {
         activeTasks: skillTasks.filter((t) => !t.completed).length
       };
     },
-    [getSkill, tasks]
+    [skills, tasks]
   );
 
   const getSkillsByIds = useCallback(
-    (ids: string[]): Skill[] => {
-      return state.skills.filter((skill) => ids.includes(skill.id));
-    },
-    [state.skills]
+    (ids: string[]): Skill[] => skills.filter((s) => ids.includes(s.id)),
+    [skills]
   );
 
   const importSkills = useCallback(
     (importedSkills: Skill[], mode: "merge" | "replace" = "merge") => {
-      setState((prev) => {
-        if (mode === "replace") {
-          return { ...prev, skills: importedSkills };
-        }
-        // Merge: add new skills, skip existing ones by id
-        const existingIds = new Set(prev.skills.map((s) => s.id));
+      applyState((prev) => {
+        if (mode === "replace") return importedSkills;
+        const existingIds = new Set(prev.map((s) => s.id));
         const newSkills = importedSkills.filter((s) => !existingIds.has(s.id));
-        return { ...prev, skills: [...newSkills, ...prev.skills] };
+        return [...newSkills, ...prev];
       });
     },
-    [setState]
+    []
   );
 
   return {
-    skills: state.skills,
+    skills,
+    isLoading,
     addSkill,
     updateSkill,
     removeSkill,

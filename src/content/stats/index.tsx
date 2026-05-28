@@ -36,6 +36,7 @@ import {
   VIEW_ORDER,
   getViewIndex
 } from "./stats-view-selector";
+import { StatsSkeleton } from "./stats-skeleton";
 import { ProjectFilter } from "./project-filter";
 import { GeneralStatsView } from "./general-stats-view";
 import { StatsCards } from "./stats-cards";
@@ -55,7 +56,7 @@ const periodLabels: Record<StatsPeriod, string> = {
 };
 
 export function PomodoroStats() {
-  const { sessions, getStats, importSessions } = usePomodoroSessions();
+  const { sessions, isLoading, getStats, importSessions } = usePomodoroSessions();
   const { tasks, getTask } = useTasks();
   const { projects, getProjectStats } = useProjects();
   const { skills, getSkillStats } = useSkills();
@@ -199,6 +200,8 @@ export function PomodoroStats() {
         return [];
     }
   };
+
+  if (isLoading) return <StatsSkeleton />;
 
   const chartData = getChartData();
   const currentIndex = getViewIndex(currentView);

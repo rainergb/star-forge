@@ -6,6 +6,7 @@ import { useConfig } from "@/hooks/use-config";
 import { useToast } from "@/hooks/use-toast";
 import { useTaskFilters } from "@/hooks/use-task-filters";
 import { TaskInput } from "./task-input";
+import { TaskListSkeleton } from "./task-list-skeleton";
 import { TaskListContent } from "./task-list-content";
 import { TaskDetails } from "./task-details";
 import { ProjectFilter } from "./project-filter";
@@ -43,6 +44,7 @@ export function TaskList({
 }: TaskListProps) {
   const {
     tasks,
+    isLoading,
     addTask,
     toggleCompleted,
     toggleFavorite,
@@ -294,6 +296,8 @@ export function TaskList({
     : null;
 
   const estimatedEndTime = calculateEstimatedEndTime();
+
+  if (isLoading) return <TaskListSkeleton />;
 
   return (
     <div className="flex flex-col items-center gap-2 w-full max-w-2xl mx-auto overflow-hidden">
