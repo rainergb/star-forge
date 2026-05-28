@@ -16,6 +16,7 @@ import { TaskActionsSection } from "./task-actions-section";
 import { TaskNotesSection } from "./task-notes-section";
 import { TaskFooter } from "./task-footer";
 import { TaskPomodoroSection } from "./task-pomodoro-section";
+import { exportSingleTask } from "@/services/export-service";
 
 interface TaskDetailsProps {
   task: Task | null;
@@ -32,7 +33,9 @@ interface TaskDetailsProps {
   onToggleStep: (taskId: string, stepId: string) => void;
   onRemoveStep: (taskId: string, stepId: string) => void;
   onUpdateStep: (taskId: string, stepId: string, newTitle: string) => void;
+  onReorderSteps: (taskId: string, fromIndex: number, toIndex: number) => void;
   onSetDueDate: (taskId: string, dueDate: number | null) => void;
+  onSetRepeatDays: (taskId: string, days: number[]) => void;
   onSetReminder: (taskId: string, reminder: TaskReminder | null) => void;
   onSetRepeat: (taskId: string, repeat: RepeatType) => void;
   onAddFile: (taskId: string, file: Omit<TaskFile, "id" | "addedAt">) => void;
@@ -60,7 +63,9 @@ export function TaskDetails({
   onToggleStep,
   onRemoveStep,
   onUpdateStep,
+  onReorderSteps,
   onSetDueDate,
+  onSetRepeatDays,
   onSetReminder,
   onSetRepeat,
   onAddFile,
@@ -99,6 +104,7 @@ export function TaskDetails({
               onToggleStep={onToggleStep}
               onRemoveStep={onRemoveStep}
               onUpdateStep={onUpdateStep}
+              onReorderSteps={onReorderSteps}
             />
 
             <TaskActionsSection
@@ -106,6 +112,7 @@ export function TaskDetails({
               onSetReminder={onSetReminder}
               onSetDueDate={onSetDueDate}
               onSetRepeat={onSetRepeat}
+              onSetRepeatDays={onSetRepeatDays}
               onAddFile={onAddFile}
               onRemoveFile={onRemoveFile}
               onSetProject={(_, projectId) => onSetProject(task.id, projectId)}
@@ -129,7 +136,11 @@ export function TaskDetails({
             />
           </DetailContent>
 
-          <TaskFooter createdAt={task.createdAt} onDelete={handleDelete} />
+          <TaskFooter
+            createdAt={task.createdAt}
+            onDelete={handleDelete}
+            onExport={() => exportSingleTask(task)}
+          />
         </>
       )}
     </DetailContainer>

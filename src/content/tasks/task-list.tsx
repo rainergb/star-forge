@@ -62,6 +62,9 @@ export function TaskList({
     removeTask,
     setEstimatedPomodoros,
     reorderTasks,
+    reorderSteps,
+    duplicateTask,
+    setRepeatDays,
     setProject,
     setSkills,
     setPriority,
@@ -74,7 +77,7 @@ export function TaskList({
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [completedCollapsed, setCompletedCollapsed] = useState(false);
+  const [completedCollapsed, setCompletedCollapsed] = useState(true);
 
   const {
     projectIds: filterProjectIds,
@@ -198,13 +201,9 @@ export function TaskList({
 
   const handleToggleCompleted = useCallback(
     (id: string) => {
-      const task = tasks.find((t) => t.id === id);
-      if (task && !task.completed) {
-        setDetailsOpen(false);
-      }
       toggleCompleted(id);
     },
-    [tasks, toggleCompleted]
+    [toggleCompleted]
   );
 
   const handleTaskDoubleClick = (task: Task) => {
@@ -298,9 +297,42 @@ export function TaskList({
 
   return (
     <div className="flex flex-col items-center gap-2 w-full max-w-2xl mx-auto overflow-hidden">
-      <TaskInput onAddTask={handleAddTask} />
+      <div className="flex gap-2 w-full items-center">
+        <TaskInput onAddTask={handleAddTask} />
+        <ExportButton
+          onExport={() => exportTasks(tasks)}
+          tooltip="Export tasks"
+        />
+        <ImportButton
+          onImport={async (file) => {
+            const result = await importFromFile(file);
+            if (result.success && result.data?.tasks) {
+              if (validateTasksImport(result.data.tasks)) {
+                importTasks(result.data.tasks);
+                toast({
+                  title: "Import successful",
+                  description: `${result.data.tasks.length} tasks imported`
+                });
+              } else {
+                toast({
+                  title: "Import failed",
+                  description: "Invalid tasks format",
+                  variant: "destructive"
+                });
+              }
+            } else {
+              toast({
+                title: "Import failed",
+                description: result.message,
+                variant: "destructive"
+              });
+            }
+          }}
+          tooltip="Import tasks"
+        />
+      </div>
 
-      <div className="flex gap-2 w-full mt-2 flex-wrap">
+      <div className="flex gap-2 w-full mt-1 flex-wrap">
         <ProjectFilter
           selectedProjectIds={filterProjectIds}
           includeNoProject={filterNoProject}
@@ -317,39 +349,6 @@ export function TaskList({
           customRange={customDateRange}
           onCustomRangeChange={setCustomDateRange}
         />
-        <div className="flex gap-1">
-          <ExportButton
-            onExport={() => exportTasks(tasks)}
-            tooltip="Export tasks"
-          />
-          <ImportButton
-            onImport={async (file) => {
-              const result = await importFromFile(file);
-              if (result.success && result.data?.tasks) {
-                if (validateTasksImport(result.data.tasks)) {
-                  importTasks(result.data.tasks);
-                  toast({
-                    title: "Import successful",
-                    description: `${result.data.tasks.length} tasks imported`
-                  });
-                } else {
-                  toast({
-                    title: "Import failed",
-                    description: "Invalid tasks format",
-                    variant: "destructive"
-                  });
-                }
-              } else {
-                toast({
-                  title: "Import failed",
-                  description: result.message,
-                  variant: "destructive"
-                });
-              }
-            }}
-            tooltip="Import tasks"
-          />
-        </div>
       </div>
 
       <TaskListContent
@@ -370,6 +369,8 @@ export function TaskList({
         onTaskClick={handleTaskClick}
         onTaskDoubleClick={handleTaskDoubleClick}
         onReorderTasks={reorderTasks}
+        onDuplicateTask={duplicateTask}
+        onSetRepeat={setRepeat}
         calculateTaskEndTime={calculateTaskEndTime}
         formatEndTime={formatEndTime}
       />
@@ -386,6 +387,8 @@ export function TaskList({
         onToggleStep={toggleStep}
         onRemoveStep={removeStep}
         onUpdateStep={updateStep}
+        onReorderSteps={reorderSteps}
+        onSetRepeatDays={setRepeatDays}
         onSetDueDate={setDueDate}
         onSetReminder={setReminder}
         onSetRepeat={setRepeat}

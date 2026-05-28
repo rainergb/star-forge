@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
   Circle,
@@ -12,9 +12,10 @@ import {
   Repeat,
   Timer,
   Clock,
-  Flag
+  Flag,
+  Copy
 } from "lucide-react";
-import { Task, TaskPriority } from "@/types/task.types";
+import { Task, TaskPriority, RepeatType } from "@/types/task.types";
 import { PROJECT_COLORS } from "@/types/project.types";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import {
   ContextMenu,
   ContextMenuItem,
   ContextMenuDivider,
+  ContextMenuSubMenu,
   useContextMenu
 } from "@/components/shared/context-menu";
 import { FavoriteButton } from "@/components/shared/favorite-button";
@@ -53,14 +55,22 @@ const formatReminderDate = (timestamp: number): string => {
   return format(date, "MM/dd");
 };
 
-const getRepeatLabel = (repeat: string): string => {
+const DAY_ABBR = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+const getRepeatLabel = (task: Task): string => {
+  if (!task.repeat) return "";
+  if (task.repeat === "custom") {
+    const days = task.repeatDays || [];
+    if (days.length === 0) return "Custom";
+    return [...days].sort((a, b) => a - b).map((d) => DAY_ABBR[d]).join(", ");
+  }
   const labels: Record<string, string> = {
     daily: "Daily",
     weekly: "Weekly",
     monthly: "Monthly",
     yearly: "Yearly"
   };
-  return labels[repeat] || repeat;
+  return labels[task.repeat] || task.repeat;
 };
 
 const formatTimeSpent = (seconds: number): string => {
@@ -91,6 +101,8 @@ interface TaskItemProps {
   onDoubleClick?: () => void;
   onFocus?: () => void;
   expectedEndTime?: string;
+  onDuplicate?: () => void;
+  onSetRepeat?: (repeat: RepeatType) => void;
 }
 
 export function TaskItem({
@@ -102,7 +114,9 @@ export function TaskItem({
   onRemoveTask,
   onClick,
   onDoubleClick,
-  expectedEndTime
+  expectedEndTime,
+  onDuplicate,
+  onSetRepeat
 }: TaskItemProps) {
   const {
     position: contextMenu,
@@ -117,6 +131,8 @@ export function TaskItem({
   const { settings: personalizeSettings } = usePersonalize();
   const { getProject } = useProjects();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Debounce single-click so double-click never accidentally sets the active task
+  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const project = task.projectId ? getProject(task.projectId) : null;
 
@@ -125,6 +141,28 @@ export function TaskItem({
     audioRef.current.volume =
       (personalizeSettings.notificationVolume ?? 50) / 100;
   }, [personalizeSettings.notificationVolume]);
+
+  // Distinguish single-click (toggle active task) from double-click (open details)
+  const handleItemClick = useCallback(() => {
+    if (clickTimerRef.current) {
+      // Second click arrived before the timer — this is a double-click; cancel
+      clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+      return;
+    }
+    clickTimerRef.current = setTimeout(() => {
+      clickTimerRef.current = null;
+      onClick();
+    }, 240);
+  }, [onClick]);
+
+  const handleItemDoubleClick = useCallback(() => {
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+    }
+    onDoubleClick?.();
+  }, [onDoubleClick]);
 
   const playSuccessSound = () => {
     if (audioRef.current && personalizeSettings.notificationSound) {
@@ -176,8 +214,8 @@ export function TaskItem({
   return (
     <>
       <ListItem
-        onClick={onClick}
-        onDoubleClick={onDoubleClick}
+        onClick={handleItemClick}
+        onDoubleClick={handleItemDoubleClick}
         onContextMenu={handleContextMenu}
         isActive={isActive}
         isDisabled={task.completed}
@@ -260,7 +298,7 @@ export function TaskItem({
               icon={<Repeat className="w-3 h-3" />}
               color="text-[#B57CFF]"
             >
-              {getRepeatLabel(task.repeat)}
+              {getRepeatLabel(task)}
             </ListItemStat>
           )}
           {task.estimatedPomodoros && task.estimatedPomodoros > 0 && (
@@ -280,6 +318,17 @@ export function TaskItem({
             </ListItemStat>
           )}
         </ListItemMeta>
+
+        {task.steps && task.steps.length > 0 && (
+          <div className="mt-1.5 w-32 h-1 bg-white/10 rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all bg-primary"
+              style={{
+                width: `${(task.steps.filter((s) => s.completed).length / task.steps.length) * 100}%`
+              }}
+            />
+          </div>
+        )}
       </ListItem>
 
       <ContextMenu position={contextMenu} onClose={closeContextMenu}>
@@ -298,6 +347,39 @@ export function TaskItem({
           label="Choose date"
           onClick={handleChooseDate}
         />
+        <ContextMenuDivider />
+        {onDuplicate && (
+          <ContextMenuItem
+            icon={<Copy className="w-4 h-4" />}
+            label="Duplicate task"
+            onClick={() => { onDuplicate(); closeContextMenu(); }}
+          />
+        )}
+        {onSetRepeat && (
+          <ContextMenuSubMenu
+            icon={<Repeat className="w-4 h-4" />}
+            label={task.repeat ? `Repeat: ${getRepeatLabel(task)}` : "Repeat"}
+          >
+            {(["daily", "weekly", "monthly", "yearly"] as RepeatType[]).map((r) => (
+              <ContextMenuItem
+                key={r}
+                label={r!.charAt(0).toUpperCase() + r!.slice(1)}
+                onClick={() => { onSetRepeat(r); closeContextMenu(); }}
+                className={task.repeat === r ? "text-primary bg-primary/10" : ""}
+              />
+            ))}
+            {task.repeat && (
+              <>
+                <ContextMenuDivider />
+                <ContextMenuItem
+                  label="Remove repeat"
+                  onClick={() => { onSetRepeat(null); closeContextMenu(); }}
+                  variant="danger"
+                />
+              </>
+            )}
+          </ContextMenuSubMenu>
+        )}
         <ContextMenuDivider />
         <ContextMenuItem
           icon={<Trash2 className="w-4 h-4" />}

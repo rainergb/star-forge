@@ -1,5 +1,6 @@
 import { Skill, SkillStats } from "@/types/skill.types";
 import { Task } from "@/types/task.types";
+import { exportSingleSkill } from "@/services/export-service";
 import { DetailContainer, DetailContent } from "@/components/shared/detail-item";
 import { SkillHeader } from "./skill-header";
 import { SkillActionsSection } from "./skill-actions-section";
@@ -56,6 +57,8 @@ export function SkillDetails({
               skill={skill}
               onUpdateName={handleUpdateName}
               onUpdateImage={handleUpdateImage}
+              onUpdateIcon={(icon) => onUpdateSkill(skill.id, { icon })}
+              onUpdateColor={(color) => onUpdateSkill(skill.id, { color })}
             />
 
             <SkillActionsSection />
@@ -71,6 +74,7 @@ export function SkillDetails({
           <SkillFooter
             createdAt={skill.createdAt}
             onDelete={handleDelete}
+            onExport={() => exportSingleSkill(skill)}
           />
         </>
       )}

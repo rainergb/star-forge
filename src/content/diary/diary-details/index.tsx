@@ -1,5 +1,6 @@
 import { DiaryEntry, DiaryEntryType, MoodEntry, DiaryFile } from "@/types/diary.types";
 import { DetailContainer, DetailContent } from "@/components/shared/detail-item";
+import { exportSingleDiaryEntry } from "@/services/export-service";
 import { DiaryHeader } from "./diary-header";
 import { DiaryContentSection } from "./diary-content-section";
 import { DiaryMoodSection } from "./diary-mood-section";
@@ -80,6 +81,7 @@ export function DiaryDetails({
         createdAt={entry.createdAt}
         updatedAt={entry.updatedAt}
         onDelete={handleDelete}
+        onExport={() => exportSingleDiaryEntry(entry)}
       />
     </DetailContainer>
   );

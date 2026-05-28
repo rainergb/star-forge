@@ -10,9 +10,10 @@ import { loginSchema, LoginFormData } from "@/schemas/auth.schema";
 interface LoginFormProps {
   onSubmit: (data: LoginFormData) => void;
   onGoogleLogin: () => void;
+  onGuestLogin: () => void;
 }
 
-export function LoginForm({ onSubmit, onGoogleLogin }: LoginFormProps) {
+export function LoginForm({ onSubmit, onGoogleLogin, onGuestLogin }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -152,6 +153,20 @@ export function LoginForm({ onSubmit, onGoogleLogin }: LoginFormProps) {
           Sign up
         </button>
       </p>
+
+      <div className="relative my-4">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-white/10" />
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={onGuestLogin}
+        className="w-full text-sm text-white/35 hover:text-white/60 transition-colors py-1 cursor-pointer"
+      >
+        Continue without an account
+      </button>
     </form>
   );
 }

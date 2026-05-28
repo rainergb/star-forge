@@ -42,6 +42,17 @@ function generateFilename(module: ExportModule): string {
   return `star-forge-${module}-${dateStr}_${timeStr}.txt`;
 }
 
+function generateSingleFilename(module: ExportModule, name: string): string {
+  const date = new Date();
+  const dateStr = date.toISOString().split("T")[0];
+  const safeName = name
+    .replace(/[^a-z0-9]/gi, "-")
+    .toLowerCase()
+    .replace(/-+/g, "-")
+    .slice(0, 32);
+  return `star-forge-${module}-${safeName}-${dateStr}.txt`;
+}
+
 function downloadFile(content: string, filename: string): void {
   const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -119,6 +130,60 @@ export function exportPomodoro(sessions: PomodoroSession[]): void {
 
   const content = JSON.stringify(exportData, null, 2);
   downloadFile(content, generateFilename("pomodoro"));
+}
+
+// ============ SINGLE-ITEM EXPORT FUNCTIONS ============
+
+export function exportSingleTask(task: Task): void {
+  const exportData: ExportData = {
+    module: "tasks",
+    exportedAt: new Date().toISOString(),
+    version: APP_VERSION,
+    data: { tasks: [task] }
+  };
+  downloadFile(
+    JSON.stringify(exportData, null, 2),
+    generateSingleFilename("tasks", task.title)
+  );
+}
+
+export function exportSingleProject(project: Project): void {
+  const exportData: ExportData = {
+    module: "projects",
+    exportedAt: new Date().toISOString(),
+    version: APP_VERSION,
+    data: { projects: [project] }
+  };
+  downloadFile(
+    JSON.stringify(exportData, null, 2),
+    generateSingleFilename("projects", project.name)
+  );
+}
+
+export function exportSingleSkill(skill: Skill): void {
+  const exportData: ExportData = {
+    module: "maestry",
+    exportedAt: new Date().toISOString(),
+    version: APP_VERSION,
+    data: { skills: [skill] }
+  };
+  downloadFile(
+    JSON.stringify(exportData, null, 2),
+    generateSingleFilename("maestry", skill.name)
+  );
+}
+
+export function exportSingleDiaryEntry(entry: DiaryEntry): void {
+  const exportData: ExportData = {
+    module: "diary",
+    exportedAt: new Date().toISOString(),
+    version: APP_VERSION,
+    data: { diary: [entry] }
+  };
+  downloadFile(
+    JSON.stringify(exportData, null, 2),
+    generateSingleFilename("diary", entry.content.slice(0, 40) || "entry")
+  );
 }
 
 export function exportAll(options: ExportOptions): void {

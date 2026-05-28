@@ -23,7 +23,7 @@ export interface TaskNote {
   updatedAt: number;
 }
 
-export type RepeatType = "daily" | "weekly" | "monthly" | "yearly" | null;
+export type RepeatType = "daily" | "weekly" | "monthly" | "yearly" | "custom" | null;
 
 export type TaskPriority = "high" | "medium" | "low" | null;
 
@@ -39,6 +39,7 @@ export interface Task {
   dueDate: number | null;
   reminder: TaskReminder | null;
   repeat: RepeatType;
+  repeatDays: number[];
   files: TaskFile[];
   notes: TaskNote[];
   estimatedPomodoros: number | null;

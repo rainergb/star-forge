@@ -26,7 +26,7 @@ export function DetailContainer({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         className={cn(
-          "w-full sm:max-w-md bg-background border-l border-white/10 text-white flex flex-col p-0",
+          "w-full sm:max-w-xl bg-background border-l border-white/10 text-white flex flex-col p-0",
           className
         )}
       >

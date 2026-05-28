@@ -9,10 +9,12 @@ import {
   Calendar,
   MoreHorizontal,
   MoreVertical,
-  Star
+  Star,
+  UserCircle2
 } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { SettingsModal } from "@/content/config/settings";
+import { useAuth } from "@/hooks/use-auth";
 import { AppView } from "@/types/app.types";
 
 interface TopBarProps {
@@ -24,6 +26,7 @@ interface TopBarProps {
   onToggleMiniMaestryList: () => void;
   onToggleMiniCalendar: () => void;
   onViewStats: () => void;
+  onOpenProfile: () => void;
 }
 
 const TOPBAR_EXPANDED_KEY = "star-habit-topbar-expanded";
@@ -36,8 +39,10 @@ export function TopBar({
   onToggleMiniProjectList,
   onToggleMiniMaestryList,
   onToggleMiniCalendar,
-  onViewStats
+  onViewStats,
+  onOpenProfile
 }: TopBarProps) {
+  const { user } = useAuth();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(() => {
     const saved = localStorage.getItem(TOPBAR_EXPANDED_KEY);
@@ -177,12 +182,28 @@ export function TopBar({
         </button>
 
         {/* User Avatar */}
-        <button className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 hover:border-primary/50 transition-all hover:shadow-[0_0_15px_rgba(106,48,255,0.3)]">
-          <img
-            src="https://github.com/shadcn.png"
-            alt="User"
-            className="w-full h-full object-cover"
-          />
+        <button
+          onClick={onOpenProfile}
+          className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 hover:border-primary/50 transition-all hover:shadow-[0_0_15px_rgba(106,48,255,0.3)] bg-gradient-to-br from-primary to-purple-700 flex items-center justify-center shrink-0"
+          title="Profile"
+        >
+          {user?.avatar ? (
+            <img
+              src={user.avatar}
+              alt={user.name ?? "avatar"}
+              className="w-full h-full object-cover"
+            />
+          ) : user?.name ? (
+            <span className="text-sm font-bold text-white select-none">
+              {user.name
+                .split(/[\s@]/)
+                .slice(0, 2)
+                .map((s) => s[0]?.toUpperCase() ?? "")
+                .join("")}
+            </span>
+          ) : (
+            <UserCircle2 className="w-5 h-5 text-white/70" />
+          )}
         </button>
       </div>
 

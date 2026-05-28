@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { ChevronRight, ListTodo, Focus } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -20,7 +22,6 @@ import { useActiveTask } from "@/hooks/use-active-task";
 import { useTaskFilters } from "@/hooks/use-task-filters";
 import { Task } from "@/types/task.types";
 import { WidgetPosition } from "@/types/widget.types";
-import { ListTodo, Focus } from "lucide-react";
 import {
   isToday,
   isTomorrow,
@@ -56,7 +57,9 @@ export function MiniTaskList({
   onClearTask,
   stackIndex
 }: MiniTaskListProps) {
-  const { tasks, toggleComplete, reorderTasks } = useTasks();
+  const [completedCollapsed, setCompletedCollapsed] = useState(true);
+
+  const { tasks, toggleCompleted, reorderTasks } = useTasks();
   const { activeTask } = useActiveTask();
   const {
     projectIds: filterProjectIds,
@@ -132,14 +135,13 @@ export function MiniTaskList({
   const allTasks = tasks;
   const incompleteTasks = filterTasks(allTasks.filter((t) => !t.completed));
   const completedTasks = filterTasks(allTasks.filter((t) => t.completed));
-  const sortedTasks = [...incompleteTasks, ...completedTasks];
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = sortedTasks.findIndex((t) => t.id === active.id);
-      const newIndex = sortedTasks.findIndex((t) => t.id === over.id);
+      const oldIndex = allTasks.findIndex((t) => t.id === active.id);
+      const newIndex = allTasks.findIndex((t) => t.id === over.id);
       reorderTasks(oldIndex, newIndex);
     }
   };
@@ -198,38 +200,76 @@ export function MiniTaskList({
       onPositionChange={onPositionChange}
       stackIndex={stackIndex}
     >
-      {sortedTasks.length === 0 ? (
+      {incompleteTasks.length === 0 && completedTasks.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 text-white/40">
           <ListTodo className="h-8 w-8 mb-2 opacity-50" />
           <p className="text-xs">No tasks</p>
         </div>
       ) : (
-        <div className="overflow-y-auto max-h-[340px] scrollbar-none p-2 space-y-0.5">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={sortedTasks.map((t) => t.id)}
-              strategy={verticalListSortingStrategy}
+        <div className="overflow-y-auto max-h-[300px] scrollbar-none p-2 space-y-0.5">
+          {/* Pending tasks with drag-and-drop */}
+          {incompleteTasks.length > 0 ? (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
             >
-              {sortedTasks.map((task) => (
-                <MiniTaskItem
-                  key={task.id}
-                  task={task}
-                  isActive={activeTask?.id === task.id}
-                  onSelect={handleSelectTask}
-                  onToggleComplete={toggleComplete}
+              <SortableContext
+                items={incompleteTasks.map((t) => t.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {incompleteTasks.map((task) => (
+                  <MiniTaskItem
+                    key={task.id}
+                    task={task}
+                    isActive={activeTask?.id === task.id}
+                    onSelect={handleSelectTask}
+                    onToggleComplete={toggleCompleted}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          ) : (
+            <p className="text-xs text-white/30 text-center py-2">All done!</p>
+          )}
+
+          {/* Completed tasks — collapsible, starts closed */}
+          {completedTasks.length > 0 && (
+            <div className="mt-1">
+              <button
+                onClick={() => setCompletedCollapsed((v) => !v)}
+                className="w-full flex items-center gap-1.5 px-2 py-1 text-xs text-white/35 hover:text-white/55 transition-colors"
+              >
+                <ChevronRight
+                  className={`h-3 w-3 transition-transform duration-150 ${
+                    completedCollapsed ? "" : "rotate-90"
+                  }`}
                 />
-              ))}
-            </SortableContext>
-          </DndContext>
+                <span>
+                  Completed ({completedTasks.length})
+                </span>
+              </button>
+
+              {!completedCollapsed && (
+                <div className="space-y-0.5 mt-0.5">
+                  {completedTasks.map((task) => (
+                    <MiniTaskItem
+                      key={task.id}
+                      task={task}
+                      isActive={false}
+                      onSelect={handleSelectTask}
+                      onToggleComplete={toggleCompleted}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {activeTask && (
             <button
               onClick={onClearTask}
-              className="w-full flex items-center gap-2 px-2 py-1.5 mt-2 rounded-lg text-xs text-white/60 hover:text-white/90 hover:bg-white/5 transition-colors border-t border-white/10 pt-2"
+              className="w-full flex items-center gap-2 px-2 py-1.5 mt-1 rounded-lg text-xs text-white/60 hover:text-white/90 hover:bg-white/5 transition-colors border-t border-white/10 pt-2"
             >
               <Focus className="h-3.5 w-3.5" />
               <span>Free focus</span>

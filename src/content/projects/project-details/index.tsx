@@ -5,6 +5,8 @@ import {
   ProjectColor
 } from "@/types/project.types";
 import { useTasks } from "@/hooks/use-tasks";
+import { useProjects } from "@/hooks/use-projects";
+import { exportSingleProject } from "@/services/export-service";
 import {
   DetailContainer,
   DetailContent
@@ -13,6 +15,7 @@ import { ProjectHeader } from "./project-header";
 import { ProjectActionsSection } from "./project-actions-section";
 import { ProjectStatsSection } from "./project-stats-section";
 import { ProjectTasksSection } from "./project-tasks-section";
+import { ProjectNotesSection } from "./project-notes-section";
 import { ProjectFooter } from "./project-footer";
 
 interface ProjectDetailsProps {
@@ -40,8 +43,8 @@ export function ProjectDetails({
   onUpdateIcon,
   onUpdateColor
 }: ProjectDetailsProps) {
-  const { tasks, setProject, addTask, updateTask, toggleCompleted } =
-    useTasks();
+  const { tasks, setProject, addTask, updateTask, toggleCompleted } = useTasks();
+  const { addNote, updateNote, removeNote } = useProjects();
 
   const handleDelete = () => {
     if (!project) return;
@@ -115,11 +118,19 @@ export function ProjectDetails({
                   : undefined
               }
             />
+
+            <ProjectNotesSection
+              notes={project.notes || []}
+              onAddNote={(content) => addNote(project.id, content)}
+              onUpdateNote={(noteId, content) => updateNote(project.id, noteId, content)}
+              onRemoveNote={(noteId) => removeNote(project.id, noteId)}
+            />
           </DetailContent>
 
           <ProjectFooter
             createdAt={project.createdAt}
             onDelete={handleDelete}
+            onExport={() => exportSingleProject(project)}
           />
         </>
       )}

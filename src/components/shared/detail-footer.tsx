@@ -1,11 +1,12 @@
 import { format, formatDistanceToNow } from "date-fns";
-import { Trash2 } from "lucide-react";
+import { Trash2, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface DetailFooterProps {
   createdAt: number;
   updatedAt?: number;
   onDelete: () => void;
+  onExport?: () => void;
   dateFormat?: "absolute" | "relative";
   className?: string;
 }
@@ -14,6 +15,7 @@ export function DetailFooter({
   createdAt,
   updatedAt,
   onDelete,
+  onExport,
   dateFormat = "absolute",
   className
 }: DetailFooterProps) {
@@ -43,6 +45,16 @@ export function DetailFooter({
       </div>
 
       <div className="flex items-center gap-2">
+        {onExport && (
+          <button
+            onClick={onExport}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-white/50 hover:text-white/80 hover:bg-white/5 rounded-lg text-sm transition-colors cursor-pointer"
+            title="Export as JSON"
+          >
+            <Download className="w-4 h-4" />
+            Export
+          </button>
+        )}
         <button
           onClick={onDelete}
           className="flex items-center gap-1.5 px-3 py-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg text-sm transition-colors cursor-pointer"

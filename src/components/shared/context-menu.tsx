@@ -1,5 +1,6 @@
 import { useState, ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ContextMenuPosition {
@@ -73,6 +74,35 @@ export function ContextMenuItem({
 
 export function ContextMenuDivider() {
   return <div className="border-t border-white/10 my-1" />;
+}
+
+interface ContextMenuSubMenuProps {
+  icon?: ReactNode;
+  label: string;
+  children: ReactNode;
+}
+
+export function ContextMenuSubMenu({ icon, label, children }: ContextMenuSubMenuProps) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white/70 hover:bg-white/5 transition-colors cursor-pointer">
+        {icon}
+        <span className="flex-1 text-left">{label}</span>
+        <ChevronRight className="w-3 h-3 text-white/30" />
+      </button>
+      {open && (
+        <div className="absolute left-full top-0 ml-1 min-w-[160px] bg-[#1a1d3a] border border-white/10 rounded-lg shadow-xl py-1 z-[60]">
+          {children}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // Hook para gerenciar o context menu

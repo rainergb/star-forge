@@ -2,7 +2,9 @@ export interface User {
   email: string;
   name?: string;
   avatar?: string;
-  provider: "email" | "google";
+  bio?: string;
+  provider: "email" | "google" | "guest";
+  createdAt?: number;
 }
 
 export interface AuthState {

@@ -15,7 +15,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Clock, ListTodo } from "lucide-react";
-import { Task } from "@/types/task.types";
+import { Task, RepeatType } from "@/types/task.types";
 import { TaskItem } from "./task-item";
 import { cn } from "@/lib/utils";
 import {
@@ -35,6 +35,8 @@ interface SortableTaskItemProps {
   onClick: () => void;
   onDoubleClick: () => void;
   expectedEndTime?: string;
+  onDuplicate: () => void;
+  onSetRepeat: (repeat: RepeatType) => void;
 }
 
 function SortableTaskItem({
@@ -46,7 +48,9 @@ function SortableTaskItem({
   onRemoveTask,
   onClick,
   onDoubleClick,
-  expectedEndTime
+  expectedEndTime,
+  onDuplicate,
+  onSetRepeat
 }: SortableTaskItemProps) {
   const {
     attributes,
@@ -88,6 +92,8 @@ function SortableTaskItem({
         onClick={onClick}
         onDoubleClick={onDoubleClick}
         expectedEndTime={expectedEndTime}
+        onDuplicate={onDuplicate}
+        onSetRepeat={onSetRepeat}
       />
     </div>
   );
@@ -111,6 +117,8 @@ interface TaskListContentProps {
   onReorderTasks: (oldIndex: number, newIndex: number) => void;
   calculateTaskEndTime: (index: number) => Date | null;
   formatEndTime: (date: Date) => string;
+  onDuplicateTask: (id: string) => void;
+  onSetRepeat: (id: string, repeat: RepeatType) => void;
 }
 
 export function TaskListContent({
@@ -130,7 +138,9 @@ export function TaskListContent({
   onTaskDoubleClick,
   onReorderTasks,
   calculateTaskEndTime,
-  formatEndTime
+  formatEndTime,
+  onDuplicateTask,
+  onSetRepeat
 }: TaskListContentProps) {
   const sortedTasks = [...incompleteTasks, ...completedTasks];
 
@@ -201,6 +211,8 @@ export function TaskListContent({
                     expectedEndTime={
                       taskEndTime ? formatEndTime(taskEndTime) : undefined
                     }
+                    onDuplicate={() => onDuplicateTask(task.id)}
+                    onSetRepeat={(repeat) => onSetRepeat(task.id, repeat)}
                   />
                 </div>
               );
@@ -226,6 +238,8 @@ export function TaskListContent({
                   onRemoveTask={onRemoveTask}
                   onClick={() => onTaskClick(task)}
                   onDoubleClick={() => onTaskDoubleClick(task)}
+                  onDuplicate={() => onDuplicateTask(task.id)}
+                  onSetRepeat={(repeat) => onSetRepeat(task.id, repeat)}
                 />
               ))}
             </div>

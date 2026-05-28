@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { addDays, addWeeks, addMonths, addYears } from "date-fns";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import {
   Task,
@@ -16,6 +17,27 @@ const STORAGE_KEY = "star-habit-tasks";
 const defaultState: TasksState = {
   tasks: []
 };
+
+function getNextDueDate(task: Task): number | null {
+  const base = task.dueDate ? new Date(task.dueDate) : new Date();
+  switch (task.repeat) {
+    case "daily":   return addDays(base, 1).getTime();
+    case "weekly":  return addWeeks(base, 1).getTime();
+    case "monthly": return addMonths(base, 1).getTime();
+    case "yearly":  return addYears(base, 1).getTime();
+    case "custom": {
+      const days = task.repeatDays || [];
+      if (days.length === 0) return null;
+      const today = new Date();
+      for (let i = 1; i <= 7; i++) {
+        const next = addDays(today, i);
+        if (days.includes(next.getDay())) return next.getTime();
+      }
+      return null;
+    }
+    default: return null;
+  }
+}
 
 export function useTasks() {
   const { value: storedState, setValue: setState } =
@@ -53,6 +75,7 @@ export function useTasks() {
         dueDate: options?.dueDate ?? null,
         reminder: options?.reminder ?? null,
         repeat: null,
+        repeatDays: [],
         files: [],
         notes: [],
         estimatedPomodoros: options?.estimatedPomodoros ?? null,
@@ -80,24 +103,37 @@ export function useTasks() {
 
   const toggleCompleted = useCallback(
     (id: string) => {
-      setState((prev) => ({
-        ...prev,
-        tasks: prev.tasks.map((task) => {
+      setState((prev) => {
+        const updatedTasks = prev.tasks.map((task) => {
           if (task.id !== id) return task;
-
           const newCompleted = !task.completed;
-          const updatedSteps = task.steps.map((step) => ({
-            ...step,
-            completed: newCompleted
-          }));
-
           return {
             ...task,
             completed: newCompleted,
-            steps: updatedSteps
+            steps: task.steps.map((s) => ({ ...s, completed: newCompleted }))
           };
-        })
-      }));
+        });
+
+        const completedTask = updatedTasks.find((t) => t.id === id);
+        if (completedTask?.completed && completedTask.repeat) {
+          const nextDueDate = getNextDueDate(completedTask);
+          if (nextDueDate) {
+            const nextTask: Task = {
+              ...completedTask,
+              id: generateId(),
+              completed: false,
+              createdAt: Date.now(),
+              completedPomodoros: 0,
+              totalTimeSpent: 0,
+              dueDate: nextDueDate,
+              steps: completedTask.steps.map((s) => ({ ...s, completed: false }))
+            };
+            return { ...prev, tasks: [nextTask, ...updatedTasks] };
+          }
+        }
+
+        return { ...prev, tasks: updatedTasks };
+      });
     },
     [setState]
   );
@@ -149,18 +185,18 @@ export function useTasks() {
     (taskId: string, stepId: string) => {
       setState((prev) => ({
         ...prev,
-        tasks: prev.tasks.map((task) =>
-          task.id === taskId
-            ? {
-                ...task,
-                steps: (task.steps || []).map((step) =>
-                  step.id === stepId
-                    ? { ...step, completed: !step.completed }
-                    : step
-                )
-              }
-            : task
-        )
+        tasks: prev.tasks.map((task) => {
+          if (task.id !== taskId) return task;
+
+          const updatedSteps = (task.steps || []).map((step) =>
+            step.id === stepId ? { ...step, completed: !step.completed } : step
+          );
+
+          const allCompleted =
+            updatedSteps.length > 0 && updatedSteps.every((s) => s.completed);
+
+          return { ...task, steps: updatedSteps, completed: allCompleted };
+        })
       }));
     },
     [setState]
@@ -409,6 +445,58 @@ export function useTasks() {
     [setState]
   );
 
+  const reorderSteps = useCallback(
+    (taskId: string, fromIndex: number, toIndex: number) => {
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) => {
+          if (task.id !== taskId) return task;
+          const newSteps = [...task.steps];
+          const [removed] = newSteps.splice(fromIndex, 1);
+          newSteps.splice(toIndex, 0, removed);
+          return { ...task, steps: newSteps };
+        })
+      }));
+    },
+    [setState]
+  );
+
+  const duplicateTask = useCallback(
+    (id: string) => {
+      setState((prev) => {
+        const task = prev.tasks.find((t) => t.id === id);
+        if (!task) return prev;
+        const copy: Task = {
+          ...task,
+          id: generateId(),
+          title: `${task.title} (copy)`,
+          completed: false,
+          createdAt: Date.now(),
+          completedPomodoros: 0,
+          totalTimeSpent: 0,
+          steps: task.steps.map((s) => ({ ...s, completed: false }))
+        };
+        const index = prev.tasks.findIndex((t) => t.id === id);
+        const newTasks = [...prev.tasks];
+        newTasks.splice(index + 1, 0, copy);
+        return { ...prev, tasks: newTasks };
+      });
+    },
+    [setState]
+  );
+
+  const setRepeatDays = useCallback(
+    (taskId: string, days: number[]) => {
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((task) =>
+          task.id === taskId ? { ...task, repeatDays: days } : task
+        )
+      }));
+    },
+    [setState]
+  );
+
   const setProject = useCallback(
     (taskId: string, projectId: string | null) => {
       setState((prev) => ({
@@ -483,7 +571,6 @@ export function useTasks() {
     addTask,
     removeTask,
     toggleCompleted,
-    toggleComplete: toggleCompleted,
     toggleFavorite,
     updateTask,
     addStep,
@@ -504,6 +591,9 @@ export function useTasks() {
     clearCompleted,
     getTask,
     reorderTasks,
+    reorderSteps,
+    duplicateTask,
+    setRepeatDays,
     setProject,
     setSkills,
     setPriority,

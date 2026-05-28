@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { TopBar } from "@/components/top-bar";
 import { AppDock } from "@/content/dock/app-dock";
 import { MainContent } from "@/components/main-content";
@@ -20,10 +20,12 @@ import {
 } from "@/context/active-module-context";
 import { Task } from "@/types/task.types";
 import bgVideo from "@/assets/bg.mp4";
+import { ProfilePanel } from "@/content/profile/profile-panel";
 
 function AppContent() {
   const { toast } = useToast();
   const { settings } = usePersonalize();
+  const [profileOpen, setProfileOpen] = useState(false);
   const { setActiveTask, clearActiveTask, activeTask } = useActiveTask();
   const { selectedDate } = useActiveModule();
   const { toggleVisibility } = useFloatingWidgets();
@@ -91,6 +93,7 @@ function AppContent() {
         onToggleMiniMaestryList={() => toggleVisibility("miniMaestryList")}
         onToggleMiniCalendar={() => toggleVisibility("miniCalendar")}
         onViewStats={() => changeView("stats")}
+        onOpenProfile={() => setProfileOpen(true)}
       />
 
       <FloatingWidgetsLayer
@@ -108,6 +111,8 @@ function AppContent() {
       />
 
       <AppDock currentView={currentView} onViewChange={changeView} />
+
+      <ProfilePanel open={profileOpen} onOpenChange={setProfileOpen} />
     </div>
   );
 }

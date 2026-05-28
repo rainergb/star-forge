@@ -1,5 +1,12 @@
 export type ProjectStatus = "active" | "paused" | "completed";
 
+export interface ProjectNote {
+  id: string;
+  content: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export type ProjectColor =
   | "purple"
   | "blue"
@@ -31,6 +38,7 @@ export interface Project {
   completedPomodoros: number;
   totalTimeSpent: number;
   sortOrder: number;
+  notes: ProjectNote[];
 }
 
 export interface ProjectsState {

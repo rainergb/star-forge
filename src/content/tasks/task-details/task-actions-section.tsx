@@ -19,8 +19,11 @@ const repeatOptions: { label: string; value: RepeatType }[] = [
   { label: "Daily", value: "daily" },
   { label: "Weekly", value: "weekly" },
   { label: "Monthly", value: "monthly" },
-  { label: "Yearly", value: "yearly" }
+  { label: "Yearly", value: "yearly" },
+  { label: "Custom", value: "custom" }
 ];
+
+const DAY_ABBR = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 const priorityOptions: { label: string; value: TaskPriority; color: string }[] =
   [
@@ -41,8 +44,13 @@ const getPriorityColor = (priority: TaskPriority): string => {
   return option?.color || "text-white/50";
 };
 
-const getRepeatLabel = (repeat: RepeatType): string => {
+const getRepeatLabel = (repeat: RepeatType, repeatDays?: number[]): string => {
   if (!repeat) return "Repeat";
+  if (repeat === "custom") {
+    const days = repeatDays || [];
+    if (days.length === 0) return "Custom";
+    return [...days].sort((a, b) => a - b).map((d) => DAY_ABBR[d]).join(", ");
+  }
   const option = repeatOptions.find((o) => o.value === repeat);
   return option?.label || "Repeat";
 };
@@ -55,6 +63,7 @@ interface TaskActionsSectionProps {
   onSetReminder: (taskId: string, reminder: TaskReminder | null) => void;
   onSetDueDate: (taskId: string, dueDate: number | null) => void;
   onSetRepeat: (taskId: string, repeat: RepeatType) => void;
+  onSetRepeatDays: (taskId: string, days: number[]) => void;
   onAddFile: (taskId: string, file: Omit<TaskFile, "id" | "addedAt">) => void;
   onRemoveFile: (taskId: string, fileId: string) => void;
   onSetProject: (taskId: string, projectId: string | null) => void;
@@ -67,6 +76,7 @@ export function TaskActionsSection({
   onSetReminder,
   onSetDueDate,
   onSetRepeat,
+  onSetRepeatDays,
   onAddFile,
   onRemoveFile,
   onSetProject,
@@ -183,7 +193,7 @@ export function TaskActionsSection({
         >
           <Repeat className="w-4 h-4 text-white/50" />
           <span className="text-white/70 text-sm">
-            {getRepeatLabel(task.repeat)}
+            {getRepeatLabel(task.repeat, task.repeatDays)}
           </span>
           {task.repeat && (
             <button
@@ -211,7 +221,7 @@ export function TaskActionsSection({
                     key={option.value}
                     onClick={() => {
                       onSetRepeat(task.id, option.value);
-                      setShowRepeatMenu(false);
+                      if (option.value !== "custom") setShowRepeatMenu(false);
                     }}
                     className={`w-full px-4 py-2 text-left text-sm transition-colors cursor-pointer ${
                       task.repeat === option.value
@@ -223,6 +233,36 @@ export function TaskActionsSection({
                   </button>
                 ))}
               </div>
+
+              {task.repeat === "custom" && (
+                <div className="border-t border-white/10 px-3 py-2">
+                  <p className="text-xs text-white/40 mb-2">Repeat on</p>
+                  <div className="flex gap-1">
+                    {DAY_ABBR.map((abbr, index) => {
+                      const selected = (task.repeatDays || []).includes(index);
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => {
+                            const current = task.repeatDays || [];
+                            const next = selected
+                              ? current.filter((d) => d !== index)
+                              : [...current, index];
+                            onSetRepeatDays(task.id, next);
+                          }}
+                          className={`w-7 h-7 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+                            selected
+                              ? "bg-primary text-white"
+                              : "bg-white/10 text-white/50 hover:bg-white/20"
+                          }`}
+                        >
+                          {abbr}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </>
         )}

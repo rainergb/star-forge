@@ -2,6 +2,7 @@ import { useCallback, useMemo } from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import {
   Project,
+  ProjectNote,
   ProjectsState,
   ProjectStatus,
   ProjectColor,
@@ -60,7 +61,8 @@ export function useProjects() {
         estimatedPomodoros: options?.estimatedPomodoros ?? null,
         completedPomodoros: 0,
         totalTimeSpent: 0,
-        sortOrder: maxSortOrder + 1
+        sortOrder: maxSortOrder + 1,
+        notes: []
       };
 
       setState((prev) => ({
@@ -249,6 +251,70 @@ export function useProjects() {
     return sortedProjects.filter((p) => p.status === "active");
   }, [sortedProjects]);
 
+  const addNote = useCallback(
+    (projectId: string, content: string) => {
+      const newNote: ProjectNote = {
+        id: generateId(),
+        content,
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      };
+      setState((prev) => ({
+        ...prev,
+        projects: prev.projects.map((project) =>
+          project.id === projectId
+            ? {
+                ...project,
+                notes: [...(project.notes || []), newNote],
+                updatedAt: Date.now()
+              }
+            : project
+        )
+      }));
+    },
+    [setState]
+  );
+
+  const updateNote = useCallback(
+    (projectId: string, noteId: string, content: string) => {
+      setState((prev) => ({
+        ...prev,
+        projects: prev.projects.map((project) =>
+          project.id === projectId
+            ? {
+                ...project,
+                notes: (project.notes || []).map((note) =>
+                  note.id === noteId
+                    ? { ...note, content, updatedAt: Date.now() }
+                    : note
+                ),
+                updatedAt: Date.now()
+              }
+            : project
+        )
+      }));
+    },
+    [setState]
+  );
+
+  const removeNote = useCallback(
+    (projectId: string, noteId: string) => {
+      setState((prev) => ({
+        ...prev,
+        projects: prev.projects.map((project) =>
+          project.id === projectId
+            ? {
+                ...project,
+                notes: (project.notes || []).filter((note) => note.id !== noteId),
+                updatedAt: Date.now()
+              }
+            : project
+        )
+      }));
+    },
+    [setState]
+  );
+
   const importProjects = useCallback(
     (importedProjects: Project[], mode: "merge" | "replace" = "merge") => {
       setState((prev) => {
@@ -281,6 +347,9 @@ export function useProjects() {
     getProjectStats,
     incrementPomodoro,
     addTimeSpent,
+    addNote,
+    updateNote,
+    removeNote,
     importProjects
   };
 }

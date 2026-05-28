@@ -21,7 +21,8 @@ export function useAuth() {
       const user: User = {
         email: credentials.email,
         name: credentials.email.split("@")[0],
-        provider: "email"
+        provider: "email",
+        createdAt: Date.now()
       };
 
       setAuthState({
@@ -39,7 +40,8 @@ export function useAuth() {
     const user: User = {
       email: "user@gmail.com",
       name: "Google User",
-      provider: "google"
+      provider: "google",
+      createdAt: Date.now()
     };
 
     setAuthState({
@@ -51,6 +53,33 @@ export function useAuth() {
     return true;
   }, [setAuthState]);
 
+  const loginAsGuest = useCallback(() => {
+    const user: User = {
+      email: "guest@starhabit.local",
+      name: "Guest",
+      provider: "guest",
+      createdAt: Date.now()
+    };
+
+    setAuthState({
+      user,
+      isAuthenticated: true,
+      rememberMe: false
+    });
+
+    return true;
+  }, [setAuthState]);
+
+  const updateUser = useCallback(
+    (updates: Partial<User>) => {
+      setAuthState((prev) => ({
+        ...prev,
+        user: prev.user ? { ...prev.user, ...updates } : prev.user
+      }));
+    },
+    [setAuthState]
+  );
+
   const logout = useCallback(() => {
     setAuthState(initialAuthState);
   }, [setAuthState]);
@@ -61,6 +90,8 @@ export function useAuth() {
     rememberMe: authState.rememberMe,
     login,
     loginWithGoogle,
+    loginAsGuest,
+    updateUser,
     logout
   };
 }

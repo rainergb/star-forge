@@ -5,7 +5,7 @@ import Particles from "@/components/particles";
 import logo from "@/assets/logo.png";
 
 export function LoginScreen() {
-  const { login, loginWithGoogle } = useAuth();
+  const { login, loginWithGoogle, loginAsGuest } = useAuth();
 
   const handleSubmit = (data: LoginFormData) => {
     login({
@@ -62,7 +62,11 @@ export function LoginScreen() {
             </p>
           </div>
 
-          <LoginForm onSubmit={handleSubmit} onGoogleLogin={handleGoogleLogin} />
+          <LoginForm
+            onSubmit={handleSubmit}
+            onGoogleLogin={handleGoogleLogin}
+            onGuestLogin={loginAsGuest}
+          />
         </div>
 
         <p className="text-center text-white/30 text-xs mt-6">

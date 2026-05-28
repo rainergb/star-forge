@@ -4,6 +4,8 @@ import { useToast } from "@/hooks/use-toast";
 import { DiaryInput } from "./diary-input";
 import { DiaryListContent } from "./diary-list-content";
 import { DiaryDetails } from "./diary-details";
+import { DiaryDateFilter } from "./diary-date-filter";
+import type { DiaryDateFilterOption, DiaryCustomDateRange } from "./diary-date-filter";
 import { ExportButton } from "@/components/shared/export-button";
 import { ImportButton } from "@/components/shared/import-button";
 import {
@@ -17,6 +19,14 @@ interface DiaryListProps {
   initialDate?: string;
   selectedDate?: string;
 }
+
+const getTodayStr = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+};
+
+const getDateStr = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 export function DiaryList({
   initialDate,
@@ -32,35 +42,73 @@ export function DiaryList({
     addFile,
     removeFile,
     linkTask,
-    getEntriesByDate,
     importEntries
   } = useDiary();
   const { toast } = useToast();
 
-  const getTodayDate = () => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  };
-
+  // The "selected date" is used only for the DiaryInput default date
   const [internalSelectedDate, setInternalSelectedDate] = useState(
-    initialDate || getTodayDate()
+    initialDate || getTodayStr()
   );
-  const [selectedEntry, setSelectedEntry] = useState<DiaryEntry | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-
-  // Use external date if provided, otherwise use internal state
   const selectedDate = externalSelectedDate || internalSelectedDate;
 
-  // Update internal date when external date changes
   useEffect(() => {
     if (externalSelectedDate) {
       setInternalSelectedDate(externalSelectedDate);
     }
   }, [externalSelectedDate]);
 
-  const dayEntries = useMemo(() => {
-    return getEntriesByDate(selectedDate);
-  }, [selectedDate, getEntriesByDate, entries]);
+  // Date filter state — default to "today" so it starts focused
+  const [dateFilter, setDateFilter] = useState<DiaryDateFilterOption>("today");
+  const [customDateRange, setCustomDateRange] = useState<DiaryCustomDateRange>({
+    start: null,
+    end: null
+  });
+
+  const [selectedEntry, setSelectedEntry] = useState<DiaryEntry | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+
+  // Apply date filter to all entries
+  const filteredEntries = useMemo(() => {
+    if (dateFilter === "all") return entries;
+
+    const today = new Date();
+    const todayStr = getDateStr(today);
+
+    if (dateFilter === "today") {
+      return entries.filter((e) => e.date === todayStr);
+    }
+
+    if (dateFilter === "yesterday") {
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      return entries.filter((e) => e.date === getDateStr(yesterday));
+    }
+
+    if (dateFilter === "week") {
+      // Sunday-based week
+      const weekStart = new Date(today);
+      weekStart.setDate(today.getDate() - today.getDay());
+      weekStart.setHours(0, 0, 0, 0);
+      const weekStartStr = getDateStr(weekStart);
+      return entries.filter((e) => e.date >= weekStartStr && e.date <= todayStr);
+    }
+
+    if (dateFilter === "month") {
+      const monthPrefix = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+      return entries.filter((e) => e.date.startsWith(monthPrefix));
+    }
+
+    if (dateFilter === "custom" && customDateRange.start) {
+      const startStr = getDateStr(customDateRange.start);
+      const endStr = customDateRange.end
+        ? getDateStr(customDateRange.end)
+        : startStr;
+      return entries.filter((e) => e.date >= startStr && e.date <= endStr);
+    }
+
+    return entries;
+  }, [entries, dateFilter, customDateRange]);
 
   const handleAddEntry = (
     content: string,
@@ -98,14 +146,12 @@ export function DiaryList({
   useEffect(() => {
     if (selectedEntry) {
       const updated = entries.find((e) => e.id === selectedEntry.id);
-      if (updated) {
-        setSelectedEntry(updated);
-      }
+      if (updated) setSelectedEntry(updated);
     }
   }, [entries, selectedEntry?.id]);
 
   return (
-    <div className="flex flex-col items-center gap-6 w-full max-w-2xl mx-auto">
+    <div className="flex flex-col items-center gap-4 w-full max-w-2xl mx-auto overflow-hidden">
       <div className="flex gap-2 w-full items-center">
         <DiaryInput onAddEntry={handleAddEntry} selectedDate={selectedDate} />
         <ExportButton
@@ -141,9 +187,19 @@ export function DiaryList({
         />
       </div>
 
+      {/* Date filter — same toolbar row pattern as tasks */}
+      <div className="flex gap-2 w-full mt-1">
+        <DiaryDateFilter
+          selectedFilter={dateFilter}
+          onFilterChange={setDateFilter}
+          customRange={customDateRange}
+          onCustomRangeChange={setCustomDateRange}
+        />
+      </div>
+
       <DiaryListContent
-        entries={dayEntries}
-        selectedDate={selectedDate}
+        entries={filteredEntries}
+        dateFilter={dateFilter}
         onToggleFavorite={toggleFavorite}
         onRemove={removeEntry}
         onEntryClick={handleEntryClick}
