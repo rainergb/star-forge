@@ -1,19 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useDiary } from "@/hooks/use-diary";
-import { useToast } from "@/hooks/use-toast";
 import { DiaryInput } from "./diary-input";
 import { DiaryListSkeleton } from "./diary-list-skeleton";
 import { DiaryListContent } from "./diary-list-content";
 import { DiaryDetails } from "./diary-details";
 import { DiaryDateFilter } from "./diary-date-filter";
 import type { DiaryDateFilterOption, DiaryCustomDateRange } from "./diary-date-filter";
-import { ExportButton } from "@/components/shared/export-button";
-import { ImportButton } from "@/components/shared/import-button";
-import {
-  exportDiary,
-  importFromFile,
-  validateDiaryImport
-} from "@/services/export-service";
 import { DiaryEntry, DiaryEntryType, MoodEntry } from "@/types/diary.types";
 import { useListLimit } from "@/hooks/use-list-limit";
 import { LimitChip, applyLimit } from "@/components/shared/limit-chip";
@@ -45,10 +37,8 @@ export function DiaryList({
     setMood,
     addFile,
     removeFile,
-    linkTask,
-    importEntries
+    linkTask
   } = useDiary();
-  const { toast } = useToast();
 
   // The "selected date" is used only for the DiaryInput default date
   const [internalSelectedDate, setInternalSelectedDate] = useState(
@@ -161,37 +151,6 @@ export function DiaryList({
     <div className="flex flex-col items-center gap-4 w-full max-w-2xl mx-auto overflow-hidden">
       <div className="flex gap-2 w-full items-center">
         <DiaryInput onAddEntry={handleAddEntry} selectedDate={selectedDate} />
-        <ExportButton
-          onExport={() => exportDiary(entries)}
-          tooltip="Export diary"
-        />
-        <ImportButton
-          onImport={async (file) => {
-            const result = await importFromFile(file);
-            if (result.success && result.data?.diary) {
-              if (validateDiaryImport(result.data.diary)) {
-                importEntries(result.data.diary);
-                toast({
-                  title: "Import successful",
-                  description: `${result.data.diary.length} entries imported`
-                });
-              } else {
-                toast({
-                  title: "Import failed",
-                  description: "Invalid diary format",
-                  variant: "destructive"
-                });
-              }
-            } else {
-              toast({
-                title: "Import failed",
-                description: result.message,
-                variant: "destructive"
-              });
-            }
-          }}
-          tooltip="Import diary"
-        />
       </div>
 
       {/* Date filter + limit — same toolbar row pattern as tasks */}

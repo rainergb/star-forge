@@ -2,18 +2,10 @@ import { useState, useMemo } from "react";
 import { useSkills } from "@/hooks/use-skills";
 import { useTasks } from "@/hooks/use-tasks";
 import { usePomodoroSessions } from "@/hooks/use-pomodoro-sessions";
-import { useToast } from "@/hooks/use-toast";
 import { SkillInput } from "./skill-input";
 import { SkillListSkeleton } from "./skill-list-skeleton";
 import { SkillListContent } from "./skill-list-content";
 import { SkillDetails } from "./skill-details";
-import { ExportButton } from "@/components/shared/export-button";
-import { ImportButton } from "@/components/shared/import-button";
-import {
-  exportSkills,
-  importFromFile,
-  validateSkillsImport
-} from "@/services/export-service";
 import { Skill, SkillColor } from "@/types/skill.types";
 import { ArrowUpDown } from "lucide-react";
 import { useListLimit } from "@/hooks/use-list-limit";
@@ -35,13 +27,11 @@ export function SkillList() {
     addSkill,
     updateSkill,
     removeSkill,
-    getSkillStats,
-    importSkills
+    getSkillStats
   } = useSkills();
 
   const { tasks, setSkills } = useTasks();
   const { sessions } = usePomodoroSessions();
-  const { toast } = useToast();
 
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -136,37 +126,6 @@ export function SkillList() {
     <div className="flex flex-col items-center gap-2 w-full max-w-2xl mx-auto">
       <div className="flex gap-2 w-full items-center">
         <SkillInput onAddSkill={handleAddSkill} />
-        <ExportButton
-          onExport={() => exportSkills(skills)}
-          tooltip="Export skills"
-        />
-        <ImportButton
-          onImport={async (file) => {
-            const result = await importFromFile(file);
-            if (result.success && result.data?.skills) {
-              if (validateSkillsImport(result.data.skills)) {
-                importSkills(result.data.skills);
-                toast({
-                  title: "Import successful",
-                  description: `${result.data.skills.length} skills imported`
-                });
-              } else {
-                toast({
-                  title: "Import failed",
-                  description: "Invalid skills format",
-                  variant: "destructive"
-                });
-              }
-            } else {
-              toast({
-                title: "Import failed",
-                description: result.message,
-                variant: "destructive"
-              });
-            }
-          }}
-          tooltip="Import skills"
-        />
       </div>
 
       {/* Sort chips + limit */}

@@ -184,7 +184,7 @@ export function MiniProjectList({
         stackIndex={stackIndex}
       >
         <div className="flex-1 overflow-y-auto scrollbar-none">
-          <ProjectList />
+          <ProjectList compact />
         </div>
       </FloatingContainer>
     );

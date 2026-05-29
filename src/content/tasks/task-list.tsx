@@ -3,8 +3,9 @@ import { useTasks } from "@/hooks/use-tasks";
 import { usePomodoroSessions } from "@/hooks/use-pomodoro-sessions";
 import { useActiveTask } from "@/hooks/use-active-task";
 import { useConfig } from "@/hooks/use-config";
-import { useToast } from "@/hooks/use-toast";
 import { useTaskFilters } from "@/hooks/use-task-filters";
+import { useTaskSort, TASK_SORT_LABELS, TASK_SORT_ICONS } from "@/hooks/use-task-sort";
+import type { TaskSortKey } from "@/hooks/use-task-sort";
 import { useListLimit } from "@/hooks/use-list-limit";
 import { LimitChip, applyLimit } from "@/components/shared/limit-chip";
 import { TaskInput } from "./task-input";
@@ -14,13 +15,6 @@ import { TaskDetails } from "./task-details";
 import { ProjectFilter } from "./project-filter";
 import { PriorityFilter } from "./priority-filter";
 import { DateFilter } from "./date-filter";
-import { ExportButton } from "@/components/shared/export-button";
-import { ImportButton } from "@/components/shared/import-button";
-import {
-  exportTasks,
-  importFromFile,
-  validateTasksImport
-} from "@/services/export-service";
 import { Task, TaskReminder } from "@/types/task.types";
 import {
   isToday,
@@ -31,15 +25,7 @@ import {
 } from "date-fns";
 import { ArrowUpDown } from "lucide-react";
 
-type TaskSortKey = "default" | "priority" | "steps" | "due-date" | "worked";
 const PRIORITY_ORDER: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3, none: 4 };
-const TASK_SORT_LABELS: Record<TaskSortKey, string> = {
-  default: "Default",
-  priority: "Priority",
-  steps: "Most steps",
-  "due-date": "Due date",
-  worked: "Most worked"
-};
 
 interface TaskListProps {
   onNavigateToPomodoro?: () => void;
@@ -51,6 +37,7 @@ interface TaskListProps {
 
 export function TaskList({
   onNavigateToPomodoro,
+  compact = false,
   onSelectTask,
   onClearTask,
   initialFilterProjectId
@@ -82,18 +69,15 @@ export function TaskList({
     setRepeatDays,
     setProject,
     setSkills,
-    setPriority,
-    importTasks
+    setPriority
   } = useTasks();
   const { sessions } = usePomodoroSessions();
   const { activeTask, setActiveTask, clearActiveTask } = useActiveTask();
   const { settings: timerSettings } = useConfig();
-  const { toast } = useToast();
-
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [completedCollapsed, setCompletedCollapsed] = useState(true);
-  const [sortKey, setSortKey] = useState<TaskSortKey>("default");
+  const { sortKey, setSortKey } = useTaskSort();
   const { limit, setLimit } = useListLimit("tasks");
 
   // Map taskId → total work time (seconds) baseado nas pomodoro sessions
@@ -356,45 +340,15 @@ export function TaskList({
     <div className="flex flex-col items-center gap-2 w-full max-w-2xl mx-auto overflow-hidden">
       <div className="flex gap-2 w-full items-center">
         <TaskInput onAddTask={handleAddTask} />
-        <ExportButton
-          onExport={() => exportTasks(tasks)}
-          tooltip="Export tasks"
-        />
-        <ImportButton
-          onImport={async (file) => {
-            const result = await importFromFile(file);
-            if (result.success && result.data?.tasks) {
-              if (validateTasksImport(result.data.tasks)) {
-                importTasks(result.data.tasks);
-                toast({
-                  title: "Import successful",
-                  description: `${result.data.tasks.length} tasks imported`
-                });
-              } else {
-                toast({
-                  title: "Import failed",
-                  description: "Invalid tasks format",
-                  variant: "destructive"
-                });
-              }
-            } else {
-              toast({
-                title: "Import failed",
-                description: result.message,
-                variant: "destructive"
-              });
-            }
-          }}
-          tooltip="Import tasks"
-        />
       </div>
 
-      <div className="flex gap-2 w-full mt-1 flex-wrap">
+      {/* Filtros — compacto no modo floating, padrão na tela cheia */}
+      <div className={`flex w-full gap-1.5 ${compact ? "flex-nowrap overflow-x-auto scrollbar-none" : "flex-wrap gap-2 mt-1"}`}>
         <ProjectFilter
           selectedProjectIds={filterProjectIds}
           includeNoProject={filterNoProject}
           onSelectionChange={setProjectFilter}
-          className="flex-1 min-w-[120px]"
+          className={compact ? "shrink-0" : "flex-1 min-w-[120px]"}
         />
         <PriorityFilter
           selectedPriorities={filterPriorities}
@@ -408,22 +362,31 @@ export function TaskList({
         />
       </div>
 
-      {/* Sort chips + limit */}
-      <div className="flex items-center gap-2 w-full">
+      {/* Sort chips + limit — compact usa ícones com title tooltip */}
+      <div className="flex items-center gap-1.5 w-full">
         <ArrowUpDown className="w-3.5 h-3.5 text-white/30 shrink-0" />
-        {(Object.keys(TASK_SORT_LABELS) as TaskSortKey[]).map((key) => (
-          <button
-            key={key}
-            onClick={() => setSortKey(key)}
-            className={`px-2.5 py-1 rounded-lg text-xs transition-colors cursor-pointer ${
-              sortKey === key
-                ? "bg-primary/20 text-primary border border-primary/30"
-                : "bg-white/5 text-white/40 border border-white/10 hover:text-white/60 hover:bg-white/10"
-            }`}
-          >
-            {TASK_SORT_LABELS[key]}
-          </button>
-        ))}
+        {(Object.keys(TASK_SORT_LABELS) as TaskSortKey[]).map((key) => {
+          const Icon = TASK_SORT_ICONS[key];
+          const isActive = sortKey === key;
+          return (
+            <button
+              key={key}
+              onClick={() => setSortKey(key)}
+              title={TASK_SORT_LABELS[key]}
+              className={`rounded-lg text-xs transition-colors cursor-pointer flex items-center gap-1 border
+                ${compact ? "p-1.5" : "px-2.5 py-1"}
+                ${isActive
+                  ? "bg-primary/20 text-primary border-primary/30"
+                  : "bg-white/5 text-white/40 border-white/10 hover:text-white/60 hover:bg-white/10"
+                }`}
+            >
+              {compact
+                ? <Icon className="w-3.5 h-3.5" />
+                : TASK_SORT_LABELS[key]
+              }
+            </button>
+          );
+        })}
         <div className="ml-auto">
           <LimitChip value={limit} onChange={setLimit} totalCount={filteredIncomplete.length} />
         </div>
