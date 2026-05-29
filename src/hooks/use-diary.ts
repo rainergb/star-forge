@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useAuth } from "@/hooks/use-auth";
 import { diaryService } from "@/services/supabase";
+import { recordUserActivity } from "@/hooks/use-streak";
 import { diaryCache } from "@/lib/cache-registry";
 import {
   DiaryEntry,
@@ -138,10 +139,11 @@ export function useDiary() {
     if (isGuest) { setIsLoading(false); return; }
     if (!userId) return;
 
+    // SWR: mostra cache imediatamente, busca em background para atualizar
     const cached = diaryCache.get(userId);
-    if (cached) { setDbEntries(cached); setIsLoading(false); return; }
+    if (cached) { setDbEntries(cached); setIsLoading(false); }
+    if (!cached) setIsLoading(true);
 
-    setIsLoading(true);
     diaryService
       .getEntries(userId)
       .then((rows) => {
@@ -217,6 +219,7 @@ export function useDiary() {
             .catch((err) => console.error("[useDiary] create:", err));
         }
       }
+      recordUserActivity();
       return id;
     },
     [isGuest, userId, setLocalState]

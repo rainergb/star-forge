@@ -3,3 +3,4 @@ export { projectsService } from "./projects.service";
 export { skillsService } from "./skills.service";
 export { diaryService } from "./diary.service";
 export { pomodoroService } from "./pomodoro.service";
+export { streakService } from "./streak.service";

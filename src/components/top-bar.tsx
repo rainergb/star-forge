@@ -15,6 +15,7 @@ import {
 import logo from "@/assets/logo.png";
 import { SettingsModal } from "@/content/config/settings";
 import { useAuth } from "@/hooks/use-auth";
+import { StreakBadge } from "@/components/streak-badge";
 import { AppView } from "@/types/app.types";
 
 interface TopBarProps {
@@ -172,6 +173,8 @@ export function TopBar({
             <MoreHorizontal className="w-4 h-4" />
           )}
         </button>
+
+        <StreakBadge />
 
         <button
           onClick={() => setIsSettingsOpen(true)}

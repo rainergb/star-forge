@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useAuth } from "@/hooks/use-auth";
 import { skillsService } from "@/services/supabase";
+import { recordUserActivity } from "@/hooks/use-streak";
 import { skillCache } from "@/lib/cache-registry";
 import {
   Skill,
@@ -111,10 +112,11 @@ export function useSkills() {
     if (isGuest) { setIsLoading(false); return; }
     if (!userId) return;
 
+    // SWR: mostra cache imediatamente, busca em background para atualizar
     const cached = skillCache.get(userId);
-    if (cached) { setDbSkills(cached); setIsLoading(false); return; }
+    if (cached) { setDbSkills(cached); setIsLoading(false); }
+    if (!cached) setIsLoading(true);
 
-    setIsLoading(true);
     skillsService
       .getSkills(userId)
       .then((rows) => {
@@ -177,6 +179,7 @@ export function useSkills() {
             .catch((err) => console.error("[useSkills] create:", err));
         }
       }
+      recordUserActivity();
       return id;
     },
     [isGuest, userId, setLocalState]

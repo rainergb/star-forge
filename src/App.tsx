@@ -4,6 +4,7 @@ import { AppDock } from "@/content/dock/app-dock";
 import { MainContent } from "@/components/main-content";
 import { FloatingWidgetsLayer } from "@/components/floating/floating-widgets-layer";
 import { LoginScreen } from "@/content/auth";
+import { RecoveryPasswordModal } from "@/content/auth/recovery-password-modal";
 import { useToast } from "@/hooks/use-toast";
 import { usePersonalize } from "@/hooks/use-personalize";
 import { useFloatingWidgets } from "@/hooks/use-floating-widgets";
@@ -23,10 +24,13 @@ import bgVideo from "@/assets/bg.mp4";
 import { ProfilePanel } from "@/content/profile/profile-panel";
 import { MigrationModal } from "@/components/shared/migration-modal";
 import { useMigration } from "@/hooks/use-migration";
+import { useAutoStart } from "@/hooks/use-auto-start";
+import { SkillToastContainer } from "@/components/skill-toast";
 
 function AppContent() {
   const { toast } = useToast();
   const { settings } = usePersonalize();
+  useAutoStart();
   const [profileOpen, setProfileOpen] = useState(false);
   const { showModal, status, summary, errorMsg, migrate, skip, dismiss } = useMigration();
   const { setActiveTask, clearActiveTask, activeTask } = useActiveTask();
@@ -126,23 +130,33 @@ function AppContent() {
         onSkip={skip}
         onDismiss={dismiss}
       />
+
+      {/* Toasts gamificados de skill ao completar pomodoros */}
+      <SkillToastContainer />
     </div>
   );
 }
 
 function App() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isRecoveryMode, changePassword } = useAuth();
 
   if (!isAuthenticated) {
     return <LoginScreen />;
   }
 
   return (
-    <PomodoroProvider>
-      <ActiveModuleProvider>
-        <AppContent />
-      </ActiveModuleProvider>
-    </PomodoroProvider>
+    <>
+      <PomodoroProvider>
+        <ActiveModuleProvider>
+          <AppContent />
+        </ActiveModuleProvider>
+      </PomodoroProvider>
+
+      {/* Modal de nova senha — aparece após clicar no link de reset */}
+      {isRecoveryMode && (
+        <RecoveryPasswordModal onChangePassword={changePassword} />
+      )}
+    </>
   );
 }
 

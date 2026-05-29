@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useAuth } from "@/hooks/use-auth";
 import { projectsService } from "@/services/supabase";
+import { recordUserActivity } from "@/hooks/use-streak";
 import { projectCache } from "@/lib/cache-registry";
 import {
   Project,
@@ -127,14 +128,15 @@ export function useProjects() {
     }
     if (!userId) return;
 
+    // SWR: mostra cache imediatamente, busca em background para atualizar
     const cached = projectCache.get(userId);
     if (cached) {
       setDbProjects(cached);
       setIsLoading(false);
-      return;
+      // Não retorna — continua para o fetch em background
     }
+    if (!cached) setIsLoading(true);
 
-    setIsLoading(true);
     projectsService
       .getProjects(userId)
       .then((rows) => {
@@ -209,6 +211,7 @@ export function useProjects() {
             .catch((err) => console.error("[useProjects] create:", err));
         }
       }
+      recordUserActivity();
       return id;
     },
     [isGuest, userId, projects, setLocalState]

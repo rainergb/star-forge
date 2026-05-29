@@ -3,6 +3,7 @@ import { addDays, addWeeks, addMonths, addYears } from "date-fns";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useAuth } from "@/hooks/use-auth";
 import { tasksService } from "@/services/supabase";
+import { recordUserActivity } from "@/hooks/use-streak";
 import { taskCache } from "@/lib/cache-registry";
 import {
   Task,
@@ -159,10 +160,15 @@ export function useTasks() {
     if (isGuest) { setIsLoading(false); return; }
     if (!userId) return;
 
+    // SWR: mostra cache imediatamente, busca em background para atualizar
     const cached = taskCache.get(userId);
-    if (cached) { setDbTasks(cached); setIsLoading(false); return; }
+    if (cached) {
+      setDbTasks(cached);
+      setIsLoading(false);
+      // Não retorna — continua para o fetch em background
+    }
+    if (!cached) setIsLoading(true);
 
-    setIsLoading(true);
     tasksService
       .getTasks(userId)
       .then((rows) => {
@@ -236,6 +242,7 @@ export function useTasks() {
             .catch((err) => console.error("[useTasks] create:", err));
         }
       }
+      recordUserActivity();
       return id;
     },
     [isGuest, userId, setLocalState]

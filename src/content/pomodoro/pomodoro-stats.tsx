@@ -19,6 +19,8 @@ import {
   startOfMonth,
   endOfMonth
 } from "date-fns";
+import { useListLimit } from "@/hooks/use-list-limit";
+import { LimitChip, applyLimit } from "@/components/shared/limit-chip";
 
 interface MiniCycleStarProps {
   index: number;
@@ -139,6 +141,7 @@ export function PomodoroStats() {
   const { sessions, getStats } = usePomodoroSessions();
   const { settings } = useConfig();
   const [period, setPeriod] = useState<StatsPeriod>("week");
+  const { limit, setLimit } = useListLimit("pomodoro");
 
   const stats = getStats(period);
   const longBreakInterval = settings.longBreakInterval || 4;
@@ -377,17 +380,24 @@ export function PomodoroStats() {
         </div>
       </div>
 
-      {sessions.length > 0 && (
+      {sessions.length > 0 && (() => {
+        const workSessions = [...sessions]
+          .filter((s) => s.completed && s.mode === "work")
+          .sort((a, b) => b.startedAt - a.startedAt);
+        const limitedSessions = applyLimit(workSessions, limit);
+
+        return (
         <div className="bg-background/50 border border-white/10 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-white/60 mb-4">
-            <Timer className="w-4 h-4" />
-            <span className="text-sm">Recent Sessions</span>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2 text-white/60">
+              <Timer className="w-4 h-4" />
+              <span className="text-sm">Recent Sessions</span>
+            </div>
+            <LimitChip value={limit} onChange={setLimit} totalCount={workSessions.length} />
           </div>
 
           <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-none">
-            {sessions
-              .filter((s) => s.completed && s.mode === "work")
-              .slice(0, 10)
+            {limitedSessions
               .map((session) => (
                 <div
                   key={session.id}
@@ -408,7 +418,8 @@ export function PomodoroStats() {
               ))}
           </div>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

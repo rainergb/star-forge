@@ -9,12 +9,13 @@ import { loginSchema, LoginFormData } from "@/schemas/auth.schema";
 
 interface LoginFormProps {
   onSubmit: (data: LoginFormData) => void;
-  onGoogleLogin: () => void;
+  onGoogleLogin: (rememberMe: boolean) => void;
   onGuestLogin: () => void;
   onGoToSignup: () => void;
+  onForgotPassword: () => void;
 }
 
-export function LoginForm({ onSubmit, onGoogleLogin, onGuestLogin, onGoToSignup }: LoginFormProps) {
+export function LoginForm({ onSubmit, onGoogleLogin, onGuestLogin, onGoToSignup, onForgotPassword }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -95,7 +96,8 @@ export function LoginForm({ onSubmit, onGoogleLogin, onGuestLogin, onGoToSignup 
         </div>
         <button
           type="button"
-          className="text-sm text-primary hover:text-primary/80 transition-colors"
+          onClick={onForgotPassword}
+          className="text-sm text-primary hover:text-primary/80 transition-colors cursor-pointer"
         >
           Forgot password?
         </button>
@@ -121,7 +123,7 @@ export function LoginForm({ onSubmit, onGoogleLogin, onGuestLogin, onGoToSignup 
       <Button
         type="button"
         variant="outline"
-        onClick={onGoogleLogin}
+        onClick={() => onGoogleLogin(rememberMe)}
         className="w-full border-white/10 hover:bg-white/5 text-white"
       >
         <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">

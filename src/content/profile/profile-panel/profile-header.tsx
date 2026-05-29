@@ -1,7 +1,9 @@
 import { useRef, useState } from "react";
-import { Camera, Pencil, Check, X } from "lucide-react";
+import { Camera, Pencil, Check, X, RotateCcw } from "lucide-react";
 import { User } from "@/types/auth.types";
 import { cn } from "@/lib/utils";
+
+const CUSTOM_AVATAR_KEY = "star-habit-avatar-custom"; // Upload manual
 
 interface ProfileHeaderProps {
   user: User;
@@ -32,12 +34,21 @@ export function ProfileHeader({
   const [editingBio, setEditingBio] = useState(false);
   const [bioValue, setBioValue] = useState(user.bio ?? "");
 
+  // Mostra botão de reverter só se: provider é google E tem foto customizada ativa
+  const hasCustomAvatar =
+    user.provider === "google" &&
+    !!localStorage.getItem(CUSTOM_AVATAR_KEY);
+
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onloadend = () => onUpdateAvatar(reader.result as string);
     reader.readAsDataURL(file);
+  };
+
+  const handleRevertToGoogle = () => {
+    onUpdateAvatar(null);
   };
 
   const saveName = () => {
@@ -106,6 +117,18 @@ export function ProfileHeader({
           className="hidden"
         />
       </div>
+
+      {/* Revert to Google photo — só aparece se tiver foto customizada ativa */}
+      {hasCustomAvatar && (
+        <button
+          onClick={handleRevertToGoogle}
+          className="flex items-center gap-1 text-white/35 hover:text-white/60 text-xs transition-colors cursor-pointer -mt-2 mb-3"
+          title="Use Google photo"
+        >
+          <RotateCcw className="w-3 h-3" />
+          Use Google photo
+        </button>
+      )}
 
       {/* Name */}
       <div className="flex items-center gap-2 group justify-center">

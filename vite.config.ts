@@ -24,9 +24,18 @@ export default defineConfig({
         vite: {
           build: {
             outDir: "dist-electron",
+            emptyOutDir: false,
+            // Força CJS diretamente via rollupOptions.output.
+            // build.lib é ignorado pelo vite-plugin-electron@0.28 quando
+            // "type":"module" está no package.json — por isso usamos rollupOptions.
             rollupOptions: {
               external: ["electron"],
-              output: { format: "cjs" }
+              output: {
+                // .mjs = ESM explícito. Electron 28+ suporta ESM em preload
+                // nativamente. Não usar .cjs — Electron 28 compila preload como ESM
+                // e .cjs faz Node tentar interpretá-lo como CJS (quebrando os imports).
+                entryFileNames: "[name].mjs"
+              }
             }
           }
         },

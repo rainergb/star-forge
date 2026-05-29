@@ -15,6 +15,8 @@ import {
   validateDiaryImport
 } from "@/services/export-service";
 import { DiaryEntry, DiaryEntryType, MoodEntry } from "@/types/diary.types";
+import { useListLimit } from "@/hooks/use-list-limit";
+import { LimitChip, applyLimit } from "@/components/shared/limit-chip";
 
 interface DiaryListProps {
   initialDate?: string;
@@ -69,6 +71,7 @@ export function DiaryList({
 
   const [selectedEntry, setSelectedEntry] = useState<DiaryEntry | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const { limit, setLimit } = useListLimit("diary");
 
   // Apply date filter to all entries
   const filteredEntries = useMemo(() => {
@@ -191,18 +194,21 @@ export function DiaryList({
         />
       </div>
 
-      {/* Date filter — same toolbar row pattern as tasks */}
-      <div className="flex gap-2 w-full mt-1">
+      {/* Date filter + limit — same toolbar row pattern as tasks */}
+      <div className="flex gap-2 w-full mt-1 items-center">
         <DiaryDateFilter
           selectedFilter={dateFilter}
           onFilterChange={setDateFilter}
           customRange={customDateRange}
           onCustomRangeChange={setCustomDateRange}
         />
+        <div className="ml-auto">
+          <LimitChip value={limit} onChange={setLimit} totalCount={filteredEntries.length} />
+        </div>
       </div>
 
       <DiaryListContent
-        entries={filteredEntries}
+        entries={applyLimit(filteredEntries, limit)}
         dateFilter={dateFilter}
         onToggleFavorite={toggleFavorite}
         onRemove={removeEntry}

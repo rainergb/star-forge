@@ -1,4 +1,4 @@
-import { Palette, Volume2, VolumeX, Trash2, Plus, Minus } from "lucide-react";
+import { Palette, Volume2, VolumeX, Trash2, Plus, Minus, Power } from "lucide-react";
 import {
   AccordionItem,
   AccordionTrigger,
@@ -15,6 +15,7 @@ export interface PersonalizeSettings {
   notificationSound: boolean;
   notificationVolume: number;
   notificationRepeat: number;
+  openAtLogin: boolean;
 }
 
 interface PersonalizeConfigProps {
@@ -53,6 +54,17 @@ export function PersonalizeConfig({
       </AccordionTrigger>
 
       <AccordionContent isOpen={isOpen} className="space-y-6 pt-4">
+        <div className="flex items-center justify-between">
+          <Label className="text-white/90 flex items-center gap-2">
+            <Power className="w-3.5 h-3.5 text-white/50" />
+            Open at Startup
+          </Label>
+          <Switch
+            checked={settings.openAtLogin}
+            onCheckedChange={(checked) => updateSetting("openAtLogin", checked)}
+          />
+        </div>
+
         <div className="flex items-center justify-between">
           <Label className="text-white/90">Show Background Video</Label>
           <Switch

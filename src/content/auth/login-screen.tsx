@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { LoginForm } from "./login-form";
 import { SignupForm } from "./signup-form";
+import { ForgotForm } from "./forgot-form";
 import { LoginFormData, SignupFormData } from "@/schemas/auth.schema";
 import { useAuth } from "@/hooks/use-auth";
 import Particles from "@/components/particles";
 import logo from "@/assets/logo.png";
 
-type AuthView = "login" | "signup" | "confirm";
+type AuthView = "login" | "signup" | "confirm" | "forgot";
 
 export function LoginScreen() {
-  const { login, signup, loginWithGoogle, loginAsGuest } = useAuth();
+  const { login, signup, loginWithGoogle, loginAsGuest, sendPasswordReset } = useAuth();
   const [view, setView] = useState<AuthView>("login");
   const [confirmEmail, setConfirmEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +50,8 @@ export function LoginScreen() {
   const subtitles: Record<AuthView, string> = {
     login: "Welcome back! Sign in to continue",
     signup: "Create your account to get started",
-    confirm: "Check your email"
+    confirm: "Check your email",
+    forgot: "Reset your password"
   };
 
   return (
@@ -123,13 +125,22 @@ export function LoginScreen() {
             </div>
           )}
 
+          {/* Forgot password view */}
+          {view === "forgot" && (
+            <ForgotForm
+              onSendReset={sendPasswordReset}
+              onGoToLogin={() => { setError(null); setView("login"); }}
+            />
+          )}
+
           {/* Login view */}
           {view === "login" && (
             <LoginForm
               onSubmit={handleLogin}
-              onGoogleLogin={loginWithGoogle}
+              onGoogleLogin={(rememberMe) => loginWithGoogle(rememberMe)}
               onGuestLogin={loginAsGuest}
               onGoToSignup={() => { setError(null); setView("signup"); }}
+              onForgotPassword={() => { setError(null); setView("forgot"); }}
             />
           )}
 
@@ -137,7 +148,7 @@ export function LoginScreen() {
           {view === "signup" && (
             <SignupForm
               onSubmit={handleSignup}
-              onGoogleLogin={loginWithGoogle}
+              onGoogleLogin={() => loginWithGoogle()}
               onGoToLogin={() => { setError(null); setView("login"); }}
             />
           )}

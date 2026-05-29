@@ -7,6 +7,9 @@ import { usePomodoroSessions } from "@/hooks/use-pomodoro-sessions";
 import { useTasks } from "@/hooks/use-tasks";
 import { useProjects } from "@/hooks/use-projects";
 import { useSkills } from "@/hooks/use-skills";
+import { pushSkillToast } from "@/hooks/use-skill-toasts";
+import { recordUserActivity } from "@/hooks/use-streak";
+import { calculateMasteryLevel, getProgressToNextLevel, MasteryLevel } from "@/types/skill.types";
 import notificationSound from "@/assets/notification.mp3";
 import successSound from "@/assets/sucess.mp3";
 
@@ -23,7 +26,7 @@ export function usePomodoroTimer() {
     incrementPomodoro: incrementProjectPomodoro,
     addTimeSpent: addProjectTimeSpent
   } = useProjects();
-  const { addTimeToMultiple: addTimeToSkills } = useSkills();
+  const { addTimeToMultiple: addTimeToSkills, getSkill } = useSkills();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const startAudioRef = useRef<HTMLAudioElement | null>(null);
   const sessionStartRef = useRef<number | null>(null);
@@ -37,6 +40,7 @@ export function usePomodoroTimer() {
   const addProjectTimeSpentRef = useRef(addProjectTimeSpent);
   const getTaskRef = useRef(getTask);
   const addTimeToSkillsRef = useRef(addTimeToSkills);
+  const getSkillRef = useRef(getSkill);
 
   useEffect(() => {
     activeTaskRef.current = activeTask;
@@ -69,6 +73,10 @@ export function usePomodoroTimer() {
   useEffect(() => {
     addTimeToSkillsRef.current = addTimeToSkills;
   }, [addTimeToSkills]);
+
+  useEffect(() => {
+    getSkillRef.current = getSkill;
+  }, [getSkill]);
 
   useEffect(() => {
     audioRef.current = new Audio(notificationSound);
@@ -249,12 +257,46 @@ export function usePomodoroTimer() {
             addProjectTimeSpentRef.current(task.projectId, sessionDuration);
           }
 
-          // Add time to linked skills
+          // Add time to linked skills + dispara toasts gamificados
           if (task?.skillIds && task.skillIds.length > 0) {
-            addTimeToSkillsRef.current(task.skillIds, sessionDuration);
+            // Captura estado ANTES do update para calcular nível anterior
+            const beforeSnapshots = task.skillIds
+              .map((sid) => {
+                const s = getSkillRef.current(sid);
+                return s ? { id: sid, prevLevel: s.currentLevel, prevTime: s.totalTimeSpent } : null;
+              })
+              .filter((x): x is { id: string; prevLevel: MasteryLevel; prevTime: number } => x !== null);
+
+            const results = addTimeToSkillsRef.current(task.skillIds, sessionDuration);
+
+            // Dispara um toast por skill, em cascata (delay pequeno entre cada)
+            results.forEach((res, idx) => {
+              const skill = getSkillRef.current(res.skillId);
+              const before = beforeSnapshots.find((b) => b.id === res.skillId);
+              if (!skill || !before) return;
+
+              const newTotalTime = before.prevTime + sessionDuration;
+              const newCalcLevel = calculateMasteryLevel(newTotalTime);
+              const progress = getProgressToNextLevel(newTotalTime);
+
+              setTimeout(() => {
+                pushSkillToast({
+                  skillId: skill.id,
+                  skillName: skill.name,
+                  skillIcon: skill.icon,
+                  skillColor: skill.color,
+                  durationSeconds: sessionDuration,
+                  previousLevel: before.prevLevel as any,
+                  newLevel: newCalcLevel,
+                  leveledUp: res.leveledUp,
+                  progressPercentageAfter: progress.progressPercentage
+                });
+              }, idx * 350);
+            });
           }
         }
 
+        recordUserActivity();
         const newCycles = completedCycles + 1;
         setCompletedCycles(newCycles);
 

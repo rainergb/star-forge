@@ -9,7 +9,8 @@ const defaultSettings: PersonalizeSettings = {
   showTest: false,
   notificationSound: true,
   notificationVolume: 50,
-  notificationRepeat: 1
+  notificationRepeat: 1,
+  openAtLogin: true
 };
 
 export function usePersonalize() {

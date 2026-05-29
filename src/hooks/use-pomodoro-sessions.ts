@@ -105,10 +105,11 @@ export function usePomodoroSessions() {
     if (isGuest) { setIsLoading(false); return; }
     if (!userId) return;
 
+    // SWR: mostra cache imediatamente, busca em background para atualizar
     const cached = sessionCache.get(userId);
-    if (cached) { setDbSessions(cached); setIsLoading(false); return; }
+    if (cached) { setDbSessions(cached); setIsLoading(false); }
+    if (!cached) setIsLoading(true);
 
-    setIsLoading(true);
     pomodoroService
       .getSessions(userId)
       .then((rows) => {

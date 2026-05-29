@@ -5,6 +5,8 @@ import { useActiveTask } from "@/hooks/use-active-task";
 import { useConfig } from "@/hooks/use-config";
 import { useToast } from "@/hooks/use-toast";
 import { useTaskFilters } from "@/hooks/use-task-filters";
+import { useListLimit } from "@/hooks/use-list-limit";
+import { LimitChip, applyLimit } from "@/components/shared/limit-chip";
 import { TaskInput } from "./task-input";
 import { TaskListSkeleton } from "./task-list-skeleton";
 import { TaskListContent } from "./task-list-content";
@@ -29,13 +31,14 @@ import {
 } from "date-fns";
 import { ArrowUpDown } from "lucide-react";
 
-type TaskSortKey = "default" | "priority" | "steps" | "due-date";
+type TaskSortKey = "default" | "priority" | "steps" | "due-date" | "worked";
 const PRIORITY_ORDER: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3, none: 4 };
 const TASK_SORT_LABELS: Record<TaskSortKey, string> = {
   default: "Default",
   priority: "Priority",
   steps: "Most steps",
-  "due-date": "Due date"
+  "due-date": "Due date",
+  worked: "Most worked"
 };
 
 interface TaskListProps {
@@ -91,6 +94,18 @@ export function TaskList({
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [completedCollapsed, setCompletedCollapsed] = useState(true);
   const [sortKey, setSortKey] = useState<TaskSortKey>("default");
+  const { limit, setLimit } = useListLimit("tasks");
+
+  // Map taskId → total work time (seconds) baseado nas pomodoro sessions
+  const taskTimeMap = useMemo(() => {
+    const map = new Map<string, number>();
+    sessions.forEach((s) => {
+      if (s.taskId && s.mode === "work" && s.completed) {
+        map.set(s.taskId, (map.get(s.taskId) ?? 0) + s.duration);
+      }
+    });
+    return map;
+  }, [sessions]);
 
   const applySort = useCallback((list: Task[]) => {
     if (sortKey === "default") return list;
@@ -107,9 +122,13 @@ export function TaskList({
         if (!b.dueDate) return -1;
         return a.dueDate - b.dueDate;
       }
+      if (sortKey === "worked") {
+        // Combina horas e pomodoros: ordena por tempo total trabalhado (em segundos)
+        return (taskTimeMap.get(b.id) ?? 0) - (taskTimeMap.get(a.id) ?? 0);
+      }
       return 0;
     });
-  }, [sortKey]);
+  }, [sortKey, taskTimeMap]);
 
   const {
     projectIds: filterProjectIds,
@@ -191,8 +210,12 @@ export function TaskList({
 
   const allIncompleteTasks = tasks.filter((t) => !t.completed);
   const allCompletedTasks = tasks.filter((t) => t.completed);
-  const incompleteTasks = useMemo(() => applySort(filterTasks(allIncompleteTasks)), [allIncompleteTasks, sortKey, filterProjectIds, filterNoProject, filterPriorities, filterDate, customDateRange]);
-  const completedTasks = filterTasks(allCompletedTasks);
+  const filteredIncomplete = useMemo(
+    () => applySort(filterTasks(allIncompleteTasks)),
+    [allIncompleteTasks, sortKey, filterProjectIds, filterNoProject, filterPriorities, filterDate, customDateRange]
+  );
+  const incompleteTasks = useMemo(() => applyLimit(filteredIncomplete, limit), [filteredIncomplete, limit]);
+  const completedTasks = applyLimit(filterTasks(allCompletedTasks), limit);
 
   // Get project to inherit when creating new task
   const inheritProjectId =
@@ -385,7 +408,7 @@ export function TaskList({
         />
       </div>
 
-      {/* Sort chips */}
+      {/* Sort chips + limit */}
       <div className="flex items-center gap-2 w-full">
         <ArrowUpDown className="w-3.5 h-3.5 text-white/30 shrink-0" />
         {(Object.keys(TASK_SORT_LABELS) as TaskSortKey[]).map((key) => (
@@ -401,6 +424,9 @@ export function TaskList({
             {TASK_SORT_LABELS[key]}
           </button>
         ))}
+        <div className="ml-auto">
+          <LimitChip value={limit} onChange={setLimit} totalCount={filteredIncomplete.length} />
+        </div>
       </div>
 
       <TaskListContent

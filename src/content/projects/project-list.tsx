@@ -17,6 +17,8 @@ import {
 import { Project, ProjectColor } from "@/types/project.types";
 import { ListSummary } from "@/components/shared/list-container";
 import { ArrowUpDown } from "lucide-react";
+import { useListLimit } from "@/hooks/use-list-limit";
+import { LimitChip, applyLimit } from "@/components/shared/limit-chip";
 
 type ProjectSortKey = "default" | "hours" | "open-tasks";
 
@@ -48,6 +50,16 @@ export function ProjectList({ onNavigateToTasks }: ProjectListProps) {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [sortKey, setSortKey] = useState<ProjectSortKey>("default");
+  const { limit, setLimit } = useListLimit("projects");
+
+  // Deve ficar ANTES do useMemo que a utiliza
+  const getTaskCounts = (projectId: string) => {
+    const projectTasks = tasks.filter((t) => t.projectId === projectId);
+    return {
+      total: projectTasks.length,
+      completed: projectTasks.filter((t) => t.completed).length
+    };
+  };
 
   const sortedProjects = useMemo(() => {
     if (sortKey === "default") return projects;
@@ -61,6 +73,11 @@ export function ProjectList({ onNavigateToTasks }: ProjectListProps) {
       return 0;
     });
   }, [projects, sortKey, tasks]);
+
+  const limitedProjects = useMemo(
+    () => applyLimit(sortedProjects, limit),
+    [sortedProjects, limit]
+  );
 
   const handleAddProject = (
     name: string,
@@ -85,14 +102,6 @@ export function ProjectList({ onNavigateToTasks }: ProjectListProps) {
       setSelectedProject(null);
       setDetailsOpen(false);
     }
-  };
-
-  const getTaskCounts = (projectId: string) => {
-    const projectTasks = tasks.filter((t) => t.projectId === projectId);
-    return {
-      total: projectTasks.length,
-      completed: projectTasks.filter((t) => t.completed).length
-    };
   };
 
   const currentProject = selectedProject
@@ -145,7 +154,7 @@ export function ProjectList({ onNavigateToTasks }: ProjectListProps) {
         />
       </div>
 
-      {/* Sort chips */}
+      {/* Sort chips + limit */}
       <div className="flex items-center gap-2 w-full">
         <ArrowUpDown className="w-3.5 h-3.5 text-white/30 shrink-0" />
         {(Object.keys(SORT_LABELS) as ProjectSortKey[]).map((key) => (
@@ -161,10 +170,13 @@ export function ProjectList({ onNavigateToTasks }: ProjectListProps) {
             {SORT_LABELS[key]}
           </button>
         ))}
+        <div className="ml-auto">
+          <LimitChip value={limit} onChange={setLimit} totalCount={sortedProjects.length} />
+        </div>
       </div>
 
       <ProjectListContent
-        projects={sortedProjects}
+        projects={limitedProjects}
         onProjectClick={handleProjectClick}
         onToggleFavorite={toggleFavorite}
         onRemoveProject={handleDeleteProject}
