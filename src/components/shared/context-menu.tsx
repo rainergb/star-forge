@@ -1,4 +1,4 @@
-import { useState, ReactNode } from "react";
+import { useState, useRef, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -84,12 +84,25 @@ interface ContextMenuSubMenuProps {
 
 export function ContextMenuSubMenu({ icon, label, children }: ContextMenuSubMenuProps) {
   const [open, setOpen] = useState(false);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMouseEnter = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    // Delay para dar tempo do mouse atravessar o gap entre o item e o submenu.
+    // Sem o delay, onMouseLeave dispara ao cruzar os 4px de gap e fecha o submenu
+    // antes do usuário conseguir clicar em qualquer opção.
+    closeTimer.current = setTimeout(() => setOpen(false), 120);
+  };
 
   return (
     <div
       className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-white/70 hover:bg-white/5 transition-colors cursor-pointer">
         {icon}
@@ -97,7 +110,14 @@ export function ContextMenuSubMenu({ icon, label, children }: ContextMenuSubMenu
         <ChevronRight className="w-3 h-3 text-white/30" />
       </button>
       {open && (
-        <div className="absolute left-full top-0 ml-1 min-w-[160px] bg-[#1a1d3a] border border-white/10 rounded-lg shadow-xl py-1 z-[60]">
+        <div
+          className="absolute left-full top-0 min-w-[160px] bg-[#1a1d3a] border border-white/10 rounded-lg shadow-xl py-1 z-[60]"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          {/* Ponte transparente que preenche o gap entre o item e o submenu,
+              evitando que onMouseLeave dispare ao cruzar o espaço entre eles */}
+          <div className="absolute -left-2 inset-y-0 w-2" />
           {children}
         </div>
       )}

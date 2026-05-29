@@ -299,35 +299,6 @@ export function TaskList({
     return `${hours}:${minutes}`;
   };
 
-  const calculateTaskEndTime = (taskIndex: number): Date | null => {
-    const pomodoroMinutes = timerSettings.pomodoro;
-    const shortBreakMinutes = timerSettings.shortBreak;
-    const longBreakInterval = timerSettings.longBreakInterval;
-    const longBreakMinutes = timerSettings.longBreak;
-
-    let totalMinutes = 0;
-    let pomodoroCount = 0;
-
-    for (let i = 0; i <= taskIndex; i++) {
-      const task = incompleteTasks[i];
-      const pomodoros = task.estimatedPomodoros ?? 0;
-      for (let j = 0; j < pomodoros; j++) {
-        totalMinutes += pomodoroMinutes;
-        pomodoroCount++;
-        if (pomodoroCount % longBreakInterval === 0) {
-          totalMinutes += longBreakMinutes;
-        } else if (j < pomodoros - 1 || i < taskIndex) {
-          totalMinutes += shortBreakMinutes;
-        }
-      }
-    }
-
-    if (totalMinutes === 0) return null;
-
-    const now = new Date();
-    return new Date(now.getTime() + totalMinutes * 60 * 1000);
-  };
-
   const currentTask = selectedTask
     ? tasks.find((t) => t.id === selectedTask.id) || null
     : null;
@@ -412,7 +383,6 @@ export function TaskList({
         onReorderTasks={reorderTasks}
         onDuplicateTask={duplicateTask}
         onSetRepeat={setRepeat}
-        calculateTaskEndTime={calculateTaskEndTime}
         formatEndTime={formatEndTime}
       />
 

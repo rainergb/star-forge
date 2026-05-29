@@ -1,0 +1,10 @@
+{
+  "stageSeconds": [
+    60,
+    60,
+    1200
+  ],
+  "autoStartEnabled": false,
+  "autoStartPomodoroEnabled": false,
+  "longBreakInterval": 4
+}

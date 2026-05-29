@@ -6,6 +6,7 @@ import {
   CalendarCheck,
   CalendarDays,
   Calendar,
+  CalendarX2,
   Trash2,
   ChevronLeft,
   Bell,
@@ -100,7 +101,6 @@ interface TaskItemProps {
   onClick: () => void;
   onDoubleClick?: () => void;
   onFocus?: () => void;
-  expectedEndTime?: string;
   onDuplicate?: () => void;
   onSetRepeat?: (repeat: RepeatType) => void;
 }
@@ -114,7 +114,6 @@ export function TaskItem({
   onRemoveTask,
   onClick,
   onDoubleClick,
-  expectedEndTime,
   onDuplicate,
   onSetRepeat
 }: TaskItemProps) {
@@ -239,11 +238,6 @@ export function TaskItem({
         }
         trailing={
           <>
-            {expectedEndTime && !task.completed && (
-              <span className="text-[10px] text-white/30 whitespace-nowrap">
-                ~{expectedEndTime}
-              </span>
-            )}
             <FavoriteButton
               isFavorite={task.favorite}
               onToggle={() => onToggleFavorite(task.id)}
@@ -347,6 +341,14 @@ export function TaskItem({
           label="Choose date"
           onClick={handleChooseDate}
         />
+        {task.dueDate && (
+          <ContextMenuItem
+            icon={<CalendarX2 className="w-4 h-4" />}
+            label="Remove due date"
+            onClick={() => { onSetDueDate(task.id, null); closeContextMenu(); }}
+            variant="danger"
+          />
+        )}
         <ContextMenuDivider />
         {onDuplicate && (
           <ContextMenuItem

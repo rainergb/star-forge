@@ -34,7 +34,6 @@ interface SortableTaskItemProps {
   onRemoveTask: (id: string) => void;
   onClick: () => void;
   onDoubleClick: () => void;
-  expectedEndTime?: string;
   onDuplicate: () => void;
   onSetRepeat: (repeat: RepeatType) => void;
 }
@@ -48,7 +47,6 @@ function SortableTaskItem({
   onRemoveTask,
   onClick,
   onDoubleClick,
-  expectedEndTime,
   onDuplicate,
   onSetRepeat
 }: SortableTaskItemProps) {
@@ -91,7 +89,6 @@ function SortableTaskItem({
         onRemoveTask={onRemoveTask}
         onClick={onClick}
         onDoubleClick={onDoubleClick}
-        expectedEndTime={expectedEndTime}
         onDuplicate={onDuplicate}
         onSetRepeat={onSetRepeat}
       />
@@ -115,7 +112,6 @@ interface TaskListContentProps {
   onTaskClick: (task: Task) => void;
   onTaskDoubleClick: (task: Task) => void;
   onReorderTasks: (oldIndex: number, newIndex: number) => void;
-  calculateTaskEndTime: (index: number) => Date | null;
   formatEndTime: (date: Date) => string;
   onDuplicateTask: (id: string) => void;
   onSetRepeat: (id: string, repeat: RepeatType) => void;
@@ -137,7 +133,6 @@ export function TaskListContent({
   onTaskClick,
   onTaskDoubleClick,
   onReorderTasks,
-  calculateTaskEndTime,
   formatEndTime,
   onDuplicateTask,
   onSetRepeat
@@ -193,10 +188,7 @@ export function TaskListContent({
             items={incompleteTasks.map((t) => t.id)}
             strategy={verticalListSortingStrategy}
           >
-            {incompleteTasks.map((task, index) => {
-              const taskEndTime = task.estimatedPomodoros
-                ? calculateTaskEndTime(index)
-                : null;
+            {incompleteTasks.map((task) => {
               return (
                 <div key={task.id} className="relative">
                   <SortableTaskItem
@@ -208,9 +200,6 @@ export function TaskListContent({
                     onRemoveTask={onRemoveTask}
                     onClick={() => onTaskClick(task)}
                     onDoubleClick={() => onTaskDoubleClick(task)}
-                    expectedEndTime={
-                      taskEndTime ? formatEndTime(taskEndTime) : undefined
-                    }
                     onDuplicate={() => onDuplicateTask(task.id)}
                     onSetRepeat={(repeat) => onSetRepeat(task.id, repeat)}
                   />

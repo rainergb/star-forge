@@ -273,15 +273,26 @@ export function useAuth() {
   const signup = useCallback(
     async (data: { email: string; password: string; name: string }) => {
       try {
+        // Pré-arma o rememberMe: se a confirmação de email estiver desativada,
+        // o signUp já retorna sessão e dispara SIGNED_IN — o guard só processa
+        // esse evento se _pendingRememberMe não for null. Sem isso, a conta é
+        // criada mas o app não entra no sistema.
+        _pendingRememberMe = true;
         const { data: authData, error } = await supabase.auth.signUp({
           email: data.email,
           password: data.password,
           options: { data: { name: data.name } }
         });
         if (error) throw error;
+
+        // Sem sessão = precisa confirmar email. Nenhum SIGNED_IN vai consumir
+        // o _pendingRememberMe — reseta para não vazar para um login futuro.
+        if (!authData.session) _pendingRememberMe = null;
+
         return { success: true, needsConfirmation: !authData.session };
       } catch (error: any) {
         console.error("Signup failed:", error);
+        _pendingRememberMe = null;
         return { success: false, error: error.message as string };
       }
     },
@@ -368,20 +379,29 @@ export function useAuth() {
 
   const logout = useCallback(async () => {
     _pendingRememberMe = null; // garante que nenhum SIGNED_IN inesperado loga de volta
-    try {
-      if (!isGuestMode) {
-        // scope: 'global' revoga o refresh token no servidor —
-        // impede que refreshes em andamento criem uma nova sessão após o logout
-        await supabase.auth.signOut({ scope: "global" });
+
+    if (!isGuestMode) {
+      try {
+        // scope: "local" encerra a sessão do cliente e para o auto-refresh
+        // SEM fazer a chamada de rede de revogação global. Em produção
+        // (origin file://) o signOut global ficava pendente e travava o await,
+        // então o estado local nunca era limpo e o usuário não deslogava.
+        // O Promise.race com timeout garante que o logout SEMPRE prossegue,
+        // mesmo que o cliente Supabase trave (ex.: deadlock de navigator.locks).
+        await Promise.race([
+          supabase.auth.signOut({ scope: "local" }),
+          new Promise((resolve) => setTimeout(resolve, 2000))
+        ]);
+      } catch (error) {
+        console.error("Supabase signOut failed:", error);
       }
-    } catch (error) {
-      console.error("Supabase signOut failed:", error);
-    } finally {
-      clearAllStorage();
-      removeAuthState();
-      removeGuestMode();
-      setIsRecoveryMode(false);
     }
+
+    // Limpeza local — sempre executa, independente da rede/servidor.
+    clearAllStorage();
+    removeAuthState();
+    removeGuestMode();
+    setIsRecoveryMode(false);
   }, [isGuestMode, removeAuthState, removeGuestMode]);
 
   return {

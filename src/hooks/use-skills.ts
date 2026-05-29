@@ -261,18 +261,26 @@ export function useSkills() {
       skillIds: string[],
       durationSeconds: number
     ): { skillId: string; leveledUp: boolean; newLevel: MasteryLevel }[] => {
-      const results: { skillId: string; leveledUp: boolean; newLevel: MasteryLevel }[] = [];
+      // Calcula resultados ANTES de chamar applyState: o updater do React setState
+      // é enfileirado e não executado de forma síncrona em React 18 (batching automático),
+      // então acumular resultados dentro do updater retorna array vazio.
+      const results: { skillId: string; leveledUp: boolean; newLevel: MasteryLevel }[] = skills
+        .filter((s) => skillIds.includes(s.id))
+        .map((skill) => {
+          const newTotalTime = skill.totalTimeSpent + durationSeconds;
+          const calculatedLevel = calculateMasteryLevel(newTotalTime);
+          return {
+            skillId: skill.id,
+            leveledUp: calculatedLevel > skill.currentLevel,
+            newLevel: calculatedLevel
+          };
+        });
 
       applyState((prev) =>
         prev.map((skill) => {
           if (!skillIds.includes(skill.id)) return skill;
           const newTotalTime = skill.totalTimeSpent + durationSeconds;
           const calculatedLevel = calculateMasteryLevel(newTotalTime);
-          results.push({
-            skillId: skill.id,
-            leveledUp: calculatedLevel > skill.currentLevel,
-            newLevel: calculatedLevel
-          });
           return {
             ...skill,
             totalTimeSpent: newTotalTime,
@@ -303,7 +311,7 @@ export function useSkills() {
 
       return results;
     },
-    [isGuest, dbSkills]
+    [isGuest, dbSkills, skills]
   );
 
   const getSkill = useCallback(
