@@ -42,6 +42,7 @@ interface DateFilterProps {
   customRange?: CustomDateRange;
   onCustomRangeChange?: (range: CustomDateRange) => void;
   className?: string;
+  compact?: boolean;
 }
 
 export function DateFilter({
@@ -49,7 +50,8 @@ export function DateFilter({
   onFilterChange,
   customRange,
   onCustomRangeChange,
-  className
+  className,
+  compact = false
 }: DateFilterProps) {
   const [open, setOpen] = useState(false);
   const [showCustomPicker, setShowCustomPicker] = useState(false);
@@ -123,28 +125,38 @@ export function DateFilter({
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            size="sm"
+            title={hasActiveFilter ? getFilterLabel() : "Filter by date"}
             className={cn(
-              "justify-between bg-background/50 border-white/10 rounded-lg hover:bg-white/5 text-white/70 h-9 px-3",
-              hasActiveFilter && "border-primary/50 text-white"
+              "bg-background/50 border-white/10 rounded-lg hover:bg-white/5 text-white/70 transition-colors",
+              hasActiveFilter && "border-primary/50 text-primary",
+              compact
+                ? "w-auto h-auto p-1.5"
+                : "justify-between h-9 px-3"
             )}
+            size={compact ? undefined : "sm"}
           >
-            <div className="flex items-center gap-2">
-              <Calendar className="w-3.5 h-3.5" />
-              <span className="text-xs">{getFilterLabel()}</span>
-            </div>
-            <div className="flex items-center gap-1 ml-2">
-              {hasActiveFilter && (
-                <X
-                  className="w-3.5 h-3.5 hover:text-white"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    clearFilter();
-                  }}
-                />
-              )}
-              <ChevronDown className="w-3.5 h-3.5" />
-            </div>
+            {compact ? (
+              <Calendar className="w-4 h-4" />
+            ) : (
+              <>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span className="text-xs">{getFilterLabel()}</span>
+                </div>
+                <div className="flex items-center gap-1 ml-2">
+                  {hasActiveFilter && (
+                    <X
+                      className="w-3.5 h-3.5 hover:text-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        clearFilter();
+                      }}
+                    />
+                  )}
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </div>
+              </>
+            )}
           </Button>
         </PopoverTrigger>
         <PopoverContent

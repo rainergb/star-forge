@@ -46,6 +46,7 @@ interface ProjectItemProps {
   onDoubleClick?: () => void;
   onToggleFavorite: () => void;
   onRemove: () => void;
+  onSetStatus: (status: Project["status"]) => void;
 }
 
 export function ProjectItem({
@@ -55,7 +56,8 @@ export function ProjectItem({
   onClick,
   onDoubleClick,
   onToggleFavorite,
-  onRemove
+  onRemove,
+  onSetStatus
 }: ProjectItemProps) {
   const {
     position: contextMenu,
@@ -147,21 +149,27 @@ export function ProjectItem({
       </ListItem>
 
       <ContextMenu position={contextMenu} onClose={closeContextMenu}>
-        <ContextMenuItem
-          icon={<Play className="w-4 h-4 text-green-400" />}
-          label="Activate project"
-          onClick={closeContextMenu}
-        />
-        <ContextMenuItem
-          icon={<Pause className="w-4 h-4 text-yellow-400" />}
-          label="Pause project"
-          onClick={closeContextMenu}
-        />
-        <ContextMenuItem
-          icon={<CheckCircle className="w-4 h-4 text-blue-400" />}
-          label="Complete project"
-          onClick={closeContextMenu}
-        />
+        {project.status !== "active" && (
+          <ContextMenuItem
+            icon={<Play className="w-4 h-4 text-green-400" />}
+            label="Activate project"
+            onClick={() => { onSetStatus("active"); closeContextMenu(); }}
+          />
+        )}
+        {project.status !== "paused" && (
+          <ContextMenuItem
+            icon={<Pause className="w-4 h-4 text-yellow-400" />}
+            label="Pause project"
+            onClick={() => { onSetStatus("paused"); closeContextMenu(); }}
+          />
+        )}
+        {project.status !== "completed" && (
+          <ContextMenuItem
+            icon={<CheckCircle className="w-4 h-4 text-blue-400" />}
+            label="Complete project"
+            onClick={() => { onSetStatus("completed"); closeContextMenu(); }}
+          />
+        )}
         <ContextMenuDivider />
         <ContextMenuItem
           icon={<Trash2 className="w-4 h-4" />}

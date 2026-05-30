@@ -247,9 +247,15 @@ export function usePomodoroTimer() {
       });
 
       if (mode === "work") {
+        console.log("[Pomodoro] Work session completed:", {
+          taskId: currentActiveTask?.id,
+          duration: sessionDuration,
+          hasActiveTask: !!currentActiveTask
+        });
         if (currentActiveTask) {
           incrementPomodoroRef.current(currentActiveTask.id);
           addTimeSpentRef.current(currentActiveTask.id, sessionDuration);
+          console.log("[Pomodoro] Updated task:", currentActiveTask.id);
 
           const task = getTaskRef.current(currentActiveTask.id);
           if (task?.projectId) {

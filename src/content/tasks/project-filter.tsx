@@ -16,13 +16,15 @@ interface ProjectFilterProps {
   includeNoProject: boolean;
   onSelectionChange: (projectIds: string[], includeNoProject: boolean) => void;
   className?: string;
+  compact?: boolean;
 }
 
 export function ProjectFilter({
   selectedProjectIds,
   includeNoProject,
   onSelectionChange,
-  className
+  className,
+  compact = false
 }: ProjectFilterProps) {
   const [open, setOpen] = useState(false);
   const { projects } = useProjects();
@@ -74,27 +76,37 @@ export function ProjectFilter({
         <PopoverTrigger asChild>
           <Button
             variant="outline"
+            title={hasActiveFilters ? getFilterLabel() : "Filter by project"}
             className={cn(
-              "w-full justify-between bg-background/50 border-white/10 rounded-lg hover:bg-white/5 text-white/70",
-              hasActiveFilters && "border-primary/50 text-white"
+              "bg-background/50 border-white/10 rounded-lg hover:bg-white/5 text-white/70 transition-colors",
+              hasActiveFilters && "border-primary/50 text-primary",
+              compact
+                ? "w-auto h-auto p-1.5"
+                : "w-full justify-between"
             )}
           >
-            <div className="flex items-center gap-2">
+            {compact ? (
               <Filter className="w-4 h-4" />
-              <span className="text-sm">{getFilterLabel()}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              {hasActiveFilters && (
-                <X
-                  className="w-4 h-4 hover:text-white"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    clearFilters();
-                  }}
-                />
-              )}
-              <ChevronDown className="w-4 h-4" />
-            </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4" />
+                  <span className="text-sm">{getFilterLabel()}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  {hasActiveFilters && (
+                    <X
+                      className="w-4 h-4 hover:text-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        clearFilters();
+                      }}
+                    />
+                  )}
+                  <ChevronDown className="w-4 h-4" />
+                </div>
+              </>
+            )}
           </Button>
         </PopoverTrigger>
         <PopoverContent

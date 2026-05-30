@@ -52,8 +52,7 @@ export function DiaryList({
     }
   }, [externalSelectedDate]);
 
-  // Date filter state — default to "today" so it starts focused
-  const [dateFilter, setDateFilter] = useState<DiaryDateFilterOption>("today");
+  const [dateFilter, setDateFilter] = useState<DiaryDateFilterOption>("all");
   const [customDateRange, setCustomDateRange] = useState<DiaryCustomDateRange>({
     start: null,
     end: null

@@ -77,7 +77,7 @@ export function StreakBadge() {
       <button
         onClick={() => setOpen((v) => !v)}
         title={`Streak: ${currentStreak} dias`}
-        className="cursor-pointer flex items-center gap-1.5 rounded-lg px-2.5 py-2 bg-background/50 border border-white/10 text-white/70 transition-colors hover:bg-primary/10 hover:text-white group"
+        className="cursor-pointer flex items-center gap-1.5 rounded-lg p-2.5 bg-background/50 border border-white/10 text-white/70 transition-colors hover:bg-primary/10 hover:text-white group"
       >
         <Flame
           className={`w-4 h-4 transition-colors ${

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTasks } from "@/hooks/use-tasks";
+import { useProjects } from "@/hooks/use-projects";
 import { usePomodoroSessions } from "@/hooks/use-pomodoro-sessions";
 import { useActiveTask } from "@/hooks/use-active-task";
 import { useConfig } from "@/hooks/use-config";
@@ -71,6 +72,7 @@ export function TaskList({
     setSkills,
     setPriority
   } = useTasks();
+  const { projects } = useProjects();
   const { sessions } = usePomodoroSessions();
   const { activeTask, setActiveTask, clearActiveTask } = useActiveTask();
   const { settings: timerSettings } = useConfig();
@@ -168,6 +170,14 @@ export function TaskList({
   const filterTasks = (taskList: Task[]): Task[] => {
     let filtered = taskList;
 
+    // Exclude tasks from paused or completed projects
+    filtered = filtered.filter((task) => {
+      if (!task.projectId) return true; // Keep tasks without project
+      const project = projects.find((p) => p.id === task.projectId);
+      if (!project) return true; // Project not found, keep task
+      return project.status === "active"; // Only keep tasks from active projects
+    });
+
     // Filter by project
     if (hasActiveProjectFilter) {
       filtered = filtered.filter((task) => {
@@ -196,7 +206,7 @@ export function TaskList({
   const allCompletedTasks = tasks.filter((t) => t.completed);
   const filteredIncomplete = useMemo(
     () => applySort(filterTasks(allIncompleteTasks)),
-    [allIncompleteTasks, sortKey, filterProjectIds, filterNoProject, filterPriorities, filterDate, customDateRange]
+    [allIncompleteTasks, sortKey, filterProjectIds, filterNoProject, filterPriorities, filterDate, customDateRange, projects]
   );
   const incompleteTasks = useMemo(() => applyLimit(filteredIncomplete, limit), [filteredIncomplete, limit]);
   const completedTasks = applyLimit(filterTasks(allCompletedTasks), limit);
@@ -314,22 +324,25 @@ export function TaskList({
       </div>
 
       {/* Filtros — compacto no modo floating, padrão na tela cheia */}
-      <div className={`flex w-full gap-1.5 ${compact ? "flex-nowrap overflow-x-auto scrollbar-none" : "flex-wrap gap-2 mt-1"}`}>
+      <div className={`flex w-full gap-1.5 items-center ${compact ? "flex-nowrap overflow-x-auto scrollbar-none" : "flex-wrap gap-2 mt-1"}`}>
         <ProjectFilter
           selectedProjectIds={filterProjectIds}
           includeNoProject={filterNoProject}
           onSelectionChange={setProjectFilter}
           className={compact ? "shrink-0" : "flex-1 min-w-[120px]"}
+          compact={compact}
         />
         <PriorityFilter
           selectedPriorities={filterPriorities}
           onSelectionChange={setFilterPriorities}
+          compact={compact}
         />
         <DateFilter
           selectedFilter={filterDate}
           onFilterChange={setFilterDate}
           customRange={customDateRange}
           onCustomRangeChange={setCustomDateRange}
+          compact={compact}
         />
       </div>
 

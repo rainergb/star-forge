@@ -18,6 +18,7 @@ import { FloatingContainer } from "./floating-container";
 import { MiniTaskItem } from "./mini-task-item";
 import { TaskList } from "@/content/tasks/task-list";
 import { useTasks } from "@/hooks/use-tasks";
+import { useProjects } from "@/hooks/use-projects";
 import { useActiveTask } from "@/hooks/use-active-task";
 import { useTaskFilters } from "@/hooks/use-task-filters";
 import { Task } from "@/types/task.types";
@@ -60,6 +61,7 @@ export function MiniTaskList({
   const [completedCollapsed, setCompletedCollapsed] = useState(true);
 
   const { tasks, toggleCompleted, reorderTasks } = useTasks();
+  const { projects } = useProjects();
   const { activeTask } = useActiveTask();
   const {
     projectIds: filterProjectIds,
@@ -110,6 +112,14 @@ export function MiniTaskList({
 
   const filterTasks = (taskList: Task[]): Task[] => {
     let filtered = taskList;
+
+    // Exclude tasks from paused or completed projects
+    filtered = filtered.filter((task) => {
+      if (!task.projectId) return true; // Keep tasks without project
+      const project = projects.find((p) => p.id === task.projectId);
+      if (!project) return true; // Project not found, keep task
+      return project.status === "active"; // Only keep tasks from active projects
+    });
 
     if (filterProjectIds.length > 0 || filterNoProject) {
       filtered = filtered.filter((task) => {

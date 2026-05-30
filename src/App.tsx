@@ -26,11 +26,14 @@ import { MigrationModal } from "@/components/shared/migration-modal";
 import { useMigration } from "@/hooks/use-migration";
 import { useAutoStart } from "@/hooks/use-auto-start";
 import { SkillToastContainer } from "@/components/skill-toast";
+import { WhatsNewModal } from "@/components/whats-new-modal";
+import { useWhatsNew } from "@/hooks/use-whats-new";
 
 function AppContent() {
   const { toast } = useToast();
   const { settings } = usePersonalize();
   useAutoStart();
+  const { show: showWhatsNew, entry: whatsNewEntry, dismiss: dismissWhatsNew } = useWhatsNew();
   const [profileOpen, setProfileOpen] = useState(false);
   const { showModal, status, summary, errorMsg, migrate, skip, dismiss } = useMigration();
   const { setActiveTask, clearActiveTask, activeTask } = useActiveTask();
@@ -133,6 +136,13 @@ function AppContent() {
 
       {/* Toasts gamificados de skill ao completar pomodoros */}
       <SkillToastContainer />
+
+      {/* Modal de novidades — aparece somente após atualização */}
+      <WhatsNewModal
+        open={showWhatsNew}
+        entry={whatsNewEntry}
+        onClose={dismissWhatsNew}
+      />
     </div>
   );
 }

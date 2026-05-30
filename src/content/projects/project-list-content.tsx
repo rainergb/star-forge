@@ -29,6 +29,7 @@ interface SortableProjectItemProps {
   onClick: () => void;
   onToggleFavorite: () => void;
   onRemove: () => void;
+  onSetStatus: (status: Project["status"]) => void;
 }
 
 function SortableProjectItem({
@@ -37,7 +38,8 @@ function SortableProjectItem({
   completedTasksCount,
   onClick,
   onToggleFavorite,
-  onRemove
+  onRemove,
+  onSetStatus
 }: SortableProjectItemProps) {
   const {
     attributes,
@@ -65,6 +67,7 @@ function SortableProjectItem({
         onDoubleClick={onClick}
         onToggleFavorite={onToggleFavorite}
         onRemove={onRemove}
+        onSetStatus={onSetStatus}
       />
     </div>
   );
@@ -75,6 +78,7 @@ interface ProjectListContentProps {
   onProjectClick: (project: Project) => void;
   onToggleFavorite: (id: string) => void;
   onRemoveProject: (id: string) => void;
+  onSetStatus: (id: string, status: Project["status"]) => void;
   onReorderProjects: (ids: string[]) => void;
   getTaskCounts: (projectId: string) => { total: number; completed: number };
 }
@@ -84,6 +88,7 @@ export function ProjectListContent({
   onProjectClick,
   onToggleFavorite,
   onRemoveProject,
+  onSetStatus,
   onReorderProjects,
   getTaskCounts
 }: ProjectListContentProps) {
@@ -143,6 +148,7 @@ export function ProjectListContent({
                 onClick={() => onProjectClick(project)}
                 onToggleFavorite={() => onToggleFavorite(project.id)}
                 onRemove={() => onRemoveProject(project.id)}
+                onSetStatus={(status) => onSetStatus(project.id, status)}
               />
             );
           })}

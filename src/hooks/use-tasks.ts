@@ -615,10 +615,12 @@ export function useTasks() {
 
   const incrementPomodoro = useCallback(
     (taskId: string) => {
+      console.log("[useTasks] incrementPomodoro called for:", taskId);
       applyState((prev) =>
         prev.map((t) => {
           if (t.id !== taskId) return t;
           const newCompleted = (t.completedPomodoros || 0) + 1;
+          console.log("[useTasks] Updated completedPomodoros:", newCompleted);
           const currentEstimated = t.estimatedPomodoros || 0;
           const newEstimated =
             currentEstimated < newCompleted ? newCompleted : currentEstimated;
@@ -651,12 +653,16 @@ export function useTasks() {
 
   const addTimeSpent = useCallback(
     (taskId: string, seconds: number) => {
+      console.log("[useTasks] addTimeSpent called:", { taskId, seconds });
       applyState((prev) =>
-        prev.map((t) =>
-          t.id === taskId
-            ? { ...t, totalTimeSpent: (t.totalTimeSpent || 0) + seconds }
-            : t
-        )
+        prev.map((t) => {
+          if (t.id === taskId) {
+            const newTime = (t.totalTimeSpent || 0) + seconds;
+            console.log("[useTasks] Updated totalTimeSpent:", newTime);
+            return { ...t, totalTimeSpent: newTime };
+          }
+          return t;
+        })
       );
       if (!isGuest) {
         const task = dbTasks.find((t) => t.id === taskId);

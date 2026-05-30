@@ -173,6 +173,7 @@ export function ProjectList({ onNavigateToTasks, compact = false }: ProjectListP
         onProjectClick={handleProjectClick}
         onToggleFavorite={toggleFavorite}
         onRemoveProject={handleDeleteProject}
+        onSetStatus={setStatus}
         onReorderProjects={reorderProjects}
         getTaskCounts={getTaskCounts}
       />
